@@ -24,12 +24,19 @@ npm install --prefix protected
 
 Copy `.env.local.example` to `.env.local` in **both** application directories and fill in the values from the hosted project's API settings:
 
+```bash
+cp client/.env.local.example client/.env.local
+cp protected/.env.local.example protected/.env.local
+```
+
 ```dotenv
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
 ```
 
 The publishable key is intended for application clients. Never add a database password or service-role key to either application.
+
+Next.js reads each application's environment file when its development server starts. If either file is added or changed while `npm run dev` is running, restart the development server. The protected portal displays a setup prompt instead of failing when its Supabase configuration is absent.
 
 ## Development
 
@@ -49,4 +56,3 @@ Or start them independently with `npm run dev:client` and `npm run dev:protected
 ## Checks
 
 Run `npm run lint`, `npm run typecheck`, and `npm run build` from the repository root.
-
