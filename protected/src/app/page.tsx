@@ -1,7 +1,21 @@
 import { createBusStop } from "./actions";
+import { hasSupabaseConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function PortalHomePage() {
+  if (!hasSupabaseConfig()) {
+    return (
+      <main className="portal-message">
+        <p>Protected portal</p>
+        <h1>Supabase configuration required</h1>
+        <span>
+          Copy <code>.env.local.example</code> to <code>.env.local</code> in the protected app,
+          then set the project URL and publishable key before restarting the development server.
+        </span>
+      </main>
+    );
+  }
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: stops } = user ? await supabase.from("bus_stops").select("id,name_de,name_it,name_en,municipality,latitude,longitude,is_published").order("created_at", { ascending: false }) : { data: [] };
