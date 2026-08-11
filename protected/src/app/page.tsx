@@ -1,6 +1,9 @@
-import { createBusStop } from "./actions";
+import { createBusStop, signOut } from "./actions";
+import { LoginForm } from "./login-form";
 import { hasSupabaseConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
+
+export const dynamic = "force-dynamic";
 
 export default async function PortalHomePage() {
   if (!hasSupabaseConfig()) {
@@ -21,11 +24,26 @@ export default async function PortalHomePage() {
   const { data: stops } = user ? await supabase.from("bus_stops").select("id,name_de,name_it,name_en,municipality,latitude,longitude,is_published").order("created_at", { ascending: false }) : { data: [] };
   const { data: feedback } = user ? await supabase.from("stop_feedback").select("id,overall_rating,cleanliness_rating,safety_rating,accessibility_rating,information_rating,shelter_rating,has_shelter,has_seating,has_lighting,comment,email,consent_to_contact,language,created_at,bus_stops(name_de,name_it,name_en)").order("created_at", { ascending: false }) : { data: [] };
 
-  if (!user) return <main className="portal-message"><p>Protected portal</p><h1>Authentication required</h1><span>Sign in with your authorized Supabase account to manage bus stops.</span></main>;
+  if (!user) return (
+    <main className="login-page">
+      <section className="login-intro">
+        <div className="brand-mark" aria-hidden="true"><span>ST</span></div>
+        <p>South Tyrol · Public transport</p>
+        <h1>Shape better stops<br />for every journey.</h1>
+        <span>Review passenger feedback and keep the region&apos;s bus stop information accurate, accessible and up to date.</span>
+        <div className="mountain-lines" aria-hidden="true" />
+      </section>
+      <section className="login-panel"><div className="login-card">
+        <p>Protected portal</p><h2>Welcome back</h2><span>Sign in with your authorized Supabase account.</span>
+        <LoginForm />
+        <small>Access is restricted to approved transport administrators.</small>
+      </div></section>
+    </main>
+  );
 
   return (
     <main className="portal">
-      <header><div><p>Transport data portal</p><h1>Bus stop management</h1></div><span className="user-pill">{user.email}</span></header>
+      <header><div><p>Transport data portal</p><h1>Bus stop management</h1></div><div className="user-actions"><span className="user-pill">{user.email}</span><form action={signOut}><button type="submit" className="sign-out">Sign out</button></form></div></header>
       <div className="portal-grid">
         <section className="editor-card">
           <div className="card-heading"><span>New location</span><h2>Add a bus stop</h2><p>Enter all three public names and the exact WGS84 coordinates.</p></div>
