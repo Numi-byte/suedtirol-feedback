@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function ThanksPage() {
-  return <main className="feedback-page"><section className="thanks"><span>Südtirol Feedback</span><h1>Danke · Grazie · Thank you!</h1><p>Your feedback was saved and will help improve public transport stops.</p><a href="/">Back to the map</a></section></main>;
+  return <main className="feedback-page"><section className="thanks"><span>südtirolmobil feedback</span><h1>Danke · Grazie · Thank you!</h1><p>Deine Rückmeldung ist gespeichert und hilft, die Haltestellen in Südtirol zu verbessern.</p><Link href="/">Zurück zur Karte</Link></section></main>;
 }

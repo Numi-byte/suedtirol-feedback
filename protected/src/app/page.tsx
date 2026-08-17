@@ -1,9 +1,23 @@
 import { createBusStop, signOut } from "./actions";
 import { LoginForm } from "./login-form";
+import { BrandLogo } from "@/components/brand-logo";
 import { hasSupabaseConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
+
+const RouteLines = () => (
+  <svg className="route-lines" viewBox="0 0 420 300" fill="none" aria-hidden="true">
+    <g stroke="currentColor" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 230h110l80-80h130l60-60" />
+      <path d="M70 30v90l80 80v100" opacity=".6" />
+    </g>
+    <g fill="currentColor">
+      <circle cx="130" cy="230" r="16" />
+      <circle cx="340" cy="150" r="16" />
+    </g>
+  </svg>
+);
 
 export default async function PortalHomePage() {
   if (!hasSupabaseConfig()) {
@@ -27,11 +41,11 @@ export default async function PortalHomePage() {
   if (!user) return (
     <main className="login-page">
       <section className="login-intro">
-        <div className="brand-mark" aria-hidden="true"><span>ST</span></div>
+        <BrandLogo tone="dark" sub="portal" />
         <p>South Tyrol · Public transport</p>
         <h1>Shape better stops<br />for every journey.</h1>
-        <span>Review passenger feedback and keep the region&apos;s bus stop information accurate, accessible and up to date.</span>
-        <div className="mountain-lines" aria-hidden="true" />
+        <span className="login-lead">Review passenger feedback and keep the region&apos;s bus stop information accurate, accessible and up to date.</span>
+        <RouteLines />
       </section>
       <section className="login-panel"><div className="login-card">
         <p>Protected portal</p><h2>Welcome back</h2><span>Sign in with your authorized Supabase account.</span>
@@ -42,8 +56,15 @@ export default async function PortalHomePage() {
   );
 
   return (
+    <>
+    <div className="portal-bar">
+      <div className="portal-bar-inner">
+        <BrandLogo sub="portal" />
+        <div className="user-actions"><span className="user-pill">{user.email}</span><form action={signOut}><button type="submit" className="sign-out">Sign out</button></form></div>
+      </div>
+    </div>
     <main className="portal">
-      <header><div><p>Transport data portal</p><h1>Bus stop management</h1></div><div className="user-actions"><span className="user-pill">{user.email}</span><form action={signOut}><button type="submit" className="sign-out">Sign out</button></form></div></header>
+      <header><div><p>Transport data portal</p><h1>Bus stop management</h1></div></header>
       <div className="portal-grid">
         <section className="editor-card">
           <div className="card-heading"><span>New location</span><h2>Add a bus stop</h2><p>Enter all three public names and the exact WGS84 coordinates.</p></div>
@@ -71,5 +92,6 @@ export default async function PortalHomePage() {
         </tbody></table></div>
       </section>
     </main>
+    </>
   );
 }
