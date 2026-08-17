@@ -146,22 +146,34 @@ nav a:hover::after { transform: scaleX(1); }
 
 /* ---------- section furniture ---------- */
 .mini-label { display: block; color: var(--blue); font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
-.map-heading, .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 56px; }
-.map-heading h2, .section-heading h2 { margin: 12px 0 0; font-size: clamp(28px, 3vw, 36px); line-height: 1.15; }
-.map-heading > p, .section-heading > p { width: 420px; margin: 0 0 4px; font-size: 15px; line-height: 1.65; }
+.section-heading { display: flex; align-items: end; justify-content: space-between; gap: 56px; }
+.section-heading h2 { margin: 12px 0 0; font-size: clamp(28px, 3vw, 36px); line-height: 1.15; }
+.section-heading > p { width: 420px; margin: 0 0 4px; font-size: 15px; line-height: 1.65; }
 
-/* ---------- map ---------- */
-.map-section { padding: 84px var(--gutter); background: var(--surface); }
-.map-heading { margin-bottom: 34px; }
-.map-shell { position: relative; height: 500px; overflow: hidden; border: 1px solid var(--line); border-radius: 6px; background: #dce6ee; box-shadow: 0 12px 30px rgba(0, 43, 77, .08); }
-.osm-map { width: 100%; height: 100%; border: 0; filter: saturate(.85); }
+/* ---------- map: full-viewport interactive stop map ---------- */
+.map-section { position: relative; height: 100dvh; min-height: 620px; background: #dce6ee; }
+.map-canvas { position: absolute; inset: 0; }
+.map-surface { position: absolute; inset: 0; background: #dce6ee; }
+
+/* Leaflet panes run to z-index 700, so the floating UI sits above them. */
+.map-intro, .map-panel, .map-stop-list { position: absolute; z-index: 900; }
+
+.map-intro {
+  top: 26px; left: 26px; width: min(370px, calc(100% - 52px)); padding: 22px 24px;
+  border-radius: 6px; border-top: 3px solid var(--blue);
+  background: rgba(255, 255, 255, .97); box-shadow: 0 12px 32px rgba(0, 43, 77, .18);
+}
+.map-intro h2 { margin: 10px 0 8px; font-size: clamp(21px, 2.3vw, 27px); line-height: 1.15; }
+.map-intro p { margin: 0; color: var(--blue); font-size: 13px; font-weight: 700; }
+
 .map-panel {
-  position: absolute; z-index: 2; left: 24px; bottom: 24px; width: min(340px, calc(100% - 48px));
-  padding: 24px; border-radius: 6px; background: #fff; box-shadow: 0 12px 32px rgba(0, 43, 77, .2);
+  left: 26px; bottom: 26px; width: min(340px, calc(100% - 52px)); padding: 24px;
+  border-radius: 6px; background: #fff; box-shadow: 0 12px 32px rgba(0, 43, 77, .2);
 }
 .map-panel-label { color: var(--blue); font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
 .map-panel h3 { margin: 8px 0 6px; font-size: 21px; }
 .map-panel p { margin: 0; font-size: 14px; line-height: 1.55; }
+.map-panel-empty { color: var(--muted); }
 .transport-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 18px; }
 .transport-tags span { padding: 6px 10px; border-radius: 3px; color: var(--blue-deep); background: var(--sky); font-size: 11px; font-weight: 700; }
 .map-panel > a {
@@ -170,21 +182,44 @@ nav a:hover::after { transform: scaleX(1); }
 }
 .map-panel > a:hover { background: var(--blue-dark); }
 .map-panel > a svg { width: 16px; height: 16px; }
-.map-attribution { position: absolute; right: 4px; bottom: 3px; z-index: 3; padding: 3px 6px; color: var(--navy); background: rgba(255, 255, 255, .9); font-size: 10px; text-decoration: underline; }
-.map-pins { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
-.stop-pin {
-  position: absolute; width: 30px; height: 30px; display: grid; place-items: center;
-  border: 3px solid #fff; border-radius: 50% 50% 50% 0; color: #fff; background: var(--blue);
-  box-shadow: 0 4px 12px rgba(0, 43, 77, .4); transform: translate(-50%, -100%) rotate(-45deg); pointer-events: auto; cursor: pointer;
+
+.map-stop-list {
+  top: 26px; right: 26px; width: 260px; max-height: min(46vh, 420px); margin: 0; padding: 6px;
+  overflow-y: auto; list-style: none; border-radius: 6px;
+  background: rgba(255, 255, 255, .97); box-shadow: 0 12px 32px rgba(0, 43, 77, .18);
 }
-.stop-pin span { transform: rotate(45deg); font-size: 11px; font-weight: 700; }
-.stop-pin:hover, .stop-pin:focus { z-index: 3; background: var(--blue-deep); }
-.stop-pin .pin-label {
-  position: absolute; left: 28px; top: -4px; width: max-content; max-width: 180px; padding: 6px 8px;
-  border-radius: 3px; color: var(--navy); background: #fff; box-shadow: 0 4px 10px rgba(0, 43, 77, .2);
-  transform: rotate(45deg); font-size: 11px; font-weight: 600; opacity: 0; pointer-events: none;
+.map-stop-list button {
+  width: 100%; padding: 11px 12px; border: 0; border-radius: 4px;
+  background: transparent; text-align: left; cursor: pointer;
 }
-.stop-pin:hover .pin-label, .stop-pin:focus .pin-label { opacity: 1; }
+.map-stop-list button:hover { background: var(--sky); }
+.map-stop-list button[aria-current="true"] { background: var(--blue); }
+.map-stop-list strong, .map-stop-list small { display: block; }
+.map-stop-list strong { color: var(--navy); font-size: 14px; font-weight: 700; }
+.map-stop-list small { margin-top: 2px; color: var(--muted); font-size: 11px; }
+.map-stop-list button[aria-current="true"] strong,
+.map-stop-list button[aria-current="true"] small { color: #fff; }
+
+/* Bus-stop markers and Leaflet chrome, restyled to the brand. */
+.stop-marker { background: none; border: 0; filter: drop-shadow(0 4px 8px rgba(0, 43, 77, .35)); transition: transform .15s; }
+/* Overrides the global 1.25rem svg sizing, which would squash the pin. */
+.stop-marker svg { width: 32px; height: 42px; }
+.stop-marker:hover { transform: translateY(-3px); }
+.stop-marker:focus-visible { outline: 3px solid var(--blue-deep); outline-offset: 3px; border-radius: 4px; }
+.leaflet-container { font: inherit; background: #dce6ee; }
+.leaflet-container a { color: var(--blue); }
+.leaflet-bar { border: 0; box-shadow: 0 6px 18px rgba(0, 43, 77, .2); }
+.leaflet-bar a {
+  width: 36px; height: 36px; line-height: 36px; border-bottom-color: var(--line);
+  color: var(--navy); background: #fff; font-weight: 700;
+}
+.leaflet-bar a:hover { color: var(--blue); background: var(--sky); }
+.leaflet-control-attribution { padding: 3px 7px; color: var(--muted); background: rgba(255, 255, 255, .92); font-size: 11px; }
+.leaflet-tooltip {
+  padding: 6px 9px; border: 0; border-radius: 4px; color: var(--navy);
+  background: #fff; box-shadow: 0 4px 12px rgba(0, 43, 77, .2); font-size: 12px; font-weight: 700;
+}
+.leaflet-tooltip-top::before { border-top-color: #fff; }
 
 /* ---------- steps ---------- */
 .how-section { padding: 84px var(--gutter) 92px; background: #fff; }
@@ -262,10 +297,14 @@ nav a:hover::after { transform: scaleX(1); }
   nav { display: none; }
   .hero-inner { grid-template-columns: 1fr; gap: 40px; }
   .hero-visual { min-height: 300px; }
-  .map-heading, .section-heading { align-items: start; flex-direction: column; gap: 18px; }
-  .map-heading > p, .section-heading > p { width: auto; }
+  .section-heading { align-items: start; flex-direction: column; gap: 18px; }
+  .section-heading > p { width: auto; }
   .steps-grid { grid-template-columns: 1fr; }
   .about-strip { align-items: start; flex-direction: column; }
+}
+@media (max-width: 760px) {
+  /* Too narrow for the side list; the initial view already frames every stop. */
+  .map-stop-list { display: none; }
 }
 @media (max-width: 560px) {
   .utility-inner { padding: 0 18px; font-size: 11px; }
@@ -276,9 +315,12 @@ nav a:hover::after { transform: scaleX(1); }
   .hero-visual { display: none; }
   .search-row { flex-direction: column; }
   .search-row > button { height: 52px; }
-  .map-section, .how-section { padding-top: 60px; padding-bottom: 64px; }
-  .map-shell { height: 520px; }
+  .how-section { padding-top: 60px; padding-bottom: 64px; }
+  .map-section { min-height: 520px; }
+  .map-intro { top: 14px; left: 14px; width: calc(100% - 28px); padding: 18px 20px; }
   .map-panel { left: 14px; bottom: 14px; width: calc(100% - 28px); padding: 20px; }
+  /* The full-width panel owns the bottom edge; pinch and double-tap still zoom. */
+  .leaflet-control-zoom { display: none; }
   .detail-ratings { grid-template-columns: 1fr; }
   .feedback-page section { padding: 26px 20px; }
   .feedback-page h1 { font-size: 28px; }

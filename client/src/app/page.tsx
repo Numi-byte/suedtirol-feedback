@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { BrandLogo } from "@/components/brand-logo";
 import { SiteHeader } from "@/components/site-header";
 import type { Language } from "@/components/site-header";
+import { StopMap } from "@/components/stop-map";
+import type { BusStop } from "@/components/stop-map";
 
 const SearchIcon = () => (
   <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -41,6 +43,8 @@ const RouteGraphic = () => (
   </svg>
 );
 
+const OSM_ATTRIBUTION = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+
 const translations = {
   de: {
     nav: { find: "Haltestelle finden", how: "So funktioniert's", about: "Über das Projekt", language: "Sprache ändern", service: "Service Desk", cta: "Feedback geben" },
@@ -52,10 +56,13 @@ const translations = {
     search: "Suchen", location: "Meinen Standort verwenden",
     passengers: "Mehr als 2.400 Fahrgäste", shared: "haben ihre Erfahrung schon geteilt",
     quote: "Fahrgast aus Bozen", quoteText: "Das neue Wartehäuschen macht das Warten deutlich angenehmer.",
-    explore: "In der Nähe", mapTitle: "Finde deine Haltestelle auf der Karte.",
-    mapCopy: "Haltestellen rund um Bozen auf einen Blick. Die Karte nutzt freie OpenStreetMap-Daten und benötigt keinen kostenpflichtigen API-Schlüssel.",
-    mapAria: "OpenStreetMap mit Haltestellen rund um Bozen",
-    selected: "Ausgewählte Haltestelle", train: "Zug", bus: "Bus", accessible: "Barrierefrei", feedback: "Feedback geben",
+    map: {
+      eyebrow: "Haltestellenkarte", title: "Finde deine Haltestelle.",
+      stopsAvailable: "Haltestellen verfügbar",
+      choose: "Wähle eine Haltestelle auf der Karte, um Feedback zu geben.",
+      noStops: "Es sind noch keine Haltestellen veröffentlicht.",
+      bus: "Bus", accessible: "Barrierefrei", feedback: "Feedback geben", attribution: OSM_ATTRIBUTION,
+    },
     simple: "Einfach & schnell", stepsTitle: "In drei Schritten zu besseren Haltestellen.",
     stepsCopy: "Kein Konto nötig. Deine Rückmeldung geht direkt an die Stellen, die den öffentlichen Verkehr planen.",
     steps: [
@@ -77,10 +84,13 @@ const translations = {
     search: "Cerca", location: "Usa la mia posizione",
     passengers: "Oltre 2.400 passeggeri", shared: "hanno già condiviso la loro esperienza",
     quote: "Passeggera di Bolzano", quoteText: "La nuova pensilina rende l'attesa molto più piacevole.",
-    explore: "Nei dintorni", mapTitle: "Trova la tua fermata sulla mappa.",
-    mapCopy: "Le fermate nei dintorni di Bolzano a colpo d'occhio. La mappa usa i dati liberi di OpenStreetMap, senza chiavi API a pagamento.",
-    mapAria: "OpenStreetMap con le fermate nei dintorni di Bolzano",
-    selected: "Fermata selezionata", train: "Treno", bus: "Bus", accessible: "Accessibile", feedback: "Lascia un feedback",
+    map: {
+      eyebrow: "Mappa delle fermate", title: "Trova la tua fermata.",
+      stopsAvailable: "fermate disponibili",
+      choose: "Scegli una fermata sulla mappa per lasciare un feedback.",
+      noStops: "Non ci sono ancora fermate pubblicate.",
+      bus: "Bus", accessible: "Accessibile", feedback: "Lascia un feedback", attribution: OSM_ATTRIBUTION,
+    },
     simple: "Semplice e veloce", stepsTitle: "Tre passi per fermate migliori.",
     stepsCopy: "Non serve un account. Il tuo riscontro arriva direttamente a chi pianifica il trasporto pubblico.",
     steps: [
@@ -102,10 +112,13 @@ const translations = {
     search: "Search", location: "Use my current location",
     passengers: "More than 2,400 passengers", shared: "have already shared their experience",
     quote: "Passenger from Bolzano", quoteText: "The new shelter makes waiting so much better.",
-    explore: "Nearby", mapTitle: "Find your stop on the map.",
-    mapCopy: "Stops around Bolzano at a glance. The map uses free OpenStreetMap data and needs no paid API key.",
-    mapAria: "OpenStreetMap showing public transport stops around Bolzano",
-    selected: "Selected stop", train: "Train", bus: "Bus", accessible: "Accessible", feedback: "Give feedback",
+    map: {
+      eyebrow: "Stop map", title: "Find your stop.",
+      stopsAvailable: "stops available",
+      choose: "Pick a stop on the map to give feedback.",
+      noStops: "No stops have been published yet.",
+      bus: "Bus", accessible: "Accessible", feedback: "Give feedback", attribution: OSM_ATTRIBUTION,
+    },
     simple: "Simple & quick", stepsTitle: "Three steps to better stops.",
     stepsCopy: "No account needed. Your feedback goes straight to the people who plan public transport.",
     steps: [
@@ -118,9 +131,6 @@ const translations = {
     footerLinks: ["Imprint", "Privacy", "Accessibility", "Contact"],
   },
 };
-
-type BusStop = { id: string; name_de: string; name_it: string; name_en: string; municipality: string; latitude: number; longitude: number; is_accessible: boolean };
-const mapBounds = { west: 11.3, east: 11.39, south: 46.47, north: 46.52 };
 
 export default function HomePage() {
   const [language, setLanguage] = useState<Language>("de");
@@ -135,7 +145,6 @@ export default function HomePage() {
     fetch("/api/stops").then((response) => response.ok ? response.json() : []).then(setStops).catch(() => setStops([]));
   }, []);
 
-  const stopName = (stop: BusStop) => stop[`name_${language}` as "name_de" | "name_it" | "name_en"];
   return (
     <div id="top">
       <SiteHeader language={language} onLanguageChange={setLanguage} labels={text.nav} />
@@ -177,46 +186,7 @@ export default function HomePage() {
         </section>
 
         <section className="map-section" id="stop-map" aria-labelledby="map-heading">
-          <div className="map-heading">
-            <div>
-              <span className="mini-label">{text.explore}</span><h2 id="map-heading">{text.mapTitle}</h2>
-            </div>
-            <p>{text.mapCopy}</p>
-          </div>
-
-          <div className="map-shell">
-            <iframe
-              className="osm-map"
-              title={text.mapAria}
-              src="https://www.openstreetmap.org/export/embed.html?bbox=11.3000%2C46.4700%2C11.3900%2C46.5200&amp;layer=mapnik&amp;marker=46.4983%2C11.3548"
-              loading="lazy"
-            />
-            <div className="map-pins" aria-label={text.mapAria}>
-              {stops.filter((stop) => stop.longitude >= mapBounds.west && stop.longitude <= mapBounds.east && stop.latitude >= mapBounds.south && stop.latitude <= mapBounds.north).map((stop) => (
-                <a
-                  className="stop-pin"
-                  key={stop.id}
-                  href={`/feedback?stop=${encodeURIComponent(stop.id)}&lang=${language}&name=${encodeURIComponent(stopName(stop))}`}
-                  aria-label={`${stopName(stop)} – ${text.feedback}`}
-                  style={{ left: `${((stop.longitude - mapBounds.west) / (mapBounds.east - mapBounds.west)) * 100}%`, top: `${(1 - (stop.latitude - mapBounds.south) / (mapBounds.north - mapBounds.south)) * 100}%` }}
-                ><span>M</span><span className="pin-label">{stopName(stop)}</span></a>
-              ))}
-            </div>
-            <div className="map-panel">
-              <span className="map-panel-label">{text.selected}</span>
-              <h3>Bolzano / Bozen Station</h3>
-              <p>Piazza della Stazione<br />39100 Bolzano</p>
-              <div className="transport-tags"><span>{text.train}</span><span>{text.bus}</span><span>{text.accessible}</span></div><a href="#top">{text.feedback} <ArrowIcon /></a>
-            </div>
-            <a
-              className="map-attribution"
-              href="https://www.openstreetmap.org/copyright"
-              target="_blank"
-              rel="noreferrer"
-            >
-              © OpenStreetMap contributors
-            </a>
-          </div>
+          <StopMap stops={stops} language={language} labels={text.map} />
         </section>
 
         <section className="how-section" id="how-it-works">
