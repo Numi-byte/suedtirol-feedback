@@ -573,10 +573,27 @@ nav a:hover { background: var(--blue-50); }
 .wizard-panel button:disabled { opacity: .5; cursor: not-allowed; }
 .mobile-next,
 .mobile-actions { display: none; }
-.thanks { width: min(680px, 100%); margin: auto; padding: 42px 36px; border-radius: 10px; text-align: center; background: #fff; box-shadow: 0 16px 44px rgba(0, 43, 77, .13); }
+.thanks { width: min(680px, 100%); margin: auto; padding: 44px 40px 40px; border-radius: 10px; text-align: center; background: #fff; box-shadow: 0 16px 44px rgba(0, 43, 77, .13); }
+.thanks-mark { width: 62px; height: 62px; margin: 0 auto 18px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: var(--blue); }
+.thanks-mark svg { width: 30px; height: 30px; }
 .thanks > span { color: #0868b7; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
-.thanks h1 { margin: 14px 0 10px; font-size: clamp(28px, 4vw, 42px); }
-.thanks > a { display: inline-block; margin-top: 20px; padding: 14px 22px; border-radius: 4px; color: #fff; background: var(--blue); font-weight: 700; }
+.thanks h1 { margin: 12px 0 14px; font-size: clamp(26px, 3.4vw, 36px); line-height: 1.15; }
+.thanks > p { max-width: 52ch; margin: 0 auto 14px; font-size: 16px; line-height: 1.65; }
+.thanks > p a { color: var(--blue); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.thanks > p a:hover { color: var(--blue-dark); }
+.thanks-summary { margin: 26px 0 4px; padding: 20px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); text-align: left; }
+.thanks-summary h2 { margin: 0 0 10px; font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.thanks-summary pre {
+  margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--navy);
+  font-family: inherit; font-size: 14px; line-height: 1.6;
+}
+.thanks-copy {
+  margin-top: 14px; padding: 9px 14px; border: 1px solid var(--line); border-radius: 4px;
+  color: var(--navy); background: #fff; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.thanks-copy:hover { border-color: var(--blue); color: var(--blue); }
+.thanks-back { display: inline-block; margin-top: 24px; padding: 14px 22px; border-radius: 4px; color: #fff; background: var(--blue); font-weight: 700; }
+.thanks-back:hover { background: var(--blue-dark); }
 .feedback-dialog-footer {
   display: flex;
   min-height: 45px;

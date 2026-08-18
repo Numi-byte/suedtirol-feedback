@@ -80,6 +80,7 @@ export function FeedbackForm({ stopId, stopName, stopLocation, language }: { sto
 
       <form action={submitFeedback} className="feedback-wizard">
         <input type="hidden" name="stop_id" value={stopId} />
+        <input type="hidden" name="stop_name" value={stopName} />
         <input type="hidden" name="language" value={language} />
         <input type="hidden" name="severity" value={level} />
 

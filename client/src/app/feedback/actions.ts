@@ -47,5 +47,13 @@ export async function submitFeedback(formData: FormData) {
     if (photoError) throw new Error(photoError.message);
   }
 
-  redirect(`/feedback/thanks?lang=${encodeURIComponent(language)}`);
+  // Carried so the thank-you page can show the details and hand them to the
+  // südtirolmobil contact form. The email is deliberately left out of the URL.
+  const handoff = new URLSearchParams({ lang: language });
+  const stopName = String(formData.get("stop_name") ?? "").trim();
+  if (stopName) handoff.set("stop", stopName);
+  if (categories.length) handoff.set("cats", categories.join(","));
+  if (severity) handoff.set("sev", severity);
+  if (description) handoff.set("msg", description.slice(0, 500));
+  redirect(`/feedback/thanks?${handoff.toString()}`);
 }
