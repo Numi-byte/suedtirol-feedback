@@ -1,26 +1,51 @@
 "use server";
+
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
+const categorySlugs = new Set([
+  "weather_protection", "seating", "safe_sidewalk", "safe_crossing",
+  "passenger_information", "lighting", "accessibility", "shading",
+  "bicycle_parking", "waste_bin",
+]);
+
 export async function submitFeedback(formData: FormData) {
   const supabase = await createClient();
-  const rating = (name: string) => Number(formData.get(name));
-  const { error } = await supabase.from("stop_feedback").insert({
-    bus_stop_id: String(formData.get("stop_id")),
-    overall_rating: rating("overall_rating"),
-    cleanliness_rating: rating("cleanliness_rating"),
-    safety_rating: rating("safety_rating"),
-    accessibility_rating: rating("accessibility_rating"),
-    information_rating: rating("information_rating"),
-    shelter_rating: rating("shelter_rating"),
-    has_shelter: formData.get("has_shelter") === "yes",
-    has_seating: formData.get("has_seating") === "yes",
-    has_lighting: formData.get("has_lighting") === "yes",
-    comment: String(formData.get("comment") ?? "").trim() || null,
-    email: String(formData.get("email") ?? "").trim() || null,
-    consent_to_contact: formData.get("consent_to_contact") === "on",
-    language: String(formData.get("language") ?? "de"),
+  const stopId = String(formData.get("stop_id") ?? "");
+  const categories = formData.getAll("categories").map(String).filter((slug) => categorySlugs.has(slug));
+  const severity = String(formData.get("severity") ?? "medium");
+  const description = String(formData.get("description") ?? "").trim();
+  const wantsContact = formData.get("consent_to_contact") === "on";
+  const email = String(formData.get("email") ?? "").trim();
+  const language = String(formData.get("language") ?? "de");
+
+  if (!stopId || categories.length === 0) throw new Error("Bitte wählen Sie mindestens eine Kategorie aus.");
+  if (!new Set(["low", "medium", "high"]).has(severity)) throw new Error("Ungültige Problemstärke.");
+  if (wantsContact && !email) throw new Error("Bitte geben Sie eine E-Mail-Adresse an.");
+
+  const { data: feedbackId, error } = await supabase.rpc("create_feedback_report", {
+    p_bus_stop_id: stopId,
+    p_categories: categories,
+    p_severity: severity,
+    p_description: description || null,
+    p_email: wantsContact ? email : null,
+    p_consent_to_contact: wantsContact,
+    p_language: language,
   });
   if (error) throw new Error(error.message);
-  redirect(`/feedback/thanks?lang=${encodeURIComponent(String(formData.get("language") ?? "de"))}`);
+
+  const photo = formData.get("photo");
+  if (photo instanceof File && photo.size > 0) {
+    if (photo.size > 10 * 1024 * 1024 || !["image/jpeg", "image/png", "image/webp"].includes(photo.type)) {
+      throw new Error("Das Foto muss JPG, PNG oder WebP und höchstens 10 MB groß sein.");
+    }
+    const extension = photo.name.split(".").pop()?.toLowerCase() || "jpg";
+    const path = `${feedbackId}/${crypto.randomUUID()}.${extension}`;
+    const { error: uploadError } = await supabase.storage.from("feedback-photos").upload(path, photo, { contentType: photo.type });
+    if (uploadError) throw new Error(uploadError.message);
+    const { error: photoError } = await supabase.rpc("register_feedback_photo", { p_feedback_id: feedbackId, p_storage_path: path });
+    if (photoError) throw new Error(photoError.message);
+  }
+
+  redirect(`/feedback/thanks?lang=${encodeURIComponent(language)}`);
 }
