@@ -16,19 +16,58 @@ export default function HowItWorksPage() {
     <main className="content-page">
       <div className="page-title"><h1>{t.how.title}</h1></div>
 
-      <section className="how-section">
-        <div className="section-heading">
-          <div><span className="mini-label">{t.how.eyebrow}</span></div>
-          <p>{t.how.copy}</p>
-        </div>
+      <section className="help-section">
+        <span className="mini-label">{t.how.eyebrow}</span>
+        <p className="help-lead">{t.how.lead}</p>
+      </section>
+
+      <section className="help-section">
+        <h2>{t.how.stepsTitle}</h2>
+        <p className="help-copy">{t.how.copy}</p>
         <div className="steps-grid">
           {t.how.steps.map((step, index) => (
             <article className="step" key={step.title}>
               <span className="step-number" aria-hidden="true">0{index + 1}</span>
-              <div className="step-icon" aria-hidden="true"><span>{index === 0 ? "⌖" : index === 1 ? "✎" : "♡"}</span></div>
               <h3>{step.title}</h3>
               <p>{step.copy}</p>
             </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="help-section help-section-tinted">
+        <h2>{t.how.criteriaTitle}</h2>
+        <p className="help-copy">{t.how.criteriaCopy}</p>
+        <dl className="criteria-grid">
+          {t.how.criteria.map((item) => (
+            <div className="criteria-item" key={item.title}>
+              <dt>{item.title}</dt>
+              <dd>{item.copy}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      <section className="help-section">
+        <h2>{t.how.afterTitle}</h2>
+        <ol className="after-list">
+          {t.how.after.map((item) => (
+            <li key={item.title}>
+              <strong>{item.title}</strong>
+              <span>{item.copy}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="help-section">
+        <h2>{t.how.faqTitle}</h2>
+        <div className="faq-list">
+          {t.how.faq.map((entry) => (
+            <details key={entry.q}>
+              <summary>{entry.q}</summary>
+              <p>{entry.a}</p>
+            </details>
           ))}
         </div>
       </section>
