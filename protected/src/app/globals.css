@@ -36,16 +36,11 @@ a { color: inherit; text-decoration: none; }
 :focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
 
 /* ---------- brand lockup ---------- */
-.brand-lockup { display: flex; align-items: center; gap: 12px; width: fit-content; color: var(--blue); }
+.brand-lockup { display: flex; align-items: center; gap: 14px; width: fit-content; color: var(--blue-800); }
 .brand-lockup[data-tone="dark"] { color: #fff; }
-.brand-mark { width: 40px; height: 33px; flex: none; }
-.brand-word { display: block; }
-.brand-word strong, .brand-word em { display: block; font-style: normal; line-height: 1.12; }
-.brand-word strong { color: var(--navy); font-size: 17px; font-weight: 700; letter-spacing: -.015em; }
-.brand-word em { padding-left: 9px; color: var(--muted); font-size: 9px; font-weight: 600; }
-.brand-word em:last-child { padding-left: 18px; }
-.brand-lockup[data-tone="dark"] .brand-word strong { color: #fff; }
-.brand-lockup[data-tone="dark"] .brand-word em { color: rgba(255, 255, 255, .72); }
+/* Official lockup is 249.45 x 70.87; height drives it and the width follows.
+   The class beats the global svg sizing rule, which would otherwise squash it. */
+.brand-logo { width: auto; height: 44px; flex: none; }
 .brand-sub {
   align-self: stretch; display: flex; align-items: center; padding-left: 12px;
   border-left: 1px solid var(--line); color: var(--blue); font-size: 13px; font-weight: 700;
@@ -183,6 +178,7 @@ form button:hover { background: var(--blue-dark); }
 }
 @media (max-width: 560px) {
   .portal-bar-inner { height: 66px; padding: 0 18px; }
+  .brand-logo { height: 34px; }
   .brand-sub { display: none; }
   .portal { padding: 28px 18px 56px; }
   .portal header { align-items: start; flex-direction: column; gap: 16px; }
