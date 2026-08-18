@@ -2,6 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Neue Frutiger World is a licensed Monotype face, so its files are not in the
+   repo and the navbar currently renders in the fallback stack. Drop the webfont
+   files into client/public/fonts/ and uncomment to switch it on.
+@font-face {
+  font-family: "Neue Frutiger World";
+  src: url("/fonts/NeueFrutigerWorld-Regular.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Neue Frutiger World";
+  src: url("/fonts/NeueFrutigerWorld-Medium.woff2") format("woff2");
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Neue Frutiger World";
+  src: url("/fonts/NeueFrutigerWorld-Bold.woff2") format("woff2");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+*/
+
 /* südtirolmobil design language: white surfaces, one strong brand blue,
    humanist sans type, rectilinear cards, generous but even spacing. */
 :root {
@@ -18,6 +38,9 @@
   --green: #2f8f5b;
   --amber: #f2a500;
   --blue-50: #ecf6fa;
+  --gray-800: #2a424d;
+  /* Licensed Monotype face; self-host the webfont files to get the real thing. */
+  --font-brand: "Neue Frutiger World", Frutiger, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
   /* Utility bar (38px) + nav row (96px); anchors and the map offset by it. */
   --header-h: 134px;
   --container: 1200px;
@@ -86,17 +109,19 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
   max-width: var(--shell); height: 96px; margin: auto; padding: 20px var(--shell-pad);
   display: flex; align-items: center; justify-content: space-between; gap: 32px;
 }
-nav { display: flex; gap: 8px; margin-left: auto; font-size: 15px; font-weight: 600; }
-/* Pill width follows its label; the height, padding and radius are fixed. */
+nav { display: flex; gap: 8px; margin-left: auto; }
+/* Pill width follows its label; height, padding, radius and type are fixed.
+   16px over a 24px line box is exactly the 56px pill less its 16px padding. */
 nav a {
   display: flex; align-items: center; height: 56px; padding: 16px; border-radius: 32px;
-  color: var(--navy); white-space: nowrap; transition: background .15s, color .15s;
+  font-family: var(--font-brand); font-size: 16px; font-weight: 500; line-height: 24px; letter-spacing: 0;
+  color: var(--gray-800); white-space: nowrap; transition: background .15s;
 }
-nav a:hover { color: var(--blue); background: var(--blue-50); }
+nav a:hover { background: var(--blue-50); }
 .header-cta {
   display: flex; align-items: center; height: 56px; padding: 16px 24px; border-radius: 32px;
-  color: #fff; background: var(--blue); font-size: 15px; font-weight: 700;
-  white-space: nowrap; transition: background .15s;
+  font-family: var(--font-brand); font-size: 16px; font-weight: 700; line-height: 24px; letter-spacing: 0;
+  color: #fff; background: var(--blue); white-space: nowrap; transition: background .15s;
 }
 .header-cta:hover { background: var(--blue-dark); }
 
