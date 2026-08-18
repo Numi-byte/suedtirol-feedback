@@ -1,6 +1,10 @@
-import { BrandLogo } from "@/components/brand-logo";
+"use client";
 
-export type Language = "de" | "it" | "en";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { BrandLogo } from "@/components/brand-logo";
+import { useLanguage } from "@/components/language-provider";
+import { languages } from "@/lib/i18n";
 
 const PhoneIcon = () => (
   <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
@@ -8,28 +12,19 @@ const PhoneIcon = () => (
   </svg>
 );
 
-type SiteHeaderProps = {
-  language: Language;
-  onLanguageChange: (language: Language) => void;
-  labels: { find: string; how: string; about: string; language: string; service: string; cta: string };
-};
+export function SiteHeader() {
+  const { language, setLanguage, t } = useLanguage();
+  const pathname = usePathname();
+  const current = (href: string) => (pathname === href ? "page" : undefined);
 
-const languages: Language[] = ["de", "it", "en"];
-
-export function SiteHeader({ language, onLanguageChange, labels }: SiteHeaderProps) {
   return (
     <header className="site-header">
       <div className="utility-bar">
         <div className="utility-inner">
-          <a className="utility-link" href="tel:+390471220880"><PhoneIcon /> {labels.service} +39 0471 220 880</a>
-          <div className="language-switch" role="group" aria-label={labels.language}>
+          <a className="utility-link" href="tel:+390471220880"><PhoneIcon /> {t.nav.service} +39 0471 220 880</a>
+          <div className="language-switch" role="group" aria-label={t.nav.language}>
             {languages.map((code) => (
-              <button
-                key={code}
-                type="button"
-                aria-pressed={language === code}
-                onClick={() => onLanguageChange(code)}
-              >
+              <button key={code} type="button" aria-pressed={language === code} onClick={() => setLanguage(code)}>
                 {code.toUpperCase()}
               </button>
             ))}
@@ -38,17 +33,17 @@ export function SiteHeader({ language, onLanguageChange, labels }: SiteHeaderPro
       </div>
 
       <div className="header-inner">
-        <a className="brand" href="#top" aria-label="südtirolmobil feedback">
+        <Link className="brand" href="/" aria-label={t.nav.home}>
           <BrandLogo />
-        </a>
+        </Link>
 
         <nav aria-label="Primary navigation">
-          <a href="#stop-map">{labels.find}</a>
-          <a href="#how-it-works">{labels.how}</a>
-          <a href="#about">{labels.about}</a>
+          <Link href="/stops" aria-current={current("/stops")}>{t.nav.find}</Link>
+          <Link href="/how-it-works" aria-current={current("/how-it-works")}>{t.nav.how}</Link>
+          <Link href="/about" aria-current={current("/about")}>{t.nav.about}</Link>
         </nav>
 
-        <a className="header-cta" href="#stop-map">{labels.cta}</a>
+        <Link className="header-cta" href="/stops">{t.nav.cta}</Link>
       </div>
     </header>
   );

@@ -2,6 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Neue Frutiger World is a licensed Monotype face, so its files are not in the
+   repo and the navbar currently renders in the fallback stack. Drop the webfont
+   files into client/public/fonts/ and uncomment to switch it on.
+@font-face {
+  font-family: "Neue Frutiger World";
+  src: url("/fonts/NeueFrutigerWorld-Regular.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Neue Frutiger World";
+  src: url("/fonts/NeueFrutigerWorld-Medium.woff2") format("woff2");
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Neue Frutiger World";
+  src: url("/fonts/NeueFrutigerWorld-Bold.woff2") format("woff2");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Ely Rounded";
+  src: url("/fonts/ElyRounded-Bold.woff2") format("woff2");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+*/
+
 /* südtirolmobil design language: white surfaces, one strong brand blue,
    humanist sans type, rectilinear cards, generous but even spacing. */
 :root {
@@ -17,7 +42,19 @@
   --muted: #6d7f8e;
   --green: #2f8f5b;
   --amber: #f2a500;
+  --blue-50: #ecf6fa;
+  --gray-800: #2a424d;
+  --blue-800: #005980;
+  /* Licensed Monotype face; self-host the webfont files to get the real thing. */
+  --font-brand: "Neue Frutiger World", Frutiger, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-display: "Ely Rounded", ui-rounded, "Segoe UI Rounded", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  /* Utility bar (38px) + nav row (96px); anchors and the map offset by it. */
+  --header-h: 134px;
+  /* Home pins its footer, so the map is sized around both bars. */
+  --footer-h: 64px;
   --container: 1200px;
+  --shell: 1600px;
+  --shell-pad: clamp(18px, 10.5vw, 168px);
   --gutter: max(24px, calc((100vw - var(--container)) / 2));
 }
 
@@ -37,29 +74,41 @@ a { color: inherit; text-decoration: none; }
 svg { width: 1.25rem; height: 1.25rem; }
 h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
 :focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+[id] { scroll-margin-top: var(--header-h); }
 
 /* ---------- brand lockup ---------- */
-.brand-lockup { display: flex; align-items: center; gap: 12px; color: var(--blue); }
+.brand-lockup { display: flex; align-items: center; gap: 14px; color: var(--blue-800); }
 .brand-lockup[data-tone="dark"] { color: #fff; }
-.brand-mark { width: 40px; height: 33px; flex: none; }
-.brand-word { display: block; }
-.brand-word strong, .brand-word em { display: block; font-style: normal; line-height: 1.12; }
-.brand-word strong { color: var(--navy); font-size: 17px; font-weight: 700; letter-spacing: -.015em; }
-.brand-word em { padding-left: 9px; color: var(--muted); font-size: 9px; font-weight: 600; letter-spacing: .01em; }
-.brand-word em:last-child { padding-left: 18px; }
-.brand-lockup[data-tone="dark"] .brand-word strong { color: #fff; }
-.brand-lockup[data-tone="dark"] .brand-word em { color: rgba(255, 255, 255, .72); }
+/* Official lockup is 249.45 x 70.87; height drives it and the width follows.
+   The class beats the global svg sizing rule, which would otherwise squash it. */
+.brand-logo { width: auto; height: 44px; flex: none; }
 .brand-sub {
   align-self: stretch; display: flex; align-items: center; padding-left: 12px;
   border-left: 1px solid var(--line); color: var(--blue); font-size: 13px; font-weight: 700;
 }
 .brand-lockup[data-tone="dark"] .brand-sub { border-left-color: rgba(255, 255, 255, .28); color: #fff; }
 
+/* ---------- page title band ---------- */
+/* 80px type on an 80px line box, so one line is exactly the 80px band height.
+   min-height rather than height, so a title that wraps grows instead of clipping. */
+.page-title {
+  display: flex; align-items: center; gap: 56px;
+  max-width: 1600px; min-height: 80px; margin-inline: auto;
+  padding-left: clamp(20px, 5vw, 80px); padding-right: clamp(20px, 5vw, 80px);
+}
+.page-title h1 {
+  margin: 0; color: var(--blue-800); font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(36px, 5vw, 80px); line-height: 1; letter-spacing: -.03em;
+}
+
 /* ---------- header ---------- */
-.site-header { position: relative; z-index: 20; background: #fff; border-bottom: 1px solid var(--line); }
+.site-header {
+  position: sticky; top: 0; z-index: 1200; background: #fff;
+  border-bottom: 1px solid var(--line); box-shadow: 0 2px 12px rgba(0, 43, 77, .06);
+}
 .utility-bar { background: var(--blue-deep); color: #fff; }
 .utility-inner {
-  max-width: var(--container); height: 38px; margin: auto; padding: 0 24px;
+  max-width: var(--shell); height: 38px; margin: auto; padding: 0 var(--shell-pad);
   display: flex; align-items: center; justify-content: space-between; font-size: 12px;
 }
 .utility-link { display: flex; align-items: center; gap: 8px; font-weight: 600; opacity: .92; }
@@ -74,94 +123,98 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
 .language-switch button[aria-pressed="true"] { color: var(--blue-deep); background: #fff; }
 
 .header-inner {
-  max-width: var(--container); height: 84px; margin: auto; padding: 0 24px;
+  max-width: var(--shell); height: 96px; margin: auto; padding: 20px var(--shell-pad);
   display: flex; align-items: center; justify-content: space-between; gap: 32px;
 }
-nav { display: flex; gap: 34px; margin-left: auto; font-size: 15px; font-weight: 600; }
-nav a { position: relative; padding: 6px 0; color: var(--navy); transition: color .15s; }
-nav a::after {
-  content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 3px;
-  background: var(--blue); transform: scaleX(0); transform-origin: left; transition: transform .18s;
+nav { display: flex; gap: 8px; margin-left: auto; }
+/* Pill width follows its label; height, padding, radius and type are fixed.
+   16px over a 24px line box is exactly the 56px pill less its 16px padding. */
+nav a {
+  display: flex; align-items: center; height: 56px; padding: 16px; border-radius: 32px;
+  font-family: var(--font-brand); font-size: 16px; font-weight: 500; line-height: 24px; letter-spacing: 0;
+  color: var(--gray-800); white-space: nowrap; transition: background .15s;
 }
-nav a:hover { color: var(--blue); }
-nav a:hover::after { transform: scaleX(1); }
+nav a:hover { background: var(--blue-50); }
 .header-cta {
-  padding: 12px 20px; border-radius: 4px; color: #fff; background: var(--blue);
-  font-size: 14px; font-weight: 700; transition: background .15s;
+  display: flex; align-items: center; height: 56px; padding: 16px 24px; border-radius: 32px;
+  font-family: var(--font-brand); font-size: 16px; font-weight: 700; line-height: 24px; letter-spacing: 0;
+  color: #fff; background: var(--blue); white-space: nowrap; transition: background .15s;
 }
 .header-cta:hover { background: var(--blue-dark); }
 
-/* ---------- hero ---------- */
-.hero { position: relative; padding: 76px var(--gutter) 84px; color: #fff; background: var(--blue); overflow: hidden; }
-.hero::before {
-  content: ""; position: absolute; inset: 0;
-  background: linear-gradient(104deg, var(--blue-deep) 0%, var(--blue) 52%, #0d7cc6 100%);
-}
-.hero-inner { position: relative; z-index: 2; display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr); gap: 56px; align-items: center; }
-.eyebrow { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
-.eyebrow span { width: 26px; height: 3px; background: #fff; }
-.hero h1 { margin: 0; color: #fff; font-size: clamp(38px, 4.2vw, 56px); line-height: 1.08; }
-.hero h1 em { color: #bfe0f7; font-style: normal; font-weight: 700; }
-.hero-copy { max-width: 520px; margin: 20px 0 30px; color: rgba(255, 255, 255, .88); font-size: 17px; line-height: 1.6; }
+/* ---------- content pages ---------- */
+.content-page { padding-bottom: 72px; }
+.content-page .page-title { margin: 40px auto 8px; }
 
-.search-card { padding: 24px; background: #fff; border-radius: 6px; box-shadow: 0 16px 40px rgba(0, 43, 77, .22); }
-.search-card label { display: block; margin-bottom: 10px; color: var(--navy); font-size: 13px; font-weight: 700; }
+/* ---------- stops directory ---------- */
+.stops-section { max-width: 1600px; margin: auto; padding: 8px clamp(20px, 5vw, 80px) 40px; }
+.stops-search { max-width: 620px; margin: 14px 0 0; }
+.stops-search label { display: block; margin-bottom: 10px; color: var(--navy); font-size: 13px; font-weight: 700; }
 .search-row { display: flex; gap: 10px; }
 .search-field { flex: 1; display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 14px; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
 .search-field:focus-within { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0, 105, 180, .14); }
 .search-field svg { flex: none; color: var(--blue); }
 .search-field input { min-width: 0; width: 100%; border: 0; outline: 0; color: var(--navy); background: transparent; font-size: 15px; }
 .search-field input::placeholder { color: #9aabb8; }
-.search-row > button {
-  display: flex; align-items: center; justify-content: center; gap: 12px; min-width: 140px; padding: 0 20px;
-  border: 0; border-radius: 4px; color: #fff; background: var(--blue); font-size: 15px; font-weight: 700; cursor: pointer; transition: background .15s;
+.search-clear {
+  padding: 0 18px; border: 1px solid var(--line); border-radius: 4px;
+  color: var(--navy); background: #fff; font-size: 14px; font-weight: 700; cursor: pointer;
 }
-.search-row > button:hover { background: var(--blue-dark); }
-.search-row > button svg { width: 17px; }
-.location-link {
-  display: flex; align-items: center; gap: 7px; margin: 14px 0 0; padding: 0;
-  border: 0; background: transparent; color: var(--blue); font-size: 13px; font-weight: 700; cursor: pointer;
+.search-clear:hover { border-color: var(--blue); color: var(--blue); }
+.stops-count { margin: 20px 0 0; color: var(--blue); font-size: 13px; font-weight: 700; }
+.stops-empty { margin: 24px 0 0; font-size: 16px; line-height: 1.6; }
+.stops-empty span { color: var(--muted); font-size: 14px; }
+.stops-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; margin: 20px 0 0; padding: 0; list-style: none; }
+.stop-card {
+  display: flex; flex-direction: column; justify-content: space-between; gap: 18px; height: 100%;
+  padding: 22px 24px; border: 1px solid var(--line); border-top: 3px solid var(--blue);
+  border-radius: 6px; background: #fff;
 }
-.location-link:hover { color: var(--blue-dark); text-decoration: underline; }
-.location-link svg { width: 15px; height: 15px; }
+.stop-card-place { color: var(--blue); font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.stop-card h2 { margin: 8px 0 0; font-size: 20px; line-height: 1.2; }
+.stop-card-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.stop-card-cta {
+  display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 4px;
+  color: #fff; background: var(--blue); font-size: 14px; font-weight: 700; transition: background .15s;
+}
+.stop-card-cta:hover { background: var(--blue-dark); }
+.stop-card-cta svg { width: 16px; height: 16px; }
+.stop-card-map { color: var(--blue); font-size: 13px; font-weight: 700; }
+.stop-card-map:hover { text-decoration: underline; }
 
-.trust-note { display: flex; align-items: center; gap: 14px; margin-top: 28px; }
-.avatar-stack { display: flex; padding-left: 8px; }
-.avatar-stack span {
-  width: 34px; height: 34px; margin-left: -8px; display: grid; place-items: center;
-  border: 2px solid var(--blue); border-radius: 50%; color: var(--blue-deep); background: #fff; font-size: 10px; font-weight: 700;
-}
-.trust-note p { margin: 0; color: rgba(255, 255, 255, .82); font-size: 13px; line-height: 1.45; }
-.trust-note strong { display: block; color: #fff; font-size: 14px; }
-
-.hero-visual { position: relative; min-height: 340px; }
-.route-graphic { width: 100%; height: auto; color: rgba(255, 255, 255, .5); }
-.feedback-bubble {
-  position: absolute; left: 4%; bottom: 6%; width: min(280px, 88%); padding: 20px 22px;
-  color: var(--navy); background: #fff; border-radius: 6px; border-left: 4px solid var(--blue); box-shadow: 0 14px 32px rgba(0, 43, 77, .26);
-}
-.feedback-bubble p { margin: 0; font-size: 14px; line-height: 1.5; }
-.feedback-bubble .quote { display: block; margin-bottom: 4px; color: var(--blue); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
-.stars { margin-top: 10px; color: var(--amber); font-size: 12px; letter-spacing: 3px; }
+/* ---------- about ---------- */
+.help-section-tinted + .help-section-tinted { padding-top: 0; }
 
 /* ---------- section furniture ---------- */
 .mini-label { display: block; color: var(--blue); font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
-.map-heading, .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 56px; }
-.map-heading h2, .section-heading h2 { margin: 12px 0 0; font-size: clamp(28px, 3vw, 36px); line-height: 1.15; }
-.map-heading > p, .section-heading > p { width: 420px; margin: 0 0 4px; font-size: 15px; line-height: 1.65; }
+.section-heading { display: flex; align-items: end; justify-content: space-between; gap: 56px; }
+.section-heading h2 { margin: 12px 0 0; font-size: clamp(28px, 3vw, 36px); line-height: 1.15; }
+.section-heading > p { width: 420px; margin: 0 0 4px; font-size: 15px; line-height: 1.65; }
 
-/* ---------- map ---------- */
-.map-section { padding: 84px var(--gutter); background: var(--surface); }
-.map-heading { margin-bottom: 34px; }
-.map-shell { position: relative; height: 500px; overflow: hidden; border: 1px solid var(--line); border-radius: 6px; background: #dce6ee; box-shadow: 0 12px 30px rgba(0, 43, 77, .08); }
-.osm-map { width: 100%; height: 100%; border: 0; filter: saturate(.85); }
+/* ---------- map: full-viewport interactive stop map ---------- */
+.map-section { position: relative; height: calc(100dvh - var(--header-h) - var(--footer-h)); min-height: 460px; background: #dce6ee; }
+.map-canvas { position: absolute; inset: 0; }
+.map-surface { position: absolute; inset: 0; background: #dce6ee; }
+
+/* Leaflet panes run to z-index 700, so the floating UI sits above them. */
+.map-intro, .map-panel, .map-stop-list { position: absolute; z-index: 900; }
+
+.map-intro {
+  top: 26px; left: 26px; width: min(370px, calc(100% - 52px)); padding: 22px 24px;
+  border-radius: 6px; border-top: 3px solid var(--blue);
+  background: rgba(255, 255, 255, .97); box-shadow: 0 12px 32px rgba(0, 43, 77, .18);
+}
+.map-intro h2 { margin: 10px 0 8px; font-size: clamp(21px, 2.3vw, 27px); line-height: 1.15; }
+.map-intro p { margin: 0; color: var(--blue); font-size: 13px; font-weight: 700; }
+
 .map-panel {
-  position: absolute; z-index: 2; left: 24px; bottom: 24px; width: min(340px, calc(100% - 48px));
-  padding: 24px; border-radius: 6px; background: #fff; box-shadow: 0 12px 32px rgba(0, 43, 77, .2);
+  left: 26px; bottom: 26px; width: min(340px, calc(100% - 52px)); padding: 24px;
+  border-radius: 6px; background: #fff; box-shadow: 0 12px 32px rgba(0, 43, 77, .2);
 }
 .map-panel-label { color: var(--blue); font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
 .map-panel h3 { margin: 8px 0 6px; font-size: 21px; }
 .map-panel p { margin: 0; font-size: 14px; line-height: 1.55; }
+.map-panel-empty { color: var(--muted); }
 .transport-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 18px; }
 .transport-tags span { padding: 6px 10px; border-radius: 3px; color: var(--blue-deep); background: var(--sky); font-size: 11px; font-weight: 700; }
 .map-panel > a {
@@ -170,30 +223,91 @@ nav a:hover::after { transform: scaleX(1); }
 }
 .map-panel > a:hover { background: var(--blue-dark); }
 .map-panel > a svg { width: 16px; height: 16px; }
-.map-attribution { position: absolute; right: 4px; bottom: 3px; z-index: 3; padding: 3px 6px; color: var(--navy); background: rgba(255, 255, 255, .9); font-size: 10px; text-decoration: underline; }
-.map-pins { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
-.stop-pin {
-  position: absolute; width: 30px; height: 30px; display: grid; place-items: center;
-  border: 3px solid #fff; border-radius: 50% 50% 50% 0; color: #fff; background: var(--blue);
-  box-shadow: 0 4px 12px rgba(0, 43, 77, .4); transform: translate(-50%, -100%) rotate(-45deg); pointer-events: auto; cursor: pointer;
-}
-.stop-pin span { transform: rotate(45deg); font-size: 11px; font-weight: 700; }
-.stop-pin:hover, .stop-pin:focus { z-index: 3; background: var(--blue-deep); }
-.stop-pin .pin-label {
-  position: absolute; left: 28px; top: -4px; width: max-content; max-width: 180px; padding: 6px 8px;
-  border-radius: 3px; color: var(--navy); background: #fff; box-shadow: 0 4px 10px rgba(0, 43, 77, .2);
-  transform: rotate(45deg); font-size: 11px; font-weight: 600; opacity: 0; pointer-events: none;
-}
-.stop-pin:hover .pin-label, .stop-pin:focus .pin-label { opacity: 1; }
 
-/* ---------- steps ---------- */
-.how-section { padding: 84px var(--gutter) 92px; background: #fff; }
-.steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 44px; }
-.step { position: relative; padding: 30px 28px 32px; border: 1px solid var(--line); border-top: 3px solid var(--blue); border-radius: 6px; background: #fff; }
-.step-number { position: absolute; top: 22px; right: 24px; color: var(--sky); font-size: 34px; font-weight: 700; line-height: 1; }
-.step-icon { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 4px; color: var(--blue); background: var(--sky); font-size: 22px; }
-.step h3 { margin: 20px 0 8px; font-size: 19px; }
-.step p { max-width: 280px; margin: 0; font-size: 14px; line-height: 1.6; }
+.map-stop-list {
+  top: 26px; right: 26px; width: 260px; max-height: min(46vh, 420px); margin: 0; padding: 6px;
+  overflow-y: auto; list-style: none; border-radius: 6px;
+  background: rgba(255, 255, 255, .97); box-shadow: 0 12px 32px rgba(0, 43, 77, .18);
+}
+.map-stop-list button {
+  width: 100%; padding: 11px 12px; border: 0; border-radius: 4px;
+  background: transparent; text-align: left; cursor: pointer;
+}
+.map-stop-list button:hover { background: var(--sky); }
+.map-stop-list button[aria-current="true"] { background: var(--blue); }
+.map-stop-list strong, .map-stop-list small { display: block; }
+.map-stop-list strong { color: var(--navy); font-size: 14px; font-weight: 700; }
+.map-stop-list small { margin-top: 2px; color: var(--muted); font-size: 11px; }
+.map-stop-list button[aria-current="true"] strong,
+.map-stop-list button[aria-current="true"] small { color: #fff; }
+
+/* Bus-stop markers and Leaflet chrome, restyled to the brand. */
+.stop-marker { background: none; border: 0; filter: drop-shadow(0 4px 8px rgba(0, 43, 77, .35)); transition: transform .15s; }
+/* Overrides the global 1.25rem svg sizing, which would squash the pin. */
+.stop-marker svg { width: 32px; height: 42px; }
+.stop-marker:hover { transform: translateY(-3px); }
+.stop-marker:focus-visible { outline: 3px solid var(--blue-deep); outline-offset: 3px; border-radius: 4px; }
+.leaflet-container { font: inherit; background: #dce6ee; }
+.leaflet-container a { color: var(--blue); }
+.leaflet-bar { border: 0; box-shadow: 0 6px 18px rgba(0, 43, 77, .2); }
+.leaflet-bar a {
+  width: 36px; height: 36px; line-height: 36px; border-bottom-color: var(--line);
+  color: var(--navy); background: #fff; font-weight: 700;
+}
+.leaflet-bar a:hover { color: var(--blue); background: var(--sky); }
+.leaflet-control-attribution { padding: 3px 7px; color: var(--muted); background: rgba(255, 255, 255, .92); font-size: 11px; }
+.leaflet-tooltip {
+  padding: 6px 9px; border: 0; border-radius: 4px; color: var(--navy);
+  background: #fff; box-shadow: 0 4px 12px rgba(0, 43, 77, .2); font-size: 12px; font-weight: 700;
+}
+.leaflet-tooltip-top::before { border-top-color: #fff; }
+
+/* ---------- help page ---------- */
+.help-section { max-width: 1600px; margin: auto; padding: 8px clamp(20px, 5vw, 80px) 44px; }
+.help-section-tinted { max-width: none; padding-block: 52px; background: var(--surface); }
+.help-section-tinted > * { max-width: 1600px; margin-inline: auto; }
+.help-section h2 { margin: 0 0 10px; font-size: clamp(24px, 2.6vw, 32px); line-height: 1.2; }
+.help-lead { max-width: 780px; margin: 14px 0 0; font-size: 19px; line-height: 1.65; }
+.help-copy { max-width: 720px; margin: 0; font-size: 16px; line-height: 1.65; }
+/* The measure sits on the paragraphs, not the block: a narrow block would be
+   centred by the tinted section's auto margins and drift away from its heading. */
+.prose p { max-width: 68ch; margin: 0 0 18px; font-size: 17px; line-height: 1.7; }
+.prose p:last-child { margin-bottom: 0; }
+.prose-lead p { font-size: 19px; line-height: 1.65; }
+.about-closing {
+  max-width: 68ch; margin: 0; padding-left: 22px; border-left: 4px solid var(--blue);
+  color: var(--navy); font-size: clamp(19px, 2vw, 24px); font-weight: 700; line-height: 1.45;
+}
+
+.steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 28px; }
+.step { position: relative; padding: 26px 26px 28px; border: 1px solid var(--line); border-top: 3px solid var(--blue); border-radius: 6px; background: #fff; }
+.step-number { display: block; color: var(--blue); font-size: 13px; font-weight: 700; letter-spacing: .14em; }
+.step h3 { margin: 12px 0 8px; font-size: 19px; }
+.step p { margin: 0; font-size: 15px; line-height: 1.6; }
+
+/* Six items, so a fixed three-column grid keeps two even rows rather than 4+2. */
+.criteria-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px 40px; margin: 28px 0 0; }
+.criteria-item { padding: 20px 0; border-top: 1px solid var(--line); }
+.criteria-item dt { color: var(--navy); font-size: 17px; font-weight: 700; }
+.criteria-item dd { margin: 8px 0 0; font-size: 15px; line-height: 1.6; }
+
+.after-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin: 28px 0 0; padding: 0; list-style: none; counter-reset: after; }
+.after-list li { counter-increment: after; padding-top: 18px; border-top: 3px solid var(--blue); }
+.after-list li::before { content: counter(after); display: block; margin-bottom: 8px; color: var(--blue); font-size: 13px; font-weight: 700; }
+.after-list strong { display: block; margin-bottom: 6px; color: var(--navy); font-size: 17px; }
+.after-list span { font-size: 15px; line-height: 1.6; }
+
+.faq-list { max-width: 860px; margin-top: 22px; border-top: 1px solid var(--line); }
+.faq-list details { border-bottom: 1px solid var(--line); }
+.faq-list summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  padding: 18px 2px; color: var(--navy); font-size: 17px; font-weight: 700; cursor: pointer; list-style: none;
+}
+.faq-list summary::-webkit-details-marker { display: none; }
+.faq-list summary::after { content: "+"; color: var(--blue); font-size: 24px; font-weight: 400; line-height: 1; }
+.faq-list details[open] summary::after { content: "–"; }
+.faq-list summary:hover { color: var(--blue); }
+.faq-list p { margin: 0 0 20px; max-width: 720px; font-size: 15px; line-height: 1.65; }
 
 /* ---------- closing strip + footer ---------- */
 .about-strip { display: flex; justify-content: space-between; align-items: center; gap: 28px; padding: 44px var(--gutter); color: #fff; background: var(--blue); }
@@ -204,17 +318,24 @@ nav a:hover::after { transform: scaleX(1); }
 
 .site-footer { padding: 44px var(--gutter); color: rgba(255, 255, 255, .72); background: var(--navy); font-size: 13px; }
 .footer-inner { display: flex; justify-content: space-between; align-items: center; gap: 28px; flex-wrap: wrap; }
+.footer-note { margin: 14px 0 0; }
 .footer-links { display: flex; gap: 26px; font-weight: 600; }
 .footer-links a:hover { color: #fff; text-decoration: underline; }
+.site-footer-pinned {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 1100;
+  height: var(--footer-h); display: flex; align-items: center; padding: 0 clamp(18px, 5vw, 80px);
+}
+.site-footer-pinned .footer-inner { width: 100%; flex-wrap: nowrap; gap: 20px; }
+.site-footer-pinned p { margin: 0; }
 
 /* ---------- feedback form ---------- */
-.feedback-page { min-height: 100vh; padding: 48px 24px 72px; background: var(--surface); }
-.feedback-page > a, .feedback-page section { max-width: 680px; margin: auto; }
+.feedback-page { padding: 40px 0 72px; background: var(--surface); }
+.feedback-page > a, .feedback-page section { max-width: min(680px, calc(100% - 48px)); margin: auto; }
+.feedback-page .page-title { margin-bottom: 22px; }
 .feedback-page > a { display: block; margin-bottom: 22px; color: var(--blue); font-size: 14px; font-weight: 700; }
 .feedback-page > a:hover { text-decoration: underline; }
 .feedback-page section { padding: 36px; border-radius: 6px; border-top: 3px solid var(--blue); background: #fff; box-shadow: 0 12px 30px rgba(0, 43, 77, .08); }
 .feedback-page section > span { color: var(--blue); font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
-.feedback-page h1 { margin: 10px 0 6px; font-size: 34px; line-height: 1.12; }
 .feedback-page h2 { margin: 0; color: var(--muted); font-size: 17px; font-weight: 600; }
 .feedback-page h3 { margin: 14px 0 0; font-size: 18px; }
 .feedback-page p { font-size: 15px; line-height: 1.6; }
@@ -258,30 +379,38 @@ nav a:hover::after { transform: scaleX(1); }
 .thanks > a:hover { background: var(--blue-dark); }
 
 /* ---------- responsive ---------- */
-@media (max-width: 980px) {
+@media (max-width: 1100px) {
   nav { display: none; }
-  .hero-inner { grid-template-columns: 1fr; gap: 40px; }
-  .hero-visual { min-height: 300px; }
-  .map-heading, .section-heading { align-items: start; flex-direction: column; gap: 18px; }
-  .map-heading > p, .section-heading > p { width: auto; }
+}
+@media (max-width: 980px) {
+  .criteria-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .section-heading { align-items: start; flex-direction: column; gap: 18px; }
+  .section-heading > p { width: auto; }
   .steps-grid { grid-template-columns: 1fr; }
   .about-strip { align-items: start; flex-direction: column; }
 }
+@media (max-width: 760px) {
+  /* Too narrow for the side list; the initial view already frames every stop. */
+  .map-stop-list { display: none; }
+}
 @media (max-width: 560px) {
-  .utility-inner { padding: 0 18px; font-size: 11px; }
-  .header-inner { height: 72px; gap: 12px; padding: 0 18px; }
+  :root { --header-h: 110px; --shell-pad: 18px; }
+  .utility-inner { font-size: 11px; }
+  .header-inner { height: 72px; gap: 12px; padding: 8px var(--shell-pad); }
+  .brand-logo { height: 34px; }
   .header-cta { display: none; }
   .brand-sub { display: none; }
-  .hero { padding-top: 52px; padding-bottom: 60px; }
-  .hero-visual { display: none; }
   .search-row { flex-direction: column; }
-  .search-row > button { height: 52px; }
-  .map-section, .how-section { padding-top: 60px; padding-bottom: 64px; }
-  .map-shell { height: 520px; }
+  .search-clear { height: 48px; }
+  .stops-list, .criteria-grid { grid-template-columns: 1fr; }
+  .how-section { padding-top: 60px; padding-bottom: 64px; }
+  .map-section { min-height: 520px; }
+  .map-intro { top: 14px; left: 14px; width: calc(100% - 28px); padding: 18px 20px; }
   .map-panel { left: 14px; bottom: 14px; width: calc(100% - 28px); padding: 20px; }
+  /* The full-width panel owns the bottom edge; pinch and double-tap still zoom. */
+  .leaflet-control-zoom { display: none; }
   .detail-ratings { grid-template-columns: 1fr; }
   .feedback-page section { padding: 26px 20px; }
-  .feedback-page h1 { font-size: 28px; }
   .footer-inner { flex-direction: column; align-items: start; gap: 18px; }
   .footer-links { flex-wrap: wrap; gap: 16px; }
 }
