@@ -12,7 +12,10 @@ import { useLanguage } from "@/components/language-provider";
  */
 export function SiteFooter() {
   const { t } = useLanguage();
-  const pinned = usePathname() === "/";
+  const pathname = usePathname();
+  const pinned = pathname === "/";
+
+  if (pathname.startsWith("/feedback")) return null;
 
   if (pinned) {
     return (
