@@ -17,6 +17,10 @@ export function SiteHeader() {
   const pathname = usePathname();
   const current = (href: string) => (pathname === href ? "page" : undefined);
 
+  // The reporting flow is a focused, self-contained dialog and deliberately
+  // omits the main navigation to prevent accidental loss of entered data.
+  if (pathname.startsWith("/feedback")) return null;
+
   return (
     <header className="site-header">
       <div className="utility-bar">
