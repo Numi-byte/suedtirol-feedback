@@ -1,19 +1,31 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { LANGUAGE_COOKIE, getTranslations } from "@/lib/language";
+import { languages } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
+
+export async function setLanguage(formData: FormData) {
+  const requested = String(formData.get("language") ?? "");
+  const language = languages.find((code) => code === requested);
+  if (!language) return;
+  (await cookies()).set(LANGUAGE_COOKIE, language, { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax" });
+  revalidatePath("/", "layout");
+}
 
 export type AuthState = { error?: string };
 
 export async function signIn(_state: AuthState, formData: FormData): Promise<AuthState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  if (!email || !password) return { error: "Enter your email address and password." };
+  const { t } = await getTranslations();
+  if (!email || !password) return { error: t.login.errorEmpty };
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return { error: "The email address or password is incorrect." };
+  if (error) return { error: t.login.errorInvalid };
 
   revalidatePath("/", "layout");
   redirect("/");

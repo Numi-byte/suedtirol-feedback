@@ -1,20 +1,29 @@
 import { createBusStop, signOut } from "./actions";
+import { LanguageSwitch } from "./language-switch";
 import { LoginForm } from "./login-form";
 import { BrandLogo } from "@/components/brand-logo";
+import { dateLocales } from "@/lib/i18n";
+import type { Language } from "@/lib/i18n";
+import { getTranslations } from "@/lib/language";
 import { hasSupabaseConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-type FeedbackCategory = {
-  category_slug: string;
-  feedback_categories: { label_de: string; label_it: string; label_en: string }[];
-};
-
+type CategoryLabels = { label_de: string; label_it: string; label_en: string };
+type FeedbackCategory = { category_slug: string; feedback_categories: CategoryLabels[] };
 type FeedbackPhoto = { id: string; storage_path: string };
+type Severity = "low" | "medium" | "high";
+type Status = "new" | "in_review" | "resolved" | "dismissed";
 
-function formatSubmittedAt(value: string) {
-  return new Intl.DateTimeFormat("de-IT", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+function formatSubmittedAt(value: string, language: Language) {
+  return new Intl.DateTimeFormat(dateLocales[language], { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+}
+
+/** The seeded categories carry all three labels, so show the one in use. */
+function categoryLabel(category: FeedbackCategory, language: Language) {
+  const labels = category.feedback_categories[0];
+  return labels?.[`label_${language}` as keyof CategoryLabels] ?? category.category_slug;
 }
 
 const RouteLines = () => (
@@ -31,14 +40,15 @@ const RouteLines = () => (
 );
 
 export default async function PortalHomePage() {
+  const { language, t } = await getTranslations();
+
   if (!hasSupabaseConfig()) {
     return (
       <main className="portal-message">
-        <p>Protected portal</p>
-        <h1>Supabase configuration required</h1>
+        <p>{t.setup.kicker}</p>
+        <h1>{t.setup.title}</h1>
         <span>
-          Copy <code>.env.local.example</code> to <code>.env.local</code> in the protected app,
-          then set the project URL and publishable key before restarting the development server.
+          {t.setup.body[0]} <code>.env.local.example</code> {t.setup.body[1]} <code>.env.local</code> {t.setup.body[2]}
         </span>
       </main>
     );
@@ -68,15 +78,19 @@ export default async function PortalHomePage() {
     <main className="login-page">
       <section className="login-intro">
         <BrandLogo tone="dark" sub="portal" />
-        <p>South Tyrol · Public transport</p>
-        <h1>Shape better stops<br />for every journey.</h1>
-        <span className="login-lead">Review passenger feedback and keep the region&apos;s bus stop information accurate, accessible and up to date.</span>
+        <p>{t.login.eyebrow}</p>
+        <h1>{t.login.headline[0]}<br />{t.login.headline[1]}</h1>
+        <span className="login-lead">{t.login.lead}</span>
         <RouteLines />
       </section>
       <section className="login-panel"><div className="login-card">
-        <p>Protected portal</p><h2>Welcome back</h2><span>Sign in with your authorized Supabase account.</span>
-        <LoginForm />
-        <small>Access is restricted to approved transport administrators.</small>
+        <div className="login-card-top">
+          <p>{t.login.kicker}</p>
+          <LanguageSwitch language={language} label={t.portal.language} />
+        </div>
+        <h2>{t.login.welcome}</h2><span>{t.login.panelLead}</span>
+        <LoginForm labels={t.login} />
+        <small>{t.login.restricted}</small>
       </div></section>
     </main>
   );
@@ -86,31 +100,35 @@ export default async function PortalHomePage() {
     <div className="portal-bar">
       <div className="portal-bar-inner">
         <BrandLogo sub="portal" />
-        <div className="user-actions"><span className="user-pill">{user.email}</span><form action={signOut}><button type="submit" className="sign-out">Sign out</button></form></div>
+        <div className="user-actions">
+          <LanguageSwitch language={language} label={t.portal.language} />
+          <span className="user-pill">{user.email}</span>
+          <form action={signOut}><button type="submit" className="sign-out">{t.portal.signOut}</button></form>
+        </div>
       </div>
     </div>
     <main className="portal">
-      <header><div><p>Transport data portal</p><h1>Bus stop management</h1></div></header>
+      <header><div><p>{t.portal.kicker}</p><h1>{t.portal.title}</h1></div></header>
       <div className="portal-grid">
         <section className="editor-card">
-          <div className="card-heading"><span>New location</span><h2>Add a bus stop</h2><p>Enter all three public names and the exact WGS84 coordinates.</p></div>
+          <div className="card-heading"><span>{t.editor.kicker}</span><h2>{t.editor.title}</h2><p>{t.editor.subtitle}</p></div>
           <form action={createBusStop}>
-            <div className="field-grid three"><label>German name<input name="name_de" required /></label><label>Italian name<input name="name_it" required /></label><label>English name<input name="name_en" required /></label></div>
-            <div className="field-grid"><label>Municipality<input name="municipality" required /></label><label>Stop code<input name="stop_code" placeholder="Optional" /></label></div>
-            <div className="field-grid"><label>Latitude<input name="latitude" type="number" min="-90" max="90" step="any" placeholder="46.4983" required /></label><label>Longitude<input name="longitude" type="number" min="-180" max="180" step="any" placeholder="11.3548" required /></label></div>
-            <div className="checks"><label><input name="is_accessible" type="checkbox" /> Accessible</label><label><input name="is_published" type="checkbox" defaultChecked /> Publish on client map</label></div>
-            <button type="submit">Save bus stop</button>
+            <div className="field-grid three"><label>{t.editor.nameDe}<input name="name_de" required /></label><label>{t.editor.nameIt}<input name="name_it" required /></label><label>{t.editor.nameEn}<input name="name_en" required /></label></div>
+            <div className="field-grid"><label>{t.editor.municipality}<input name="municipality" required /></label><label>{t.editor.stopCode}<input name="stop_code" placeholder={t.editor.optional} /></label></div>
+            <div className="field-grid"><label>{t.editor.latitude}<input name="latitude" type="number" min="-90" max="90" step="any" placeholder="46.4983" required /></label><label>{t.editor.longitude}<input name="longitude" type="number" min="-180" max="180" step="any" placeholder="11.3548" required /></label></div>
+            <div className="checks"><label><input name="is_accessible" type="checkbox" /> {t.editor.accessible}</label><label><input name="is_published" type="checkbox" defaultChecked /> {t.editor.publish}</label></div>
+            <button type="submit">{t.editor.save}</button>
           </form>
         </section>
-        <section className="stops-card"><div className="card-heading"><span>Database</span><h2>{stops?.length ?? 0} bus stops</h2></div><div className="stop-list">
+        <section className="stops-card"><div className="card-heading"><span>{t.stops.kicker}</span><h2>{stops?.length ?? 0} {t.stops.count}</h2></div><div className="stop-list">
           {stops?.map((stop) => <article key={stop.id}><div className="status-dot" data-published={stop.is_published} /><div><strong>{stop.name_de}</strong><small>{stop.name_it} · {stop.name_en}</small><small>{stop.municipality} · {stop.latitude.toFixed(5)}, {stop.longitude.toFixed(5)}</small></div></article>)}
-          {!stops?.length && <p className="empty">No stops yet. Add the first location.</p>}
+          {!stops?.length && <p className="empty">{t.stops.empty}</p>}
         </div></section>
       </div>
       <section className="feedback-card">
         <div className="feedback-heading-row">
-          <div className="card-heading"><span>Submitted responses</span><h2>Stop feedback</h2><p>Up to 250 recent reports. Photos and contact details remain private to authenticated portal users.</p></div>
-          <div className="feedback-summary" aria-label="Feedback summary"><strong>{feedback?.length ?? 0}</strong><span>reports</span><strong>{newFeedbackCount}</strong><span>new</span></div>
+          <div className="card-heading"><span>{t.feedback.kicker}</span><h2>{t.feedback.title}</h2><p>{t.feedback.note}</p></div>
+          <div className="feedback-summary" aria-label={t.feedback.summaryLabel}><strong>{feedback?.length ?? 0}</strong><span>{t.feedback.reports}</span><strong>{newFeedbackCount}</strong><span>{t.feedback.fresh}</span></div>
         </div>
         <div className="feedback-list">
           {feedback?.map((entry) => {
@@ -118,37 +136,39 @@ export default async function PortalHomePage() {
             const categories = (entry.stop_feedback_categories as FeedbackCategory[] | null) ?? [];
             const photos = (entry.stop_feedback_photos as FeedbackPhoto[] | null) ?? [];
             const isLegacyRating = entry.overall_rating !== null;
+            const status = (entry.status ?? "new") as Status;
+            const severity = entry.severity as Severity | null;
             return <article className="feedback-entry" key={entry.id}>
               <header>
-                <div><strong>{stop?.name_de ?? "Unavailable stop"}</strong><small>{stop?.municipality} · {stop?.name_it} · {stop?.name_en}</small></div>
-                <div className="feedback-meta"><span className="status-badge" data-status={entry.status}>{entry.status ?? "new"}</span><time dateTime={entry.created_at}>{formatSubmittedAt(entry.created_at)}</time></div>
+                <div><strong>{stop?.name_de ?? t.feedback.unavailableStop}</strong><small>{stop?.municipality} · {stop?.name_it} · {stop?.name_en}</small></div>
+                <div className="feedback-meta"><span className="status-badge" data-status={status}>{t.status[status] ?? status}</span><time dateTime={entry.created_at}>{formatSubmittedAt(entry.created_at, language)}</time></div>
               </header>
               <div className="feedback-entry-body">
                 <div>
-                  <h3>{isLegacyRating ? "Rating response" : "Reported issue"}</h3>
+                  <h3>{isLegacyRating ? t.feedback.ratingResponse : t.feedback.reportedIssue}</h3>
                   {isLegacyRating ? <>
-                    <p><span className="score">{entry.overall_rating}/5</span> overall rating</p>
-                    <p className="rating-details">Cleanliness {entry.cleanliness_rating ?? "–"}/5 · Safety {entry.safety_rating ?? "–"}/5 · Accessibility {entry.accessibility_rating ?? "–"}/5 · Information {entry.information_rating ?? "–"}/5 · Shelter {entry.shelter_rating ?? "–"}/5</p>
-                    <p className="rating-details">Shelter {entry.has_shelter ? "✓" : "–"} · Seating {entry.has_seating ? "✓" : "–"} · Lighting {entry.has_lighting ? "✓" : "–"}</p>
+                    <p><span className="score">{entry.overall_rating}/5</span> {t.feedback.overall}</p>
+                    <p className="rating-details">{t.feedback.cleanliness} {entry.cleanliness_rating ?? "–"}/5 · {t.feedback.safety} {entry.safety_rating ?? "–"}/5 · {t.feedback.accessibility} {entry.accessibility_rating ?? "–"}/5 · {t.feedback.information} {entry.information_rating ?? "–"}/5 · {t.feedback.shelter} {entry.shelter_rating ?? "–"}/5</p>
+                    <p className="rating-details">{t.feedback.shelter} {entry.has_shelter ? "✓" : "–"} · {t.feedback.seating} {entry.has_seating ? "✓" : "–"} · {t.feedback.lighting} {entry.has_lighting ? "✓" : "–"}</p>
                   </> : <>
-                    <div className="category-tags">{categories.map((category) => <span key={category.category_slug}>{category.feedback_categories[0]?.label_de ?? category.category_slug}</span>)}</div>
-                    <p><span className="severity-dot" data-severity={entry.severity} />Severity: <strong>{entry.severity ?? "not set"}</strong></p>
+                    <div className="category-tags">{categories.map((category) => <span key={category.category_slug}>{categoryLabel(category, language)}</span>)}</div>
+                    <p><span className="severity-dot" data-severity={severity} />{t.feedback.severity}: <strong>{severity ? t.severity[severity] : t.feedback.notSet}</strong></p>
                   </>}
                 </div>
-                <div><h3>Description</h3><p className="comment">{entry.description || entry.comment || "No description provided."}</p></div>
-                <div><h3>Submission</h3><p>Language: {entry.language.toUpperCase()}</p><p>{entry.consent_to_contact && entry.email ? <>Contact: <a href={`mailto:${entry.email}`}>{entry.email}</a></> : "No contact requested"}</p></div>
+                <div><h3>{t.feedback.description}</h3><p className="comment">{entry.description || entry.comment || t.feedback.noDescription}</p></div>
+                <div><h3>{t.feedback.submission}</h3><p>{t.feedback.languageLabel}: {entry.language.toUpperCase()}</p><p>{entry.consent_to_contact && entry.email ? <>{t.feedback.contact}: <a href={`mailto:${entry.email}`}>{entry.email}</a></> : t.feedback.noContact}</p></div>
               </div>
               {photos.length > 0 && <div className="feedback-photos">{photos.map((photo) => {
                 const photoUrl = photoUrls.get(photo.storage_path);
                 return photoUrl ? <a href={photoUrl} target="_blank" rel="noreferrer" key={photo.id}>
                   {/* Signed storage URLs use the deployment's Supabase hostname. */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={photoUrl} alt="Submitted feedback attachment" />
+                  <img src={photoUrl} alt={t.feedback.photoAlt} />
                 </a> : null;
               })}</div>}
             </article>;
           })}
-          {!feedback?.length && <p className="empty feedback-empty">No feedback submitted yet.</p>}
+          {!feedback?.length && <p className="empty feedback-empty">{t.feedback.empty}</p>}
         </div>
       </section>
     </main>
