@@ -6,6 +6,17 @@ import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
+type FeedbackCategory = {
+  category_slug: string;
+  feedback_categories: { label_de: string; label_it: string; label_en: string }[];
+};
+
+type FeedbackPhoto = { id: string; storage_path: string };
+
+function formatSubmittedAt(value: string) {
+  return new Intl.DateTimeFormat("de-IT", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+}
+
 const RouteLines = () => (
   <svg className="route-lines" viewBox="0 0 420 300" fill="none" aria-hidden="true">
     <g stroke="currentColor" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round">
@@ -36,7 +47,22 @@ export default async function PortalHomePage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: stops } = user ? await supabase.from("bus_stops").select("id,name_de,name_it,name_en,municipality,latitude,longitude,is_published").order("created_at", { ascending: false }) : { data: [] };
-  const { data: feedback } = user ? await supabase.from("stop_feedback").select("id,overall_rating,cleanliness_rating,safety_rating,accessibility_rating,information_rating,shelter_rating,has_shelter,has_seating,has_lighting,comment,email,consent_to_contact,language,created_at,bus_stops(name_de,name_it,name_en)").order("created_at", { ascending: false }) : { data: [] };
+  const { data: feedback } = user ? await supabase
+    .from("stop_feedback")
+    .select("id,severity,description,overall_rating,cleanliness_rating,safety_rating,accessibility_rating,information_rating,shelter_rating,has_shelter,has_seating,has_lighting,comment,email,consent_to_contact,language,status,created_at,bus_stops(name_de,name_it,name_en,municipality),stop_feedback_categories(category_slug,feedback_categories(label_de,label_it,label_en)),stop_feedback_photos(id,storage_path)")
+    .order("created_at", { ascending: false })
+    .limit(250) : { data: [] };
+
+  const photoPaths = (feedback ?? []).flatMap((entry) =>
+    (entry.stop_feedback_photos as FeedbackPhoto[] | null ?? []).map((photo) => photo.storage_path),
+  );
+  const { data: signedPhotos } = photoPaths.length
+    ? await supabase.storage.from("feedback-photos").createSignedUrls(photoPaths, 60 * 15)
+    : { data: [] };
+  const photoUrls = new Map<string, string>((signedPhotos ?? []).flatMap((photo, index) =>
+    photo.signedUrl && photoPaths[index] ? [[photoPaths[index], photo.signedUrl]] : [],
+  ));
+  const newFeedbackCount = (feedback ?? []).filter((entry) => entry.status === "new").length;
 
   if (!user) return (
     <main className="login-page">
@@ -82,14 +108,48 @@ export default async function PortalHomePage() {
         </div></section>
       </div>
       <section className="feedback-card">
-        <div className="card-heading"><span>Submitted responses</span><h2>Stop feedback</h2><p>Visible only to authenticated portal users.</p></div>
-        <div className="feedback-table-wrap"><table><thead><tr><th>Stop</th><th>Overall</th><th>Category ratings</th><th>Facilities</th><th>Comment</th><th>Submitted</th></tr></thead><tbody>
+        <div className="feedback-heading-row">
+          <div className="card-heading"><span>Submitted responses</span><h2>Stop feedback</h2><p>Up to 250 recent reports. Photos and contact details remain private to authenticated portal users.</p></div>
+          <div className="feedback-summary" aria-label="Feedback summary"><strong>{feedback?.length ?? 0}</strong><span>reports</span><strong>{newFeedbackCount}</strong><span>new</span></div>
+        </div>
+        <div className="feedback-list">
           {feedback?.map((entry) => {
             const stop = Array.isArray(entry.bus_stops) ? entry.bus_stops[0] : entry.bus_stops;
-            return <tr key={entry.id}><td><strong>{stop?.name_de ?? "Deleted stop"}</strong><small>{stop?.name_it} · {stop?.name_en}</small><small>Language: {entry.language.toUpperCase()}</small></td><td><span className="score">{entry.overall_rating}/5</span></td><td><small>Clean {entry.cleanliness_rating}/5 · Safety {entry.safety_rating}/5</small><small>Access {entry.accessibility_rating}/5 · Info {entry.information_rating}/5 · Shelter {entry.shelter_rating}/5</small></td><td><small>Shelter {entry.has_shelter ? "✓" : "–"} · Seating {entry.has_seating ? "✓" : "–"} · Light {entry.has_lighting ? "✓" : "–"}</small></td><td><span className="comment">{entry.comment || "No comment"}</span>{entry.consent_to_contact && entry.email && <small>Contact: {entry.email}</small>}</td><td><small>{new Date(entry.created_at).toLocaleDateString("de-IT")}</small></td></tr>;
+            const categories = (entry.stop_feedback_categories as FeedbackCategory[] | null) ?? [];
+            const photos = (entry.stop_feedback_photos as FeedbackPhoto[] | null) ?? [];
+            const isLegacyRating = entry.overall_rating !== null;
+            return <article className="feedback-entry" key={entry.id}>
+              <header>
+                <div><strong>{stop?.name_de ?? "Unavailable stop"}</strong><small>{stop?.municipality} · {stop?.name_it} · {stop?.name_en}</small></div>
+                <div className="feedback-meta"><span className="status-badge" data-status={entry.status}>{entry.status ?? "new"}</span><time dateTime={entry.created_at}>{formatSubmittedAt(entry.created_at)}</time></div>
+              </header>
+              <div className="feedback-entry-body">
+                <div>
+                  <h3>{isLegacyRating ? "Rating response" : "Reported issue"}</h3>
+                  {isLegacyRating ? <>
+                    <p><span className="score">{entry.overall_rating}/5</span> overall rating</p>
+                    <p className="rating-details">Cleanliness {entry.cleanliness_rating ?? "–"}/5 · Safety {entry.safety_rating ?? "–"}/5 · Accessibility {entry.accessibility_rating ?? "–"}/5 · Information {entry.information_rating ?? "–"}/5 · Shelter {entry.shelter_rating ?? "–"}/5</p>
+                    <p className="rating-details">Shelter {entry.has_shelter ? "✓" : "–"} · Seating {entry.has_seating ? "✓" : "–"} · Lighting {entry.has_lighting ? "✓" : "–"}</p>
+                  </> : <>
+                    <div className="category-tags">{categories.map((category) => <span key={category.category_slug}>{category.feedback_categories[0]?.label_de ?? category.category_slug}</span>)}</div>
+                    <p><span className="severity-dot" data-severity={entry.severity} />Severity: <strong>{entry.severity ?? "not set"}</strong></p>
+                  </>}
+                </div>
+                <div><h3>Description</h3><p className="comment">{entry.description || entry.comment || "No description provided."}</p></div>
+                <div><h3>Submission</h3><p>Language: {entry.language.toUpperCase()}</p><p>{entry.consent_to_contact && entry.email ? <>Contact: <a href={`mailto:${entry.email}`}>{entry.email}</a></> : "No contact requested"}</p></div>
+              </div>
+              {photos.length > 0 && <div className="feedback-photos">{photos.map((photo) => {
+                const photoUrl = photoUrls.get(photo.storage_path);
+                return photoUrl ? <a href={photoUrl} target="_blank" rel="noreferrer" key={photo.id}>
+                  {/* Signed storage URLs use the deployment's Supabase hostname. */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={photoUrl} alt="Submitted feedback attachment" />
+                </a> : null;
+              })}</div>}
+            </article>;
           })}
-          {!feedback?.length && <tr><td colSpan={6} className="empty">No feedback submitted yet.</td></tr>}
-        </tbody></table></div>
+          {!feedback?.length && <p className="empty feedback-empty">No feedback submitted yet.</p>}
+        </div>
       </section>
     </main>
     </>
