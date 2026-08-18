@@ -3,17 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { Map as LeafletMap, Marker } from "leaflet";
 import "leaflet/dist/leaflet.css";
-
-export type BusStop = {
-  id: string;
-  name_de: string;
-  name_it: string;
-  name_en: string;
-  municipality: string;
-  latitude: number;
-  longitude: number;
-  is_accessible: boolean;
-};
+import { stopName as nameFor } from "@/lib/stops";
+import type { BusStop } from "@/lib/stops";
 
 export type MapLabels = {
   eyebrow: string;
@@ -56,7 +47,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
   const fittedRef = useRef(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const stopName = (stop: BusStop) => stop[`name_${language}` as "name_de" | "name_it" | "name_en"];
+  const stopName = (stop: BusStop) => nameFor(stop, language);
   const selected = stops.find((stop) => stop.id === selectedId) ?? null;
 
   // Create the map once. Leaflet needs the DOM, so it is imported client-side only.

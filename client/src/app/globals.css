@@ -50,6 +50,8 @@
   --font-display: "Ely Rounded", ui-rounded, "Segoe UI Rounded", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
   /* Utility bar (38px) + nav row (96px); anchors and the map offset by it. */
   --header-h: 134px;
+  /* Home pins its footer, so the map is sized around both bars. */
+  --footer-h: 64px;
   --container: 1200px;
   --shell: 1600px;
   --shell-pad: clamp(18px, 10.5vw, 168px);
@@ -140,63 +142,67 @@ nav a:hover { background: var(--blue-50); }
 }
 .header-cta:hover { background: var(--blue-dark); }
 
-/* ---------- hero ---------- */
-.hero { position: relative; padding: 76px var(--gutter) 84px; color: #fff; background: var(--blue); overflow: hidden; }
-.hero::before {
-  content: ""; position: absolute; inset: 0;
-  background: linear-gradient(104deg, var(--blue-deep) 0%, var(--blue) 52%, #0d7cc6 100%);
-}
-.hero-inner { position: relative; z-index: 2; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, .7fr); gap: 56px; align-items: center; }
-.eyebrow { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
-.eyebrow span { width: 26px; height: 3px; background: #fff; }
-/* Same display treatment as .page-title, but white: #005980 on the blue hero
-   band would be unreadable. */
-.hero h1 {
-  margin: 0; color: #fff; font-family: var(--font-display); font-weight: 700;
-  font-size: clamp(38px, 5vw, 80px); line-height: 1; letter-spacing: -.03em;
-}
-.hero h1 em { color: #bfe0f7; font-style: normal; font-weight: 700; }
-.hero-copy { max-width: 520px; margin: 20px 0 30px; color: rgba(255, 255, 255, .88); font-size: 17px; line-height: 1.6; }
+/* ---------- content pages ---------- */
+.content-page { padding-bottom: 72px; }
+.content-page .page-title { margin: 40px auto 8px; }
 
-.search-card { padding: 24px; background: #fff; border-radius: 6px; box-shadow: 0 16px 40px rgba(0, 43, 77, .22); }
-.search-card label { display: block; margin-bottom: 10px; color: var(--navy); font-size: 13px; font-weight: 700; }
+/* ---------- stops directory ---------- */
+.stops-section { max-width: 1600px; margin: auto; padding: 8px clamp(20px, 5vw, 80px) 40px; }
+.stops-search { max-width: 620px; margin: 14px 0 0; }
+.stops-search label { display: block; margin-bottom: 10px; color: var(--navy); font-size: 13px; font-weight: 700; }
 .search-row { display: flex; gap: 10px; }
 .search-field { flex: 1; display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 14px; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
 .search-field:focus-within { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0, 105, 180, .14); }
 .search-field svg { flex: none; color: var(--blue); }
 .search-field input { min-width: 0; width: 100%; border: 0; outline: 0; color: var(--navy); background: transparent; font-size: 15px; }
 .search-field input::placeholder { color: #9aabb8; }
-.search-row > button {
-  display: flex; align-items: center; justify-content: center; gap: 12px; min-width: 140px; padding: 0 20px;
-  border: 0; border-radius: 4px; color: #fff; background: var(--blue); font-size: 15px; font-weight: 700; cursor: pointer; transition: background .15s;
+.search-clear {
+  padding: 0 18px; border: 1px solid var(--line); border-radius: 4px;
+  color: var(--navy); background: #fff; font-size: 14px; font-weight: 700; cursor: pointer;
 }
-.search-row > button:hover { background: var(--blue-dark); }
-.search-row > button svg { width: 17px; }
-.location-link {
-  display: flex; align-items: center; gap: 7px; margin: 14px 0 0; padding: 0;
-  border: 0; background: transparent; color: var(--blue); font-size: 13px; font-weight: 700; cursor: pointer;
+.search-clear:hover { border-color: var(--blue); color: var(--blue); }
+.stops-count { margin: 20px 0 0; color: var(--blue); font-size: 13px; font-weight: 700; }
+.stops-empty { margin: 24px 0 0; font-size: 16px; line-height: 1.6; }
+.stops-empty span { color: var(--muted); font-size: 14px; }
+.stops-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; margin: 20px 0 0; padding: 0; list-style: none; }
+.stop-card {
+  display: flex; flex-direction: column; justify-content: space-between; gap: 18px; height: 100%;
+  padding: 22px 24px; border: 1px solid var(--line); border-top: 3px solid var(--blue);
+  border-radius: 6px; background: #fff;
 }
-.location-link:hover { color: var(--blue-dark); text-decoration: underline; }
-.location-link svg { width: 15px; height: 15px; }
+.stop-card-place { color: var(--blue); font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.stop-card h2 { margin: 8px 0 0; font-size: 20px; line-height: 1.2; }
+.stop-card-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.stop-card-cta {
+  display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 4px;
+  color: #fff; background: var(--blue); font-size: 14px; font-weight: 700; transition: background .15s;
+}
+.stop-card-cta:hover { background: var(--blue-dark); }
+.stop-card-cta svg { width: 16px; height: 16px; }
+.stop-card-map { color: var(--blue); font-size: 13px; font-weight: 700; }
+.stop-card-map:hover { text-decoration: underline; }
 
+/* ---------- about ---------- */
+.about-section {
+  display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 48px; align-items: center;
+  max-width: 1600px; margin: auto; padding: 8px clamp(20px, 5vw, 80px) 56px;
+}
+.about-intro { margin: 14px 0 0; font-size: 18px; line-height: 1.65; }
 .trust-note { display: flex; align-items: center; gap: 14px; margin-top: 28px; }
 .avatar-stack { display: flex; padding-left: 8px; }
 .avatar-stack span {
   width: 34px; height: 34px; margin-left: -8px; display: grid; place-items: center;
-  border: 2px solid var(--blue); border-radius: 50%; color: var(--blue-deep); background: #fff; font-size: 10px; font-weight: 700;
+  border: 2px solid #fff; border-radius: 50%; color: #fff; background: var(--blue); font-size: 10px; font-weight: 700;
 }
-.trust-note p { margin: 0; color: rgba(255, 255, 255, .82); font-size: 13px; line-height: 1.45; }
-.trust-note strong { display: block; color: #fff; font-size: 14px; }
-
-.hero-visual { position: relative; min-height: 340px; }
-.route-graphic { width: 100%; height: auto; color: rgba(255, 255, 255, .5); }
+.trust-note p { margin: 0; font-size: 14px; line-height: 1.45; }
+.trust-note strong { display: block; color: var(--navy); font-size: 15px; }
 .feedback-bubble {
-  position: absolute; left: 4%; bottom: 6%; width: min(280px, 88%); padding: 20px 22px;
-  color: var(--navy); background: #fff; border-radius: 6px; border-left: 4px solid var(--blue); box-shadow: 0 14px 32px rgba(0, 43, 77, .26);
+  margin: 0; padding: 24px 26px; color: var(--navy); background: #fff;
+  border-radius: 6px; border-left: 4px solid var(--blue); box-shadow: 0 12px 30px rgba(0, 43, 77, .1);
 }
-.feedback-bubble p { margin: 0; font-size: 14px; line-height: 1.5; }
-.feedback-bubble .quote { display: block; margin-bottom: 4px; color: var(--blue); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
-.stars { margin-top: 10px; color: var(--amber); font-size: 12px; letter-spacing: 3px; }
+.feedback-bubble p { margin: 0; font-size: 16px; line-height: 1.55; }
+.feedback-bubble .quote { display: block; margin-bottom: 6px; color: var(--blue); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.stars { margin-top: 12px; color: var(--amber); font-size: 13px; letter-spacing: 3px; }
 
 /* ---------- section furniture ---------- */
 .mini-label { display: block; color: var(--blue); font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
@@ -205,7 +211,7 @@ nav a:hover { background: var(--blue-50); }
 .section-heading > p { width: 420px; margin: 0 0 4px; font-size: 15px; line-height: 1.65; }
 
 /* ---------- map: full-viewport interactive stop map ---------- */
-.map-section { position: relative; height: calc(100dvh - var(--header-h)); min-height: 560px; background: #dce6ee; }
+.map-section { position: relative; height: calc(100dvh - var(--header-h) - var(--footer-h)); min-height: 460px; background: #dce6ee; }
 .map-canvas { position: absolute; inset: 0; }
 .map-surface { position: absolute; inset: 0; background: #dce6ee; }
 
@@ -293,11 +299,18 @@ nav a:hover { background: var(--blue-50); }
 
 .site-footer { padding: 44px var(--gutter); color: rgba(255, 255, 255, .72); background: var(--navy); font-size: 13px; }
 .footer-inner { display: flex; justify-content: space-between; align-items: center; gap: 28px; flex-wrap: wrap; }
+.footer-note { margin: 14px 0 0; }
 .footer-links { display: flex; gap: 26px; font-weight: 600; }
 .footer-links a:hover { color: #fff; text-decoration: underline; }
+.site-footer-pinned {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 1100;
+  height: var(--footer-h); display: flex; align-items: center; padding: 0 clamp(18px, 5vw, 80px);
+}
+.site-footer-pinned .footer-inner { width: 100%; flex-wrap: nowrap; gap: 20px; }
+.site-footer-pinned p { margin: 0; }
 
 /* ---------- feedback form ---------- */
-.feedback-page { min-height: 100vh; padding: 48px 0 72px; background: var(--surface); }
+.feedback-page { padding: 40px 0 72px; background: var(--surface); }
 .feedback-page > a, .feedback-page section { max-width: min(680px, calc(100% - 48px)); margin: auto; }
 .feedback-page .page-title { margin-bottom: 22px; }
 .feedback-page > a { display: block; margin-bottom: 22px; color: var(--blue); font-size: 14px; font-weight: 700; }
@@ -351,8 +364,7 @@ nav a:hover { background: var(--blue-50); }
   nav { display: none; }
 }
 @media (max-width: 980px) {
-  .hero-inner { grid-template-columns: 1fr; gap: 40px; }
-  .hero-visual { min-height: 300px; }
+  .about-section { grid-template-columns: 1fr; gap: 32px; }
   .section-heading { align-items: start; flex-direction: column; gap: 18px; }
   .section-heading > p { width: auto; }
   .steps-grid { grid-template-columns: 1fr; }
@@ -369,10 +381,9 @@ nav a:hover { background: var(--blue-50); }
   .brand-logo { height: 34px; }
   .header-cta { display: none; }
   .brand-sub { display: none; }
-  .hero { padding-top: 52px; padding-bottom: 60px; }
-  .hero-visual { display: none; }
   .search-row { flex-direction: column; }
-  .search-row > button { height: 52px; }
+  .search-clear { height: 48px; }
+  .stops-list { grid-template-columns: 1fr; }
   .how-section { padding-top: 60px; padding-bottom: 64px; }
   .map-section { min-height: 520px; }
   .map-intro { top: 14px; left: 14px; width: calc(100% - 28px); padding: 18px 20px; }
