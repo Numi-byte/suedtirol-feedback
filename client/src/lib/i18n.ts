@@ -60,10 +60,44 @@ export const translations = {
       cta: "Jetzt Haltestelle suchen",
     },
     about: {
-      eyebrow: "Öffentlicher Verkehr, gemeinsam verbessert", title: "Über das Projekt",
-      intro: "Sag uns, was an deiner Haltestelle gut funktioniert – und was besser werden muss. Ohne Anmeldung, in zwei Minuten.",
-      passengers: "Mehr als 2.400 Fahrgäste", shared: "haben ihre Erfahrung schon geteilt",
-      quote: "Fahrgast aus Bozen", quoteText: "Das neue Wartehäuschen macht das Warten deutlich angenehmer.",
+      eyebrow: "Über das Projekt", title: "Über das Projekt",
+      lead: [
+        "Mit dem Projekt „Haltestellencheck“ möchten wir die Fahrgäste aktiv in die Weiterentwicklung des öffentlichen Verkehrs in Südtirol einbeziehen. Im Mittelpunkt stehen dabei die Bushaltestellen und Bahnhöfe des öffentlichen Nahverkehrs und die Frage, wie die Nutzerinnen und Nutzer ihren Aufenthalt und ihre Erfahrungen vor Ort wahrnehmen.",
+        "Die Fahrgäste erhalten die Möglichkeit, ihre persönliche Erfahrung direkt mit uns zu teilen, konkrete Verbesserungsvorschläge einzubringen und auf positive Aspekte aufmerksam zu machen. Damit wird das Feedback der Fahrgäste zu einem wichtigen Bestandteil der kontinuierlichen Verbesserung des öffentlichen Verkehrsangebots.",
+      ],
+      sections: [
+        {
+          title: "So funktioniert der Haltestellencheck",
+          body: [
+            "Über eine Online-Umfrage können Fahrgäste eine von ihnen genutzte Haltestelle oder Station bewerten. Dabei können verschiedene Aspekte der jeweiligen Haltestelle beurteilt werden, beispielsweise Ausstattung, Sauberkeit, Information, Komfort, Barrierefreiheit oder das allgemeine Erscheinungsbild.",
+            "Neben der allgemeinen Bewertung besteht auch die Möglichkeit, konkrete Mängel und Verbesserungspotenziale zu melden. Gleichzeitig können Fahrgäste positive Erfahrungen hervorheben und auf Ausstattungsmerkmale aufmerksam machen, die sie besonders schätzen und die ihrer Meinung nach auch an anderen Haltestellen sinnvoll wären.",
+            "Der Haltestellencheck soll damit nicht nur Probleme sichtbar machen, sondern ausdrücklich auch gute Beispiele und positive Erfahrungen erfassen. So können Anregungen der Fahrgäste dazu beitragen, bewährte Lösungen künftig auch an anderen Standorten einzusetzen.",
+          ],
+        },
+        {
+          title: "Regelmäßige Feedbackphasen",
+          body: [
+            "Die Online-Umfrage wird zu festgelegten Zeiträumen im Laufe des Jahres geöffnet. Nach Abschluss jeder Feedbackphase werden die eingegangenen Rückmeldungen gesammelt und systematisch ausgewertet.",
+            "Die Ergebnisse dienen als Grundlage, um häufig genannte Probleme zu erkennen, Verbesserungsvorschläge zu prüfen und – sofern dies möglich und sinnvoll ist – konkrete Maßnahmen zur Verbesserung der Haltestellen und Stationen abzuleiten und umzusetzen.",
+            "Auf diese Weise entsteht ein kontinuierlicher Kreislauf aus Feedback, Analyse, Verbesserung und erneuter Bewertung.",
+          ],
+        },
+        {
+          title: "Transparenz durch Ergebnisse in Echtzeit",
+          body: [
+            "Ein weiterer wichtiger Bestandteil des Projekts ist die Transparenz der Ergebnisse. Fahrgäste können nicht nur ihre eigene Meinung abgeben, sondern auch die bereits eingegangenen Bewertungen und Ergebnisse einsehen.",
+            "Dadurch erhalten sie unmittelbar einen Eindruck davon, wie andere Fahrgäste dieselbe Haltestelle oder Station bewerten. Die gesammelten Ergebnisse machen somit unterschiedliche Wahrnehmungen sichtbar und schaffen eine zusätzliche Orientierung für die Nutzerinnen und Nutzer.",
+          ],
+        },
+        {
+          title: "Gemeinsam den öffentlichen Verkehr weiterentwickeln",
+          body: [
+            "Der Haltestellencheck schafft eine direkte Verbindung zwischen den Erfahrungen der Fahrgäste und der Weiterentwicklung des öffentlichen Verkehrs in Südtirol. Die Nutzerinnen und Nutzer werden dabei nicht nur als Fahrgäste, sondern als aktive Mitgestalterinnen und Mitgestalter verstanden.",
+            "Durch das kontinuierliche Sammeln und Auswerten der Rückmeldungen entsteht ein wertvoller Erfahrungsschatz, der dabei helfen kann, die Qualität, Ausstattung und Aufenthaltsqualität der Haltestellen und Stationen langfristig zu verbessern.",
+          ],
+        },
+      ],
+      closing: "Denn wer den öffentlichen Verkehr täglich nutzt, weiß am besten, was vor Ort gut funktioniert – und wo es noch Verbesserungspotenzial gibt.",
       tagline: "Für alle, die Südtirol täglich in Bewegung halten.", cta: "Jetzt Feedback geben",
     },
     footer: { note: "Ein Projekt für den öffentlichen Nahverkehr in Südtirol.", links: ["Impressum", "Datenschutz", "Barrierefreiheit", "Kontakt"] },
@@ -124,10 +158,44 @@ export const translations = {
       cta: "Cerca una fermata",
     },
     about: {
-      eyebrow: "Trasporto pubblico, migliorato insieme", title: "Il progetto",
-      intro: "Raccontaci cosa funziona alla tua fermata e cosa va migliorato. Senza registrazione, in due minuti.",
-      passengers: "Oltre 2.400 passeggeri", shared: "hanno già condiviso la loro esperienza",
-      quote: "Passeggera di Bolzano", quoteText: "La nuova pensilina rende l'attesa molto più piacevole.",
+      eyebrow: "Il progetto", title: "Il progetto",
+      lead: [
+        "Con il progetto «Haltestellencheck» vogliamo coinvolgere attivamente i passeggeri nello sviluppo del trasporto pubblico in Alto Adige. Al centro ci sono le fermate degli autobus e le stazioni del trasporto pubblico locale, e la domanda di come le utenti e gli utenti vivano la sosta e l'esperienza sul posto.",
+        "I passeggeri hanno la possibilità di condividere direttamente con noi la propria esperienza, di avanzare proposte di miglioramento concrete e di richiamare l'attenzione sugli aspetti positivi. Il riscontro dei passeggeri diventa così una parte importante del miglioramento continuo dell'offerta di trasporto pubblico.",
+      ],
+      sections: [
+        {
+          title: "Come funziona l'Haltestellencheck",
+          body: [
+            "Attraverso un sondaggio online i passeggeri possono valutare una fermata o una stazione che utilizzano. È possibile giudicare diversi aspetti della singola fermata, per esempio la dotazione, la pulizia, l'informazione, il comfort, l'accessibilità o l'aspetto generale.",
+            "Oltre alla valutazione complessiva è possibile segnalare carenze concrete e margini di miglioramento. Allo stesso tempo i passeggeri possono mettere in evidenza le esperienze positive e segnalare gli elementi di dotazione che apprezzano particolarmente e che, a loro parere, sarebbero utili anche in altre fermate.",
+            "L'Haltestellencheck non vuole quindi rendere visibili soltanto i problemi, ma raccogliere espressamente anche i buoni esempi e le esperienze positive. In questo modo i suggerimenti dei passeggeri possono contribuire ad applicare in futuro le soluzioni collaudate anche in altre località.",
+          ],
+        },
+        {
+          title: "Fasi di feedback periodiche",
+          body: [
+            "Il sondaggio online viene aperto in periodi stabiliti nel corso dell'anno. Al termine di ogni fase di feedback i riscontri pervenuti vengono raccolti e analizzati in modo sistematico.",
+            "I risultati servono come base per individuare i problemi segnalati più di frequente, per esaminare le proposte di miglioramento e per ricavarne – ove possibile e sensato – misure concrete per migliorare le fermate e le stazioni, e per attuarle.",
+            "Nasce così un ciclo continuo di feedback, analisi, miglioramento e nuova valutazione.",
+          ],
+        },
+        {
+          title: "Trasparenza grazie ai risultati in tempo reale",
+          body: [
+            "Un altro elemento importante del progetto è la trasparenza dei risultati. I passeggeri non possono soltanto esprimere la propria opinione, ma anche consultare le valutazioni e i risultati già pervenuti.",
+            "In questo modo si fanno subito un'idea di come altri passeggeri valutino la stessa fermata o stazione. I risultati raccolti rendono così visibili percezioni differenti e offrono un ulteriore orientamento alle utenti e agli utenti.",
+          ],
+        },
+        {
+          title: "Sviluppare insieme il trasporto pubblico",
+          body: [
+            "L'Haltestellencheck crea un collegamento diretto tra le esperienze dei passeggeri e lo sviluppo del trasporto pubblico in Alto Adige. Le utenti e gli utenti non vengono intesi soltanto come passeggeri, ma come protagonisti attivi.",
+            "Raccogliendo e analizzando i riscontri con continuità nasce un patrimonio di esperienze prezioso, che può contribuire a migliorare nel lungo periodo la qualità, la dotazione e la vivibilità delle fermate e delle stazioni.",
+          ],
+        },
+      ],
+      closing: "Perché chi usa il trasporto pubblico ogni giorno sa meglio di chiunque altro che cosa funziona sul posto – e dove c'è ancora margine di miglioramento.",
       tagline: "Per chi tiene in movimento l'Alto Adige ogni giorno.", cta: "Lascia un feedback",
     },
     footer: { note: "Un progetto per il trasporto pubblico locale in Alto Adige.", links: ["Note legali", "Privacy", "Accessibilità", "Contatti"] },
@@ -188,10 +256,44 @@ export const translations = {
       cta: "Search for a stop",
     },
     about: {
-      eyebrow: "Public transport, improved together", title: "About the project",
-      intro: "Tell us what works at your stop — and what needs to get better. No account, two minutes.",
-      passengers: "More than 2,400 passengers", shared: "have already shared their experience",
-      quote: "Passenger from Bolzano", quoteText: "The new shelter makes waiting so much better.",
+      eyebrow: "About the project", title: "About the project",
+      lead: [
+        "With the “Haltestellencheck” project we want to involve passengers actively in the development of public transport in South Tyrol. At its centre are the bus stops and railway stations of local public transport, and the question of how the people who use them experience their time there.",
+        "Passengers get the chance to share their personal experience directly with us, to put forward concrete suggestions for improvement and to draw attention to the positive aspects. Passenger feedback thereby becomes an important part of the continuous improvement of the public transport offering.",
+      ],
+      sections: [
+        {
+          title: "How the Haltestellencheck works",
+          body: [
+            "Through an online survey, passengers can rate a stop or station they use. Various aspects of the individual stop can be assessed, for example its facilities, cleanliness, information, comfort, accessibility or its general appearance.",
+            "Alongside the overall rating there is also the option to report specific shortcomings and room for improvement. At the same time passengers can highlight positive experiences and point out features they particularly value and which, in their view, would make sense at other stops too.",
+            "The Haltestellencheck is therefore not only meant to make problems visible, but expressly to capture good examples and positive experiences as well. In this way passengers' suggestions can help to apply proven solutions at other locations in future.",
+          ],
+        },
+        {
+          title: "Regular feedback phases",
+          body: [
+            "The online survey opens for set periods over the course of the year. At the end of each feedback phase, the responses received are collected and evaluated systematically.",
+            "The results serve as a basis for identifying frequently reported problems, for examining suggested improvements and — where it is possible and sensible — for deriving concrete measures to improve the stops and stations, and putting them into practice.",
+            "This creates a continuous cycle of feedback, analysis, improvement and renewed assessment.",
+          ],
+        },
+        {
+          title: "Transparency through real-time results",
+          body: [
+            "Another important part of the project is the transparency of the results. Passengers can not only give their own opinion, but also view the ratings and results already received.",
+            "That gives them an immediate impression of how other passengers rate the same stop or station. The collected results thus make differing perceptions visible and offer users additional orientation.",
+          ],
+        },
+        {
+          title: "Developing public transport together",
+          body: [
+            "The Haltestellencheck creates a direct link between passengers' experiences and the development of public transport in South Tyrol. Users are understood not merely as passengers, but as active contributors.",
+            "By collecting and evaluating the responses continuously, a valuable body of experience emerges that can help to improve the quality, the facilities and the comfort of stops and stations in the long term.",
+          ],
+        },
+      ],
+      closing: "Because the people who use public transport every day know best what works on the ground — and where there is still room for improvement.",
       tagline: "For the people who keep South Tyrol moving every day.", cta: "Give feedback now",
     },
     footer: { note: "A project for local public transport in South Tyrol.", links: ["Imprint", "Privacy", "Accessibility", "Contact"] },

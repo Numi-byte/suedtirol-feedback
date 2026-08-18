@@ -16,21 +16,23 @@ export default function AboutPage() {
     <main className="content-page">
       <div className="page-title"><h1>{t.about.title}</h1></div>
 
-      <section className="about-section">
-        <div className="about-copy">
-          <span className="mini-label">{t.about.eyebrow}</span>
-          <p className="about-intro">{t.about.intro}</p>
-          <div className="trust-note">
-            <div className="avatar-stack" aria-hidden="true"><span>JD</span><span>MK</span><span>LS</span></div>
-            <p><strong>{t.about.passengers}</strong>{t.about.shared}</p>
-          </div>
+      <section className="help-section">
+        <div className="prose prose-lead">
+          {t.about.lead.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
         </div>
+      </section>
 
-        <figure className="feedback-bubble">
-          <span className="quote">{t.about.quote}</span>
-          <p>{t.about.quoteText}</p>
-          <div className="stars" aria-hidden="true">★★★★★</div>
-        </figure>
+      {t.about.sections.map((section, index) => (
+        <section className={index % 2 === 1 ? "help-section help-section-tinted" : "help-section"} key={section.title}>
+          <h2>{section.title}</h2>
+          <div className="prose">
+            {section.body.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+          </div>
+        </section>
+      ))}
+
+      <section className="help-section">
+        <p className="about-closing">{t.about.closing}</p>
       </section>
 
       <section className="about-strip">
