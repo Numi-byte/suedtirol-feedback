@@ -16,6 +16,9 @@
   --text: #46586a;
   --muted: #6d7f8e;
   --green: #2f8f5b;
+  --blue-800: #005980;
+  /* Licensed faces; self-host the webfont files as in the client app. */
+  --font-display: "Ely Rounded", ui-rounded, "Segoe UI Rounded", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -60,7 +63,10 @@ a { color: inherit; text-decoration: none; }
 .portal header p, .card-heading > span, .portal-message > p {
   margin: 0 0 8px; color: var(--blue); font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
 }
-.portal h1 { margin: 0; font-size: 34px; }
+.portal h1 {
+  margin: 0; color: var(--blue-800); font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(34px, 4vw, 80px); line-height: 1; letter-spacing: -.03em;
+}
 .user-pill { padding: 9px 14px; border: 1px solid var(--line); border-radius: 4px; background: #fff; font-size: 13px; }
 .user-actions { display: flex; align-items: center; gap: 10px; }
 .user-actions form { margin: 0; }
@@ -149,7 +155,10 @@ form button:hover { background: var(--blue-dark); }
   margin: 0 0 16px; color: var(--blue); font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
 }
 .login-intro > p { color: rgba(255, 255, 255, .8); }
-.login-intro h1 { margin: 0; color: #fff; font-size: clamp(34px, 3.8vw, 50px); line-height: 1.1; }
+.login-intro h1 {
+  margin: 0; color: #fff; font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(34px, 3.8vw, 64px); line-height: 1; letter-spacing: -.03em;
+}
 .login-lead { display: block; max-width: 480px; margin-top: 22px; color: rgba(255, 255, 255, .85); font-size: 16px; line-height: 1.7; }
 .route-lines { position: absolute; right: -4%; bottom: -6%; width: 62%; height: auto; color: rgba(255, 255, 255, .28); }
 

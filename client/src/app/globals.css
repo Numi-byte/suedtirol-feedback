@@ -20,6 +20,11 @@
   src: url("/fonts/NeueFrutigerWorld-Bold.woff2") format("woff2");
   font-weight: 700; font-style: normal; font-display: swap;
 }
+@font-face {
+  font-family: "Ely Rounded";
+  src: url("/fonts/ElyRounded-Bold.woff2") format("woff2");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
 */
 
 /* südtirolmobil design language: white surfaces, one strong brand blue,
@@ -39,8 +44,10 @@
   --amber: #f2a500;
   --blue-50: #ecf6fa;
   --gray-800: #2a424d;
+  --blue-800: #005980;
   /* Licensed Monotype face; self-host the webfont files to get the real thing. */
   --font-brand: "Neue Frutiger World", Frutiger, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-display: "Ely Rounded", ui-rounded, "Segoe UI Rounded", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
   /* Utility bar (38px) + nav row (96px); anchors and the map offset by it. */
   --header-h: 134px;
   --container: 1200px;
@@ -83,6 +90,19 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
   border-left: 1px solid var(--line); color: var(--blue); font-size: 13px; font-weight: 700;
 }
 .brand-lockup[data-tone="dark"] .brand-sub { border-left-color: rgba(255, 255, 255, .28); color: #fff; }
+
+/* ---------- page title band ---------- */
+/* 80px type on an 80px line box, so one line is exactly the 80px band height.
+   min-height rather than height, so a title that wraps grows instead of clipping. */
+.page-title {
+  display: flex; align-items: center; gap: 56px;
+  max-width: 1600px; min-height: 80px; margin-inline: auto;
+  padding-left: clamp(20px, 5vw, 80px); padding-right: clamp(20px, 5vw, 80px);
+}
+.page-title h1 {
+  margin: 0; color: var(--blue-800); font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(36px, 5vw, 80px); line-height: 1; letter-spacing: -.03em;
+}
 
 /* ---------- header ---------- */
 .site-header {
@@ -131,10 +151,15 @@ nav a:hover { background: var(--blue-50); }
   content: ""; position: absolute; inset: 0;
   background: linear-gradient(104deg, var(--blue-deep) 0%, var(--blue) 52%, #0d7cc6 100%);
 }
-.hero-inner { position: relative; z-index: 2; display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr); gap: 56px; align-items: center; }
+.hero-inner { position: relative; z-index: 2; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, .7fr); gap: 56px; align-items: center; }
 .eyebrow { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
 .eyebrow span { width: 26px; height: 3px; background: #fff; }
-.hero h1 { margin: 0; color: #fff; font-size: clamp(38px, 4.2vw, 56px); line-height: 1.08; }
+/* Same display treatment as .page-title, but white: #005980 on the blue hero
+   band would be unreadable. */
+.hero h1 {
+  margin: 0; color: #fff; font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(38px, 5vw, 80px); line-height: 1; letter-spacing: -.03em;
+}
 .hero h1 em { color: #bfe0f7; font-style: normal; font-weight: 700; }
 .hero-copy { max-width: 520px; margin: 20px 0 30px; color: rgba(255, 255, 255, .88); font-size: 17px; line-height: 1.6; }
 
@@ -277,13 +302,13 @@ nav a:hover { background: var(--blue-50); }
 .footer-links a:hover { color: #fff; text-decoration: underline; }
 
 /* ---------- feedback form ---------- */
-.feedback-page { min-height: 100vh; padding: 48px 24px 72px; background: var(--surface); }
-.feedback-page > a, .feedback-page section { max-width: 680px; margin: auto; }
+.feedback-page { min-height: 100vh; padding: 48px 0 72px; background: var(--surface); }
+.feedback-page > a, .feedback-page section { max-width: min(680px, calc(100% - 48px)); margin: auto; }
+.feedback-page .page-title { margin-bottom: 22px; }
 .feedback-page > a { display: block; margin-bottom: 22px; color: var(--blue); font-size: 14px; font-weight: 700; }
 .feedback-page > a:hover { text-decoration: underline; }
 .feedback-page section { padding: 36px; border-radius: 6px; border-top: 3px solid var(--blue); background: #fff; box-shadow: 0 12px 30px rgba(0, 43, 77, .08); }
 .feedback-page section > span { color: var(--blue); font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
-.feedback-page h1 { margin: 10px 0 6px; font-size: 34px; line-height: 1.12; }
 .feedback-page h2 { margin: 0; color: var(--muted); font-size: 17px; font-weight: 600; }
 .feedback-page h3 { margin: 14px 0 0; font-size: 18px; }
 .feedback-page p { font-size: 15px; line-height: 1.6; }
@@ -360,7 +385,6 @@ nav a:hover { background: var(--blue-50); }
   .leaflet-control-zoom { display: none; }
   .detail-ratings { grid-template-columns: 1fr; }
   .feedback-page section { padding: 26px 20px; }
-  .feedback-page h1 { font-size: 28px; }
   .footer-inner { flex-direction: column; align-items: start; gap: 18px; }
   .footer-links { flex-wrap: wrap; gap: 16px; }
 }
