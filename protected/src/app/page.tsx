@@ -1,4 +1,6 @@
-import { createBusStop, signOut } from "./actions";
+import Link from "next/link";
+import { archiveBusStop, createBusStop, restoreBusStop, signOut, updateBusStop } from "./actions";
+import { ConfirmButton } from "./confirm-button";
 import { LanguageSwitch } from "./language-switch";
 import { LoginForm } from "./login-form";
 import { BrandLogo } from "@/components/brand-logo";
@@ -39,8 +41,15 @@ const RouteLines = () => (
   </svg>
 );
 
-export default async function PortalHomePage() {
+type BusStopRow = {
+  id: string; name_de: string; name_it: string; name_en: string; municipality: string;
+  stop_code: string | null; latitude: number; longitude: number;
+  is_accessible: boolean; is_published: boolean; archived_at: string | null;
+};
+
+export default async function PortalHomePage({ searchParams }: { searchParams: Promise<{ stop?: string }> }) {
   const { language, t } = await getTranslations();
+  const { stop: selectedId } = await searchParams;
 
   if (!hasSupabaseConfig()) {
     return (
@@ -56,7 +65,10 @@ export default async function PortalHomePage() {
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: stops } = user ? await supabase.from("bus_stops").select("id,name_de,name_it,name_en,municipality,latitude,longitude,is_published").order("created_at", { ascending: false }) : { data: [] };
+  const { data: allStops } = user ? await supabase.from("bus_stops").select("id,name_de,name_it,name_en,municipality,stop_code,latitude,longitude,is_accessible,is_published,archived_at").order("created_at", { ascending: false }) : { data: [] };
+  const stops = ((allStops ?? []) as BusStopRow[]).filter((stop) => !stop.archived_at);
+  const archivedStops = ((allStops ?? []) as BusStopRow[]).filter((stop) => stop.archived_at);
+  const editing = selectedId ? stops.find((stop) => stop.id === selectedId) ?? null : null;
   const { data: feedback } = user ? await supabase
     .from("stop_feedback")
     .select("id,severity,description,overall_rating,cleanliness_rating,safety_rating,accessibility_rating,information_rating,shelter_rating,has_shelter,has_seating,has_lighting,comment,email,consent_to_contact,language,status,created_at,bus_stops(name_de,name_it,name_en,municipality),stop_feedback_categories(category_slug,feedback_categories(label_de,label_it,label_en)),stop_feedback_photos(id,storage_path)")
@@ -111,19 +123,57 @@ export default async function PortalHomePage() {
       <header><div><p>{t.portal.kicker}</p><h1>{t.portal.title}</h1></div></header>
       <div className="portal-grid">
         <section className="editor-card">
-          <div className="card-heading"><span>{t.editor.kicker}</span><h2>{t.editor.title}</h2><p>{t.editor.subtitle}</p></div>
-          <form action={createBusStop}>
-            <div className="field-grid three"><label>{t.editor.nameDe}<input name="name_de" required /></label><label>{t.editor.nameIt}<input name="name_it" required /></label><label>{t.editor.nameEn}<input name="name_en" required /></label></div>
-            <div className="field-grid"><label>{t.editor.municipality}<input name="municipality" required /></label><label>{t.editor.stopCode}<input name="stop_code" placeholder={t.editor.optional} /></label></div>
-            <div className="field-grid"><label>{t.editor.latitude}<input name="latitude" type="number" min="-90" max="90" step="any" placeholder="46.4983" required /></label><label>{t.editor.longitude}<input name="longitude" type="number" min="-180" max="180" step="any" placeholder="11.3548" required /></label></div>
-            <div className="checks"><label><input name="is_accessible" type="checkbox" /> {t.editor.accessible}</label><label><input name="is_published" type="checkbox" defaultChecked /> {t.editor.publish}</label></div>
-            <button type="submit">{t.editor.save}</button>
+          <div className="card-heading">
+            <span>{editing ? t.editorEdit.kicker : t.editor.kicker}</span>
+            <h2>{editing ? t.editorEdit.title : t.editor.title}</h2>
+            <p>{editing ? t.editorEdit.subtitle : t.editor.subtitle}</p>
+          </div>
+          {/* key remounts the form so the fields reset when the selection changes */}
+          <form action={editing ? updateBusStop : createBusStop} key={editing?.id ?? "new"}>
+            {editing ? <input type="hidden" name="id" value={editing.id} /> : null}
+            <div className="field-grid three"><label>{t.editor.nameDe}<input name="name_de" defaultValue={editing?.name_de ?? ""} required /></label><label>{t.editor.nameIt}<input name="name_it" defaultValue={editing?.name_it ?? ""} required /></label><label>{t.editor.nameEn}<input name="name_en" defaultValue={editing?.name_en ?? ""} required /></label></div>
+            <div className="field-grid"><label>{t.editor.municipality}<input name="municipality" defaultValue={editing?.municipality ?? ""} required /></label><label>{t.editor.stopCode}<input name="stop_code" defaultValue={editing?.stop_code ?? ""} placeholder={t.editor.optional} /></label></div>
+            <div className="field-grid"><label>{t.editor.latitude}<input name="latitude" type="number" min="-90" max="90" step="any" defaultValue={editing?.latitude ?? ""} placeholder="46.4983" required /></label><label>{t.editor.longitude}<input name="longitude" type="number" min="-180" max="180" step="any" defaultValue={editing?.longitude ?? ""} placeholder="11.3548" required /></label></div>
+            <div className="checks"><label><input name="is_accessible" type="checkbox" defaultChecked={editing?.is_accessible ?? false} /> {t.editor.accessible}</label><label><input name="is_published" type="checkbox" defaultChecked={editing?.is_published ?? true} /> {t.editor.publish}</label></div>
+            <button type="submit">{editing ? t.editorEdit.save : t.editor.save}</button>
           </form>
+          {editing ? <div className="editor-actions">
+            <Link className="editor-cancel" href="/">{t.editorEdit.cancel}</Link>
+            <form action={archiveBusStop}>
+              <input type="hidden" name="id" value={editing.id} />
+              <ConfirmButton className="editor-archive" message={t.editorEdit.archiveConfirm}>{t.editorEdit.archive}</ConfirmButton>
+            </form>
+            <p className="editor-note">{t.editorEdit.archiveNote}</p>
+          </div> : null}
         </section>
-        <section className="stops-card"><div className="card-heading"><span>{t.stops.kicker}</span><h2>{stops?.length ?? 0} {t.stops.count}</h2></div><div className="stop-list">
-          {stops?.map((stop) => <article key={stop.id}><div className="status-dot" data-published={stop.is_published} /><div><strong>{stop.name_de}</strong><small>{stop.name_it} · {stop.name_en}</small><small>{stop.municipality} · {stop.latitude.toFixed(5)}, {stop.longitude.toFixed(5)}</small></div></article>)}
-          {!stops?.length && <p className="empty">{t.stops.empty}</p>}
-        </div></section>
+        <section className="stops-card">
+          <div className="card-heading"><span>{t.stops.kicker}</span><h2>{stops.length} {t.stops.count}</h2></div>
+          <div className="stop-list">
+            {stops.map((stop) => (
+              <Link className="stop-row" href={`/?stop=${stop.id}`} key={stop.id} aria-current={stop.id === editing?.id ? "true" : undefined}>
+                <div className="status-dot" data-published={stop.is_published} />
+                <div>
+                  <strong>{stop.name_de}</strong>
+                  <small>{stop.name_it} · {stop.name_en}</small>
+                  <small>{stop.municipality} · {stop.latitude.toFixed(5)}, {stop.longitude.toFixed(5)}</small>
+                </div>
+              </Link>
+            ))}
+            {!stops.length && <p className="empty">{t.stops.empty}</p>}
+          </div>
+          {archivedStops.length > 0 ? <div className="archived-list">
+            <h3>{t.archived.title} · {archivedStops.length} {t.archived.count}</h3>
+            {archivedStops.map((stop) => (
+              <div className="archived-row" key={stop.id}>
+                <div><strong>{stop.name_de}</strong><small>{stop.municipality}</small></div>
+                <form action={restoreBusStop}>
+                  <input type="hidden" name="id" value={stop.id} />
+                  <button type="submit" className="restore">{t.archived.restore}</button>
+                </form>
+              </div>
+            ))}
+          </div> : null}
+        </section>
       </div>
       <section className="feedback-card">
         <div className="feedback-heading-row">

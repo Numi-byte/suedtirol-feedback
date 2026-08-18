@@ -36,6 +36,15 @@ export const translations = {
       accessible: "Barrierefrei", publish: "Auf der öffentlichen Karte anzeigen",
       save: "Haltestelle speichern",
     },
+    editorEdit: {
+      kicker: "Haltestelle bearbeiten", title: "Haltestelle bearbeiten",
+      subtitle: "Passe die Angaben an. Änderungen sind sofort auf der öffentlichen Karte sichtbar.",
+      save: "Änderungen speichern", cancel: "Abbrechen",
+      archive: "Haltestelle archivieren",
+      archiveConfirm: "Diese Haltestelle archivieren? Sie verschwindet von der öffentlichen Karte. Die bereits eingegangenen Rückmeldungen bleiben erhalten.",
+      archiveNote: "Archivieren nimmt die Haltestelle von der Karte. Die Rückmeldungen dazu bleiben im Posteingang erhalten.",
+    },
+    archived: { title: "Archiviert", restore: "Wiederherstellen", empty: "Keine archivierten Haltestellen.", count: "archiviert" },
     stops: { kicker: "Datenbank", count: "Haltestellen", empty: "Noch keine Haltestellen. Lege den ersten Standort an." },
     feedback: {
       kicker: "Eingegangene Rückmeldungen", title: "Haltestellen-Feedback",
@@ -86,6 +95,15 @@ export const translations = {
       accessible: "Accessibile", publish: "Mostra sulla mappa pubblica",
       save: "Salva la fermata",
     },
+    editorEdit: {
+      kicker: "Modifica fermata", title: "Modifica la fermata",
+      subtitle: "Aggiorna i dati. Le modifiche sono subito visibili sulla mappa pubblica.",
+      save: "Salva le modifiche", cancel: "Annulla",
+      archive: "Archivia la fermata",
+      archiveConfirm: "Archiviare questa fermata? Sparirà dalla mappa pubblica. I riscontri già ricevuti vengono conservati.",
+      archiveNote: "L'archiviazione toglie la fermata dalla mappa. I riscontri collegati restano nella casella.",
+    },
+    archived: { title: "Archiviate", restore: "Ripristina", empty: "Nessuna fermata archiviata.", count: "archiviate" },
     stops: { kicker: "Banca dati", count: "fermate", empty: "Nessuna fermata. Crea la prima posizione." },
     feedback: {
       kicker: "Riscontri ricevuti", title: "Feedback sulle fermate",
@@ -136,6 +154,15 @@ export const translations = {
       accessible: "Accessible", publish: "Publish on client map",
       save: "Save bus stop",
     },
+    editorEdit: {
+      kicker: "Edit stop", title: "Edit bus stop",
+      subtitle: "Update the details. Changes appear on the public map straight away.",
+      save: "Save changes", cancel: "Cancel",
+      archive: "Archive stop",
+      archiveConfirm: "Archive this stop? It disappears from the public map. The feedback already received is kept.",
+      archiveNote: "Archiving takes the stop off the map. The reports it carries stay in the inbox.",
+    },
+    archived: { title: "Archived", restore: "Restore", empty: "No archived stops.", count: "archived" },
     stops: { kicker: "Database", count: "bus stops", empty: "No stops yet. Add the first location." },
     feedback: {
       kicker: "Submitted responses", title: "Stop feedback",
