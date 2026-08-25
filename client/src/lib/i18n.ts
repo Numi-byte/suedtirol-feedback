@@ -8,6 +8,7 @@ export const translations = {
     nav: { find: "Haltestellen", how: "So funktioniert's", about: "Über das Projekt", language: "Sprache ändern", service: "Service Desk", cta: "Feedback geben", home: "Startseite" },
     map: {
       eyebrow: "Haltestellenkarte", title: "Finde deine Haltestelle.", stopsAvailable: "Haltestellen verfügbar",
+      loading: "Karte wird geladen …", loadError: "Die Karte konnte nicht geladen werden.",
       choose: "Wähle eine Haltestelle auf der Karte, um Feedback zu geben.",
       noStops: "Es sind noch keine Haltestellen veröffentlicht.",
       bus: "Bus", accessible: "Barrierefrei", feedback: "Feedback geben", attribution: OSM_ATTRIBUTION,
@@ -106,6 +107,7 @@ export const translations = {
     nav: { find: "Fermate", how: "Come funziona", about: "Il progetto", language: "Cambia lingua", service: "Service Desk", cta: "Lascia un feedback", home: "Home" },
     map: {
       eyebrow: "Mappa delle fermate", title: "Trova la tua fermata.", stopsAvailable: "fermate disponibili",
+      loading: "Caricamento della mappa …", loadError: "Non è stato possibile caricare la mappa.",
       choose: "Scegli una fermata sulla mappa per lasciare un feedback.",
       noStops: "Non ci sono ancora fermate pubblicate.",
       bus: "Bus", accessible: "Accessibile", feedback: "Lascia un feedback", attribution: OSM_ATTRIBUTION,
@@ -204,6 +206,7 @@ export const translations = {
     nav: { find: "Stops", how: "How it works", about: "About the project", language: "Change language", service: "Service desk", cta: "Give feedback", home: "Home" },
     map: {
       eyebrow: "Stop map", title: "Find your stop.", stopsAvailable: "stops available",
+      loading: "Loading map …", loadError: "The map could not be loaded.",
       choose: "Pick a stop on the map to give feedback.",
       noStops: "No stops have been published yet.",
       bus: "Bus", accessible: "Accessible", feedback: "Give feedback", attribution: OSM_ATTRIBUTION,

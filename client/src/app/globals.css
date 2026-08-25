@@ -195,6 +195,19 @@ nav a:hover { background: var(--blue-50); }
 .map-section { position: relative; height: calc(100dvh - var(--header-h) - var(--footer-h)); min-height: 460px; background: #dce6ee; }
 .map-canvas { position: absolute; inset: 0; }
 .map-surface { position: absolute; inset: 0; background: #dce6ee; }
+.map-loading {
+  position: absolute; inset: 0; z-index: 800; display: grid; place-content: center; justify-items: center; gap: 12px;
+  color: var(--blue-deep); background: linear-gradient(135deg, #edf4f8, #d5e4ed);
+}
+.map-loading p { margin: 0; font-size: 14px; font-weight: 700; }
+.map-loading.error { color: #7a2930; background: #f8eeee; }
+.loading-spinner, .button-spinner {
+  width: 28px; height: 28px; border: 3px solid rgba(0, 105, 180, .22); border-top-color: var(--blue);
+  border-radius: 50%; animation: loading-spin .8s linear infinite;
+}
+.button-spinner { width: 14px; height: 14px; border-width: 2px; border-color: rgba(255, 255, 255, .35); border-top-color: #fff; }
+@keyframes loading-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .loading-spinner, .button-spinner { animation-duration: 1.8s; } }
 
 /* Leaflet panes run to z-index 700, so the floating UI sits above them. */
 .map-intro, .map-panel, .map-stop-list { position: absolute; z-index: 900; }

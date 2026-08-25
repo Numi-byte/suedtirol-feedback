@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
 import { submitFeedback } from "./actions";
@@ -46,6 +47,17 @@ function BusStopIcon() {
   return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="5" y="4" width="14" height="14" rx="3" /><path d="M8 8h8v5H8zM8 18v2M16 18v2" /><circle cx="8.5" cy="15.5" r=".7" fill="currentColor" /><circle cx="15.5" cy="15.5" r=".7" fill="currentColor" /></svg>;
 }
 
+function SubmitButton({ disabled }: { disabled: boolean }) {
+  const { pending } = useFormStatus();
+
+  return (
+    <button type="submit" disabled={disabled || pending} aria-disabled={disabled || pending}>
+      {pending ? <span className="button-spinner" aria-hidden="true" /> : <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="m21 3-7.5 18-3.8-7.7L2 9.5Z" /><path d="m9.7 13.3 5-4.5" /></svg>}
+      {pending ? "Feedback wird gesendet …" : "Feedback senden"}
+    </button>
+  );
+}
+
 export function FeedbackForm({ stopId, stopName, stopLocation, language }: { stopId: string; stopName: string; stopLocation: string; language: string }) {
   const [step, setStep] = useState(1);
   const [selected, setSelected] = useState<string[]>([]);
@@ -54,6 +66,7 @@ export function FeedbackForm({ stopId, stopName, stopLocation, language }: { sto
   const [contact, setContact] = useState(false);
   const [email, setEmail] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
+  const submissionStarted = useRef(false);
   const preview = useMemo(() => photo ? URL.createObjectURL(photo) : "", [photo]);
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
   const activeCategories = categories.filter((item) => selected.includes(item.slug));
@@ -78,7 +91,13 @@ export function FeedbackForm({ stopId, stopName, stopLocation, language }: { sto
         ))}
       </ol>
 
-      <form action={submitFeedback} className="feedback-wizard">
+      <form action={submitFeedback} className="feedback-wizard" onSubmit={(event) => {
+        if (submissionStarted.current) {
+          event.preventDefault();
+          return;
+        }
+        submissionStarted.current = true;
+      }}>
         <input type="hidden" name="stop_id" value={stopId} />
         <input type="hidden" name="stop_name" value={stopName} />
         <input type="hidden" name="language" value={language} />
@@ -132,7 +151,7 @@ export function FeedbackForm({ stopId, stopName, stopLocation, language }: { sto
             <h3>Kontakt</h3><p>{contact ? <>Ich möchte kontaktiert werden<br />{email}</> : "Keine Kontaktaufnahme gewünscht"}</p>
           </div>
           <aside><span>i</span><p>Ihr Feedback hilft uns, Haltestellen sicherer und komfortabler zu machen. Vielen Dank!</p></aside>
-          <div className="submit-actions"><button type="button" onClick={() => setStep(2)}>Zurück</button><button type="submit" disabled={!stopId || !selected.length}><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="m21 3-7.5 18-3.8-7.7L2 9.5Z" /><path d="m9.7 13.3 5-4.5" /></svg> Feedback senden</button></div>
+          <div className="submit-actions"><button type="button" onClick={() => setStep(2)}>Zurück</button><SubmitButton disabled={!stopId || !selected.length} /></div>
         </fieldset>
       </form>
       <footer className="feedback-dialog-footer">
