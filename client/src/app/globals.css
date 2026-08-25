@@ -46,7 +46,7 @@
   --gray-50: #f5f8fa;
   --gray-600: #4b6673;
   --gray-800: #2a424d;
-  --blue-800: #005980;
+  --blue-800: #055a81;
   /* Licensed Monotype face; self-host the webfont files to get the real thing. */
   --font-brand: "Neue Frutiger World", Frutiger, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-display: "Ely Rounded", ui-rounded, "Segoe UI Rounded", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -99,8 +99,8 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
   padding-left: clamp(20px, 5vw, 80px); padding-right: clamp(20px, 5vw, 80px);
 }
 .page-title h1 {
-  margin: 0; color: var(--blue-800); font-family: var(--font-display); font-weight: 700;
-  font-size: clamp(36px, 5vw, 80px); line-height: 1; letter-spacing: -.03em;
+  margin: 0; color: var(--blue-800); font-family: var(--font-display); font-style: normal; font-weight: 700;
+  font-size: 80px; line-height: 80px; letter-spacing: -.03em;
 }
 
 /* ---------- header ---------- */
