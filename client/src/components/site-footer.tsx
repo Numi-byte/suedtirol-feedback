@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BrandLogo } from "@/components/brand-logo";
 import { useLanguage } from "@/components/language-provider";
+
+const companyName = "STA – Südtiroler Transportstrukturen AG";
 
 /**
  * The home screen is a fixed app shell around the map, so its footer is pinned
@@ -21,7 +22,7 @@ export function SiteFooter() {
     return (
       <footer className="site-footer site-footer-pinned">
         <div className="footer-inner">
-          <p>{t.footer.note}</p>
+          <p className="footer-company">{companyName}</p>
           <div className="footer-links">
             {t.footer.links.map((link) => <Link key={link} href="/about">{link}</Link>)}
           </div>
@@ -33,10 +34,7 @@ export function SiteFooter() {
   return (
     <footer className="site-footer">
       <div className="footer-inner">
-        <div>
-          <BrandLogo tone="dark" />
-          <p className="footer-note">{t.footer.note}</p>
-        </div>
+        <p className="footer-company">{companyName}</p>
         <div className="footer-links">
           {t.footer.links.map((link) => <Link key={link} href="/about">{link}</Link>)}
         </div>
