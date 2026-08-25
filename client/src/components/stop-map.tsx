@@ -16,6 +16,8 @@ export type MapLabels = {
   accessible: string;
   feedback: string;
   attribution: string;
+  loading: string;
+  loadError: string;
 };
 
 /** South Tyrol, used until the published stops define their own extent. */
@@ -46,6 +48,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
   const markersRef = useRef<Map<string, Marker>>(new Map());
   const fittedRef = useRef(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [mapStatus, setMapStatus] = useState<"loading" | "ready" | "error">("loading");
 
   const stopName = (stop: BusStop) => nameFor(stop, language);
   const selected = stops.find((stop) => stop.id === selectedId) ?? null;
@@ -55,7 +58,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
     let cancelled = false;
     const markers = markersRef.current;
 
-    (async () => {
+    const initialiseMap = async () => {
       const L = (await import("leaflet")).default;
       if (cancelled || !containerRef.current || mapRef.current) return;
 
@@ -65,17 +68,35 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
         zoomControl: false,
         scrollWheelZoom: true,
       });
-      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
         attribution: labels.attribution,
-      }).addTo(map);
+        updateWhenIdle: true,
+        keepBuffer: 1,
+      });
+      tiles.once("load", () => {
+        if (!cancelled) setMapStatus("ready");
+      });
+      tiles.addTo(map);
       L.control.zoom({ position: "bottomright" }).addTo(map);
       map.attributionControl.setPrefix(false);
       mapRef.current = map;
-    })();
+    };
+    const start = () => initialiseMap().catch(() => {
+      if (!cancelled) setMapStatus("error");
+    });
+    const scheduler: {
+      requestIdleCallback?: Window["requestIdleCallback"];
+      cancelIdleCallback?: Window["cancelIdleCallback"];
+    } = window;
+    const idleId: number = scheduler.requestIdleCallback
+      ? scheduler.requestIdleCallback(start, { timeout: 1200 })
+      : globalThis.setTimeout(start, 1) as unknown as number;
 
     return () => {
       cancelled = true;
+      if (scheduler.cancelIdleCallback) scheduler.cancelIdleCallback(idleId);
+      else globalThis.clearTimeout(idleId);
       mapRef.current?.remove();
       mapRef.current = null;
       markers.clear();
@@ -137,7 +158,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stops, language, selectedId]);
+  }, [stops, language, selectedId, mapStatus]);
 
   const focusStop = (stop: BusStop) => {
     setSelectedId(stop.id);
@@ -146,7 +167,13 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
 
   return (
     <div className="map-canvas">
-      <div className="map-surface" ref={containerRef} role="application" aria-label={labels.title} />
+      <div className="map-surface" ref={containerRef} role="application" aria-label={labels.title} aria-busy={mapStatus === "loading"} />
+      {mapStatus !== "ready" ? (
+        <div className={`map-loading ${mapStatus === "error" ? "error" : ""}`} role="status" aria-live="polite">
+          {mapStatus === "loading" ? <span className="loading-spinner" aria-hidden="true" /> : null}
+          <p>{mapStatus === "error" ? labels.loadError : labels.loading}</p>
+        </div>
+      ) : null}
 
       <div className="map-intro">
         <span className="mini-label">{labels.eyebrow}</span>
