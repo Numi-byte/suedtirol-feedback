@@ -17,7 +17,9 @@
   --muted: #6d7f8e;
   --green: #2f8f5b;
   --blue-800: #055a81;
+  --gray-950: #0f2733;
   /* Licensed faces; self-host the webfont files as in the client app. */
+  --font-brand: "Neue Frutiger World", Frutiger, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-display: "Ely Rounded", ui-rounded, "Segoe UI Rounded", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
@@ -86,7 +88,10 @@ a { color: inherit; text-decoration: none; }
   border-radius: 6px; background: #fff; box-shadow: 0 8px 24px rgba(0, 43, 77, .05);
 }
 .feedback-card { margin-top: 22px; }
-.card-heading h2 { margin: 0; font-size: 22px; }
+.card-heading h2 {
+  margin: 0; color: var(--gray-950); font-family: var(--font-brand); font-style: normal; font-weight: 700;
+  font-size: 48px; line-height: 56px; letter-spacing: -.03em;
+}
 .card-heading p { margin: 8px 0 0; font-size: 14px; line-height: 1.55; }
 
 /* ---------- forms ---------- */
@@ -214,7 +219,10 @@ form button:hover { background: var(--blue-dark); }
 
 .login-panel { display: grid; place-items: center; padding: 40px; }
 .login-card { width: min(100%, 420px); }
-.login-card h2 { margin: 0; font-size: 34px; }
+.login-card h2 {
+  margin: 0; color: var(--gray-950); font-family: var(--font-brand); font-style: normal; font-weight: 700;
+  font-size: 48px; line-height: 56px; letter-spacing: -.03em;
+}
 .login-card > span { display: block; margin-top: 10px; font-size: 15px; line-height: 1.55; }
 .login-form { display: grid; gap: 18px; margin-top: 32px; }
 .login-form input { padding: 14px; }
