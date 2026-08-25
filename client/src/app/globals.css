@@ -46,7 +46,8 @@
   --gray-50: #f5f8fa;
   --gray-600: #4b6673;
   --gray-800: #2a424d;
-  --blue-800: #005980;
+  --gray-950: #0f2733;
+  --blue-800: #055a81;
   /* Licensed Monotype face; self-host the webfont files to get the real thing. */
   --font-brand: "Neue Frutiger World", Frutiger, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-display: "Ely Rounded", ui-rounded, "Segoe UI Rounded", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -99,8 +100,8 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
   padding-left: clamp(20px, 5vw, 80px); padding-right: clamp(20px, 5vw, 80px);
 }
 .page-title h1 {
-  margin: 0; color: var(--blue-800); font-family: var(--font-display); font-weight: 700;
-  font-size: clamp(36px, 5vw, 80px); line-height: 1; letter-spacing: -.03em;
+  margin: 0; color: var(--blue-800); font-family: var(--font-display); font-style: normal; font-weight: 700;
+  font-size: 80px; line-height: 80px; letter-spacing: -.03em;
 }
 
 /* ---------- header ---------- */
@@ -281,7 +282,10 @@ nav a:hover { background: var(--blue-50); }
 .help-section { max-width: 1600px; margin: auto; padding: 8px clamp(20px, 5vw, 80px) 44px; }
 .help-section-tinted { max-width: none; padding-block: 52px; background: var(--surface); }
 .help-section-tinted > * { max-width: 1600px; margin-inline: auto; }
-.help-section h2 { margin: 0 0 10px; font-size: clamp(24px, 2.6vw, 32px); line-height: 1.2; }
+.help-section h2 {
+  margin: 0 0 10px; color: var(--gray-950); font-family: var(--font-brand); font-style: normal; font-weight: 700;
+  font-size: 48px; line-height: 56px; letter-spacing: -.03em;
+}
 .help-lead { max-width: 780px; margin: 14px 0 0; font-size: 19px; line-height: 1.65; }
 .help-copy { max-width: 720px; margin: 0; font-size: 16px; line-height: 1.65; }
 /* The measure sits on the paragraphs, not the block: a narrow block would be
