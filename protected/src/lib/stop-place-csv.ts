@@ -7,6 +7,11 @@ export type StopPlaceImportRow = {
 };
 
 const REQUIRED_COLUMNS = ["name_it", "name_de", "centroid_location", "private_code"] as const;
+const STOP_PLACE_COLUMNS = [
+  "tid", "publication_timestamp", "id_version", "valid_between_from_date",
+  "valid_between_to_date", "name_it", "name_de", "short_name_it",
+  "centroid_location", "topographic_place_ref", "private_code",
+] as const;
 
 function normalizeHeader(value: string) {
   return value.trim().replace(/^\uFEFF/, "").replace(/\\_/g, "_").toLowerCase();
@@ -64,12 +69,16 @@ export function readStopPlaceCsv(source: string): StopPlaceImportRow[] {
     const names = new Set(row.map(normalizeHeader));
     return REQUIRED_COLUMNS.every((name) => names.has(name));
   });
-  if (headerIndex < 0) {
+  const firstDataRow = rows.findIndex((row) => row.some((value) => value.trim()));
+  const isHeaderlessStopPlace = firstDataRow >= 0 && rows[firstDataRow].length >= STOP_PLACE_COLUMNS.length &&
+    /^\(\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*,?\s*\)$/.test(rows[firstDataRow][8]?.trim() ?? "");
+  if (headerIndex < 0 && !isHeaderlessStopPlace) {
     const detected = rows[0]?.map(normalizeHeader).filter(Boolean).slice(0, 8).join(", ") || "none";
     throw new Error(`Missing CSV columns: ${REQUIRED_COLUMNS.join(", ")}. Detected first row: ${detected}.`);
   }
-  const header = rows[headerIndex].map(normalizeHeader);
-  rows.splice(0, headerIndex + 1);
+  const header = headerIndex >= 0 ? rows[headerIndex].map(normalizeHeader) : [...STOP_PLACE_COLUMNS];
+  if (headerIndex >= 0) rows.splice(0, headerIndex + 1);
+  else if (firstDataRow > 0) rows.splice(0, firstDataRow);
   const columns = new Map(header.map((name, index) => [name, index]));
 
   return rows.flatMap((row, rowIndex) => {
