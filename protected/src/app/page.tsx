@@ -3,6 +3,7 @@ import { archiveBusStop, createBusStop, restoreBusStop, signOut, updateBusStop }
 import { ConfirmButton } from "./confirm-button";
 import { LanguageSwitch } from "./language-switch";
 import { LoginForm } from "./login-form";
+import { StopImportForm } from "./stop-import-form";
 import { BrandLogo } from "@/components/brand-logo";
 import { dateLocales } from "@/lib/i18n";
 import type { Language } from "@/lib/i18n";
@@ -122,6 +123,10 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
     <main className="portal">
       <header><div><p>{t.portal.kicker}</p><h1>{t.portal.title}</h1></div></header>
       <div className="portal-grid">
+        <section className="import-card">
+          <div className="card-heading"><span>{t.importer.kicker}</span><h2>{t.importer.title}</h2><p>{t.importer.subtitle}</p></div>
+          <StopImportForm labels={t.importer} />
+        </section>
         <section className="editor-card">
           <div className="card-heading">
             <span>{editing ? t.editorEdit.kicker : t.editor.kicker}</span>
