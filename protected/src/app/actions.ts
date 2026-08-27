@@ -121,3 +121,86 @@ export async function restoreBusStop(formData: FormData) {
   if (error) throw new Error(error.message);
   revalidatePath("/");
 }
+
+type ReverseAddress = { address?: Record<string, string>; display_name?: string };
+
+async function municipalityAt(latitude: number, longitude: number) {
+  const endpoint = process.env.REVERSE_GEOCODING_URL ?? "https://nominatim.openstreetmap.org/reverse";
+  const url = new URL(endpoint);
+  url.searchParams.set("format", "jsonv2");
+  url.searchParams.set("lat", String(latitude));
+  url.searchParams.set("lon", String(longitude));
+  url.searchParams.set("zoom", "10");
+  url.searchParams.set("addressdetails", "1");
+  url.searchParams.set("accept-language", "de");
+  const response = await fetch(url, {
+    headers: { "User-Agent": "suedtirol-feedback-stop-import/1.0" },
+    signal: AbortSignal.timeout(12_000),
+  });
+  if (!response.ok) throw new Error(`Reverse geocoding returned ${response.status}.`);
+  const result = await response.json() as ReverseAddress;
+  const address = result.address ?? {};
+  return address.municipality ?? address.town ?? address.city ?? address.village ?? address.county ?? "";
+}
+
+export type StopPlaceBatchRow = {
+  nameDe: string; nameIt: string; latitude: number; longitude: number; stopCode: string;
+};
+
+export type ImportBatchResult = { imported: number; skipped: number; errors: string[] };
+
+/**
+ * Receives normalized stop records rather than an uploaded File. The browser
+ * parses the CSV and sends small batches, so the original file is never
+ * uploaded to, persisted by, or buffered on the application server.
+ */
+export async function importStopPlaceBatch(rows: StopPlaceBatchRow[], published: boolean): Promise<ImportBatchResult> {
+  try {
+    const { supabase, user } = await requireUser();
+    if (!Array.isArray(rows) || !rows.length || rows.length > 25) throw new Error("An import batch must contain between 1 and 25 stops.");
+    rows.forEach((row) => {
+      if (!row.nameDe?.trim() || !row.nameIt?.trim() || !row.stopCode?.trim() ||
+        !Number.isFinite(row.latitude) || !Number.isFinite(row.longitude) ||
+        row.latitude < -90 || row.latitude > 90 || row.longitude < -180 || row.longitude > 180) {
+        throw new Error("The import batch contains invalid stop data.");
+      }
+    });
+    const imported = [];
+    const failures: string[] = [];
+
+    // Resolve in small groups so a large upload is reasonably quick without
+    // flooding the configured reverse-geocoding service.
+    for (let offset = 0; offset < rows.length; offset += 5) {
+      const group = rows.slice(offset, offset + 5);
+      const resolved = await Promise.all(group.map(async (stop) => {
+        try {
+          const municipality = await municipalityAt(stop.latitude, stop.longitude);
+          if (!municipality) throw new Error("No municipality found.");
+          return { ...stop, municipality };
+        } catch (error) {
+          failures.push(`${stop.stopCode}: ${error instanceof Error ? error.message : "lookup failed"}`);
+          return null;
+        }
+      }));
+      imported.push(...resolved.filter((stop) => stop !== null));
+    }
+    if (!imported.length) return { imported: 0, skipped: failures.length, errors: failures.slice(0, 3) };
+
+    for (let offset = 0; offset < imported.length; offset += 250) {
+      const values = imported.slice(offset, offset + 250).map((stop) => ({
+        name_de: stop.nameDe, name_it: stop.nameIt, name_en: stop.nameDe,
+        municipality: stop.municipality, stop_code: stop.stopCode,
+        latitude: stop.latitude, longitude: stop.longitude,
+        is_published: published, archived_at: null, created_by: user.id,
+        updated_at: new Date().toISOString(),
+      }));
+      const { error } = await supabase.from("bus_stops").upsert(values, { onConflict: "stop_code" });
+      if (error) throw new Error(error.message);
+    }
+    revalidatePath("/");
+    revalidatePath("/api/stops");
+    return { imported: imported.length, skipped: failures.length, errors: failures.slice(0, 3) };
+  } catch (error) {
+    throw new Error(error instanceof Error ? error.message : "The CSV batch could not be imported.");
+  }
+}
