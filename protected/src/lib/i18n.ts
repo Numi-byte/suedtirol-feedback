@@ -27,6 +27,12 @@ export const translations = {
       kicker: "Portal für Verkehrsdaten", title: "Haltestellen verwalten",
       signOut: "Abmelden", language: "Sprache ändern",
     },
+    importer: {
+      kicker: "CSV-Import", title: "Haltestellendatei importieren",
+      subtitle: "Lade stop_place.csv hoch. Namen und Koordinaten werden übernommen; die Gemeinde wird anhand der Koordinaten ermittelt.",
+      file: "stop_place.csv", active: "Auf der öffentlichen Karte anzeigen", submit: "CSV importieren",
+      hint: "Bis 50 MB. Die Datei bleibt im Browser und wird nach dem Import aus dem Speicher freigegeben. Benötigt werden name_it, name_de, centroid_location und private_code; als englischer Name wird der deutsche verwendet.",
+    },
     editor: {
       kicker: "Neuer Standort", title: "Haltestelle hinzufügen",
       subtitle: "Trage alle drei öffentlichen Namen und die exakten WGS84-Koordinaten ein.",
@@ -86,6 +92,12 @@ export const translations = {
       kicker: "Portale dati del trasporto", title: "Gestione delle fermate",
       signOut: "Esci", language: "Cambia lingua",
     },
+    importer: {
+      kicker: "Importazione CSV", title: "Importa il file delle fermate",
+      subtitle: "Carica stop_place.csv. I nomi e le coordinate vengono importati; il comune viene determinato dalle coordinate.",
+      file: "stop_place.csv", active: "Mostra sulla mappa pubblica", submit: "Importa CSV",
+      hint: "Fino a 50 MB. Il file resta nel browser e viene rimosso dalla memoria dopo l'importazione. Sono necessari name_it, name_de, centroid_location e private_code; come nome inglese viene usato quello tedesco.",
+    },
     editor: {
       kicker: "Nuova posizione", title: "Aggiungi una fermata",
       subtitle: "Inserisci tutti e tre i nomi pubblici e le coordinate WGS84 esatte.",
@@ -144,6 +156,12 @@ export const translations = {
     portal: {
       kicker: "Transport data portal", title: "Bus stop management",
       signOut: "Sign out", language: "Change language",
+    },
+    importer: {
+      kicker: "CSV import", title: "Import stop file",
+      subtitle: "Upload stop_place.csv. Names and coordinates are imported, and the municipality is determined from the coordinates.",
+      file: "stop_place.csv", active: "Publish on client map", submit: "Import CSV",
+      hint: "Up to 50 MB. The file stays in the browser and is released from memory after import. It needs name_it, name_de, centroid_location and private_code; the German name is used for English.",
     },
     editor: {
       kicker: "New location", title: "Add a bus stop",

@@ -83,11 +83,20 @@ a { color: inherit; text-decoration: none; }
 .sign-out:hover { border-color: var(--blue); color: var(--blue); }
 
 .portal-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(330px, .75fr); gap: 22px; }
-.editor-card, .stops-card, .feedback-card {
+.editor-card, .stops-card, .feedback-card, .import-card {
   padding: 28px; border: 1px solid var(--line); border-top: 3px solid var(--blue);
   border-radius: 6px; background: #fff; box-shadow: 0 8px 24px rgba(0, 43, 77, .05);
 }
 .feedback-card { margin-top: 22px; }
+.import-card { grid-column: 1 / -1; }
+.import-form { display: grid; grid-template-columns: minmax(260px, 1fr) auto auto; align-items: end; gap: 16px; margin-top: 20px; }
+.import-form p { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: 12px; }
+.import-form button { width: auto; min-width: 150px; }
+.import-form button:disabled { background: #9fb4c4; cursor: wait; }
+.import-check { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.import-check input { accent-color: var(--blue); }
+.import-form .import-result.error { color: #9b2f22; }
+.import-form .import-result.success { color: var(--green); }
 .card-heading h2 {
   margin: 0; color: var(--gray-950); font-family: var(--font-brand); font-style: normal; font-weight: 700;
   font-size: 48px; line-height: 56px; letter-spacing: -.03em;
@@ -239,6 +248,8 @@ form button:hover { background: var(--blue-dark); }
   .portal-grid { grid-template-columns: 1fr; }
   .field-grid.three { grid-template-columns: 1fr; }
   .feedback-entry-body { grid-template-columns: 1fr; }
+  .import-form { grid-template-columns: 1fr; align-items: stretch; }
+  .import-form p { grid-column: 1; }
 }
 @media (max-width: 560px) {
   .portal-bar-inner { height: 66px; padding: 0 18px; }
