@@ -50,7 +50,7 @@ function parseCsv(source: string) {
   return rows;
 }
 
-export function readStopPlaceCsv(source: string): StopPlaceImportRow[] {
+export function readStopPlaceCsv(source: string, onSkipped?: (message: string) => void): StopPlaceImportRow[] {
   const rows = parseCsv(source.replace(/^\uFEFF/, ""));
 
   // Some database exports wrap the complete header line in one additional
@@ -85,14 +85,18 @@ export function readStopPlaceCsv(source: string): StopPlaceImportRow[] {
     if (row.every((value) => !value.trim())) return [];
     const value = (name: string) => row[columns.get(name)!]?.trim() ?? "";
     const coordinates = value("centroid_location").match(/^\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,?\s*\)$/);
-    if (!coordinates) throw new Error(`Invalid centroid_location on CSV data row ${rowIndex + 1}.`);
+    if (!coordinates) {
+      onSkipped?.(`CSV data row ${rowIndex + 1}: invalid centroid_location.`);
+      return [];
+    }
     const longitude = Number(coordinates[1]);
     const latitude = Number(coordinates[2]);
     const nameDe = value("name_de");
     const nameIt = value("name_it");
     const stopCode = value("private_code");
     if (!nameDe || !nameIt || !stopCode || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
-      throw new Error(`Incomplete stop data on CSV data row ${rowIndex + 1}.`);
+      onSkipped?.(`CSV data row ${rowIndex + 1}: incomplete stop data.`);
+      return [];
     }
     return [{ nameDe, nameIt, latitude, longitude, stopCode }];
   });

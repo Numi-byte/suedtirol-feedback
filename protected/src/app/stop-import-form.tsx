@@ -23,19 +23,20 @@ export function StopImportForm({ labels }: { labels: { file: string; active: str
     try {
       // The file is read and parsed only in this browser. Only normalized rows
       // are sent to the server in small batches; localStorage is never used.
-      const rows = readStopPlaceCsv(await file.text());
+      const parseErrors: string[] = [];
+      const rows = readStopPlaceCsv(await file.text(), (message) => parseErrors.push(message));
       if (!rows.length) throw new Error("The CSV contains no stops.");
       const published = new FormData(form).get("is_published") === "on";
       let imported = 0;
-      let skipped = 0;
-      const errors: string[] = [];
+      let skipped = parseErrors.length;
+      const errors: string[] = parseErrors.slice(0, 3);
       for (let offset = 0; offset < rows.length; offset += BATCH_SIZE) {
         const batch = rows.slice(offset, offset + BATCH_SIZE);
         const response = await importStopPlaceBatch(batch, published);
         imported += response.imported;
         skipped += response.skipped;
         errors.push(...response.errors);
-        setResult({ success: `${imported + skipped} / ${rows.length} processed…` });
+        setResult({ success: `${Math.min(offset + BATCH_SIZE, rows.length)} / ${rows.length} valid rows processed…` });
       }
       setResult({ success: `${imported} stops imported${skipped ? `; ${skipped} skipped. ${errors.slice(0, 3).join(" ")}` : "."}` });
     } catch (error) {
