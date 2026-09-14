@@ -102,7 +102,7 @@ export const translations = {
       closing: "Denn wer den öffentlichen Verkehr täglich nutzt, weiß am besten, was vor Ort gut funktioniert – und wo es noch Verbesserungspotenzial gibt.",
       tagline: "Für alle, die Südtirol täglich in Bewegung halten.", cta: "Jetzt Feedback geben",
     },
-    footer: { note: "Ein Projekt für den öffentlichen Nahverkehr in Südtirol.", links: ["Impressum", "Datenschutz", "Barrierefreiheit", "Kontakt"] },
+    footer: { note: "Ein Projekt für den öffentlichen Nahverkehr in Südtirol.", links: ["Impressum", "Datenschutz", "Kontakt"] },
   },
   it: {
     nav: { find: "Fermate", how: "Come funziona", about: "Il progetto", language: "Cambia lingua", service: "Service Desk", cta: "Lascia un feedback", home: "Home" },
@@ -202,7 +202,7 @@ export const translations = {
       closing: "Perché chi usa il trasporto pubblico ogni giorno sa meglio di chiunque altro che cosa funziona sul posto – e dove c'è ancora margine di miglioramento.",
       tagline: "Per chi tiene in movimento l'Alto Adige ogni giorno.", cta: "Lascia un feedback",
     },
-    footer: { note: "Un progetto per il trasporto pubblico locale in Alto Adige.", links: ["Note legali", "Privacy", "Accessibilità", "Contatti"] },
+    footer: { note: "Un progetto per il trasporto pubblico locale in Alto Adige.", links: ["Note legali", "Privacy", "Contatti"] },
   },
   en: {
     nav: { find: "Stops", how: "How it works", about: "About the project", language: "Change language", service: "Service desk", cta: "Give feedback", home: "Home" },
@@ -302,6 +302,6 @@ export const translations = {
       closing: "Because the people who use public transport every day know best what works on the ground — and where there is still room for improvement.",
       tagline: "For the people who keep South Tyrol moving every day.", cta: "Give feedback now",
     },
-    footer: { note: "A project for local public transport in South Tyrol.", links: ["Imprint", "Privacy", "Accessibility", "Contact"] },
+    footer: { note: "A project for local public transport in South Tyrol.", links: ["Imprint", "Privacy", "Contact"] },
   },
 } as const;
