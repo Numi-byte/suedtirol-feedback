@@ -135,6 +135,13 @@ form button:hover { background: var(--blue-dark); }
 .stop-list strong { color: var(--navy); font-size: 15px; }
 .stop-list small { margin-top: 5px; font-size: 12px; line-height: 1.4; }
 .empty { color: var(--muted); font-size: 14px; }
+.stop-pagination { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+.stop-pagination a, .stop-pagination > .disabled { display: inline-flex; min-width: 34px; min-height: 34px; align-items: center; justify-content: center; padding: 7px 10px; border: 1px solid var(--line); border-radius: 4px; color: var(--navy); font-size: 12px; font-weight: 700; }
+.stop-pagination a:hover { border-color: var(--blue); color: var(--blue); }
+.stop-pagination a[aria-current="page"] { border-color: var(--blue); color: #fff; background: var(--blue); }
+.stop-pagination > .disabled { color: #93a2ae; background: var(--surface); }
+.stop-pagination .page-numbers { display: flex; gap: 5px; }
+.stop-pagination > .page-summary { flex-basis: 100%; color: var(--muted); font-size: 12px; text-align: center; }
 
 /* ---------- edit + archive ---------- */
 .editor-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); }

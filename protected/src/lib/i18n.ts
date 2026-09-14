@@ -51,7 +51,7 @@ export const translations = {
       archiveNote: "Archivieren nimmt die Haltestelle von der Karte. Die Rückmeldungen dazu bleiben im Posteingang erhalten.",
     },
     archived: { title: "Archiviert", restore: "Wiederherstellen", empty: "Keine archivierten Haltestellen.", count: "archiviert" },
-    stops: { kicker: "Datenbank", count: "Haltestellen", empty: "Noch keine Haltestellen. Lege den ersten Standort an." },
+    stops: { kicker: "Datenbank", count: "Haltestellen", empty: "Noch keine Haltestellen. Lege den ersten Standort an.", paginationLabel: "Seitennavigation der Haltestellen", previous: "Zurück", next: "Weiter", page: "Seite", of: "von" },
     feedback: {
       kicker: "Eingegangene Rückmeldungen", title: "Haltestellen-Feedback",
       note: "Bis zu 250 aktuelle Meldungen. Fotos und Kontaktdaten bleiben angemeldeten Portalnutzerinnen und -nutzern vorbehalten.",
@@ -116,7 +116,7 @@ export const translations = {
       archiveNote: "L'archiviazione toglie la fermata dalla mappa. I riscontri collegati restano nella casella.",
     },
     archived: { title: "Archiviate", restore: "Ripristina", empty: "Nessuna fermata archiviata.", count: "archiviate" },
-    stops: { kicker: "Banca dati", count: "fermate", empty: "Nessuna fermata. Crea la prima posizione." },
+    stops: { kicker: "Banca dati", count: "fermate", empty: "Nessuna fermata. Crea la prima posizione.", paginationLabel: "Navigazione delle pagine delle fermate", previous: "Indietro", next: "Avanti", page: "Pagina", of: "di" },
     feedback: {
       kicker: "Riscontri ricevuti", title: "Feedback sulle fermate",
       note: "Fino a 250 segnalazioni recenti. Le foto e i dati di contatto restano riservati agli utenti autenticati del portale.",
@@ -181,7 +181,7 @@ export const translations = {
       archiveNote: "Archiving takes the stop off the map. The reports it carries stay in the inbox.",
     },
     archived: { title: "Archived", restore: "Restore", empty: "No archived stops.", count: "archived" },
-    stops: { kicker: "Database", count: "bus stops", empty: "No stops yet. Add the first location." },
+    stops: { kicker: "Database", count: "bus stops", empty: "No stops yet. Add the first location.", paginationLabel: "Bus stop page navigation", previous: "Previous", next: "Next", page: "Page", of: "of" },
     feedback: {
       kicker: "Submitted responses", title: "Stop feedback",
       note: "Up to 250 recent reports. Photos and contact details remain private to authenticated portal users.",
