@@ -49,9 +49,16 @@ type BusStopRow = {
   is_accessible: boolean; is_published: boolean; archived_at: string | null;
 };
 
-export default async function PortalHomePage({ searchParams }: { searchParams: Promise<{ stop?: string }> }) {
+const STOPS_PER_PAGE = 10;
+
+function pageNumbers(currentPage: number, pageCount: number) {
+  const firstPage = Math.max(1, Math.min(currentPage - 2, pageCount - 4));
+  return Array.from({ length: Math.min(5, pageCount) }, (_, index) => firstPage + index);
+}
+
+export default async function PortalHomePage({ searchParams }: { searchParams: Promise<{ stop?: string; page?: string }> }) {
   const { language, t } = await getTranslations();
-  const { stop: selectedId } = await searchParams;
+  const { stop: selectedId, page: requestedPage } = await searchParams;
 
   if (!hasSupabaseConfig()) {
     return (
@@ -68,9 +75,13 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: allStops } = user ? await supabase.from("bus_stops").select("id,name_de,name_it,name_en,municipality,stop_code,latitude,longitude,is_accessible,is_published,archived_at").order("created_at", { ascending: false }) : { data: [] };
-  const stops = ((allStops ?? []) as BusStopRow[]).filter((stop) => !stop.archived_at);
+  const allActiveStops = ((allStops ?? []) as BusStopRow[]).filter((stop) => !stop.archived_at);
   const archivedStops = ((allStops ?? []) as BusStopRow[]).filter((stop) => stop.archived_at);
-  const editing = selectedId ? stops.find((stop) => stop.id === selectedId) ?? null : null;
+  const parsedPage = Number.parseInt(requestedPage ?? "1", 10);
+  const pageCount = Math.max(1, Math.ceil(allActiveStops.length / STOPS_PER_PAGE));
+  const currentPage = Math.min(Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1, pageCount);
+  const stops = allActiveStops.slice((currentPage - 1) * STOPS_PER_PAGE, currentPage * STOPS_PER_PAGE);
+  const editing = selectedId ? allActiveStops.find((stop) => stop.id === selectedId) ?? null : null;
   const { data: feedback } = user ? await supabase
     .from("stop_feedback")
     .select("id,severity,description,overall_rating,cleanliness_rating,safety_rating,accessibility_rating,information_rating,shelter_rating,has_shelter,has_seating,has_lighting,comment,email,consent_to_contact,language,status,created_at,bus_stops(name_de,name_it,name_en,municipality),stop_feedback_categories(category_slug,feedback_categories(label_de,label_it,label_en)),stop_feedback_photos(id,storage_path),feedback_replies(id,body,created_at,updated_at)")
@@ -154,10 +165,10 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
           </div> : null}
         </section>
         <section className="stops-card">
-          <div className="card-heading"><span>{t.stops.kicker}</span><h2>{stops.length} {t.stops.count}</h2></div>
+          <div className="card-heading"><span>{t.stops.kicker}</span><h2>{allActiveStops.length} {t.stops.count}</h2></div>
           <div className="stop-list">
             {stops.map((stop) => (
-              <Link className="stop-row" href={`/?stop=${stop.id}`} key={stop.id} aria-current={stop.id === editing?.id ? "true" : undefined}>
+              <Link className="stop-row" href={`/?page=${currentPage}&stop=${stop.id}`} key={stop.id} aria-current={stop.id === editing?.id ? "true" : undefined}>
                 <div className="status-dot" data-published={stop.is_published} />
                 <div>
                   <strong>{stop.name_de}</strong>
@@ -168,6 +179,18 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
             ))}
             {!stops.length && <p className="empty">{t.stops.empty}</p>}
           </div>
+          {pageCount > 1 ? <nav className="stop-pagination" aria-label={t.stops.paginationLabel}>
+            {currentPage > 1
+              ? <Link href={`/?page=${currentPage - 1}`}>{t.stops.previous}</Link>
+              : <span className="disabled" aria-disabled="true">{t.stops.previous}</span>}
+            <div className="page-numbers">
+              {pageNumbers(currentPage, pageCount).map((page) => <Link href={`/?page=${page}`} key={page} aria-current={page === currentPage ? "page" : undefined}>{page}</Link>)}
+            </div>
+            {currentPage < pageCount
+              ? <Link href={`/?page=${currentPage + 1}`}>{t.stops.next}</Link>
+              : <span className="disabled" aria-disabled="true">{t.stops.next}</span>}
+            <span className="page-summary">{t.stops.page} {currentPage} {t.stops.of} {pageCount}</span>
+          </nav> : null}
           {archivedStops.length > 0 ? <div className="archived-list">
             <h3>{t.archived.title} · {archivedStops.length} {t.archived.count}</h3>
             {archivedStops.map((stop) => (
