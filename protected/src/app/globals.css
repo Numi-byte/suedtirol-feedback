@@ -206,14 +206,24 @@ form button:hover { background: var(--blue-dark); }
 .feedback-photos img { display: block; width: 112px; height: 76px; border-radius: 4px; object-fit: cover; }
 .feedback-photos a:hover img { outline: 3px solid var(--blue); }
 .existing-reply { margin: 0 18px 16px; padding: 14px 16px; border-left: 3px solid var(--blue); background: var(--sky); }
+.existing-reply-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
 .existing-reply span { color: var(--blue-deep); font-size: 10px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
+.existing-reply .reply-check { display: inline-grid; width: 18px; height: 18px; margin-right: 7px; place-items: center; border-radius: 50%; color: #fff; background: var(--green); font-size: 11px; letter-spacing: 0; }
+.existing-reply button.reply-edit { width: auto; padding: 7px 11px; border: 1px solid var(--blue); color: var(--blue); background: #fff; font-size: 12px; }
+.existing-reply button.reply-edit:hover { color: #fff; background: var(--blue); }
 .existing-reply p { margin: 7px 0 0; color: var(--navy); font-size: 13px; line-height: 1.55; white-space: pre-wrap; }
 .reply-form { display: grid; grid-template-columns: 1fr auto; gap: 9px 14px; margin: 0 18px 18px; padding-top: 16px; border-top: 1px solid var(--line); }
 .reply-form label, .reply-form textarea, .reply-form small { grid-column: 1; }
 .reply-form textarea { min-width: 0; padding: 11px 12px; border: 1px solid var(--line); border-radius: 4px; color: var(--navy); font: inherit; font-size: 13px; line-height: 1.5; resize: vertical; }
 .reply-form textarea:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0, 105, 180, .14); }
 .reply-form small { color: var(--muted); font-size: 11px; line-height: 1.45; }
-.reply-form button { grid-column: 2; grid-row: 2 / 4; align-self: end; width: auto; min-width: 180px; }
+.reply-actions { grid-column: 2; grid-row: 2 / 5; align-self: end; display: flex; gap: 8px; }
+.reply-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: auto; min-width: 180px; }
+.reply-actions button.reply-cancel { min-width: auto; color: var(--navy); background: #fff; border: 1px solid var(--line); }
+.reply-form textarea:disabled, .reply-form button:disabled { opacity: .65; cursor: wait; }
+.reply-error { grid-column: 1; margin: 0; color: #9b2f22; font-size: 12px; }
+.button-spinner { width: 15px; height: 15px; border: 2px solid rgba(255,255,255,.45); border-top-color: #fff; border-radius: 50%; animation: reply-spin .7s linear infinite; }
+@keyframes reply-spin { to { transform: rotate(360deg); } }
 .feedback-empty { padding: 30px; border: 1px dashed var(--line); text-align: center; }
 
 /* ---------- setup message ---------- */
@@ -270,7 +280,7 @@ form button:hover { background: var(--blue-dark); }
   .field-grid.three { grid-template-columns: 1fr; }
   .feedback-entry-body { grid-template-columns: 1fr; }
   .reply-form { grid-template-columns: 1fr; }
-  .reply-form label, .reply-form textarea, .reply-form small, .reply-form button { grid-column: 1; grid-row: auto; }
+  .reply-form label, .reply-form textarea, .reply-form small, .reply-form .reply-actions { grid-column: 1; grid-row: auto; }
   .import-form { grid-template-columns: 1fr; align-items: stretch; }
   .import-form p { grid-column: 1; }
 }
