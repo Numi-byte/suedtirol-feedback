@@ -49,7 +49,7 @@ export async function submitFeedback(formData: FormData) {
 
   // Carried so the thank-you page can show the details and hand them to the
   // südtirolmobil contact form. The email is deliberately left out of the URL.
-  const handoff = new URLSearchParams({ lang: language });
+  const handoff = new URLSearchParams({ lang: language, stop_id: stopId });
   const stopName = String(formData.get("stop_name") ?? "").trim();
   if (stopName) handoff.set("stop", stopName);
   if (categories.length) handoff.set("cats", categories.join(","));

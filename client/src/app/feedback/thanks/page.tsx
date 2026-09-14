@@ -14,7 +14,7 @@ const copy = {
     contactAfter: " kontaktieren.",
     summaryTitle: "Deine Angaben",
     copy: "Angaben kopieren", copied: "Kopiert",
-    back: "Zurück zur Karte",
+    discussion: "Öffentliche Beiträge ansehen", back: "Zurück zur Karte",
   },
   it: {
     kicker: "Riscontro inviato",
@@ -25,7 +25,7 @@ const copy = {
     contactAfter: ".",
     summaryTitle: "I tuoi dati",
     copy: "Copia i dati", copied: "Copiato",
-    back: "Torna alla mappa",
+    discussion: "Vedi i contributi pubblici", back: "Torna alla mappa",
   },
   en: {
     kicker: "Feedback sent",
@@ -36,7 +36,7 @@ const copy = {
     contactAfter: ".",
     summaryTitle: "Your details",
     copy: "Copy details", copied: "Copied",
-    back: "Back to the map",
+    discussion: "View public posts", back: "Back to the map",
   },
 } as const;
 
@@ -49,7 +49,7 @@ const CheckIcon = () => (
 export default async function ThanksPage({
   searchParams,
 }: {
-  searchParams: Promise<{ lang?: string; stop?: string; cats?: string; sev?: string; msg?: string }>;
+  searchParams: Promise<{ lang?: string; stop?: string; stop_id?: string; cats?: string; sev?: string; msg?: string }>;
 }) {
   const params = await searchParams;
   const language = (["de", "it", "en"].includes(params.lang ?? "") ? params.lang : "de") as Language;
@@ -86,6 +86,7 @@ export default async function ThanksPage({
           </div>
         ) : null}
 
+        {params.stop_id ? <Link className="thanks-discussion" href={`/feedback?stop=${encodeURIComponent(params.stop_id)}&lang=${language}&name=${encodeURIComponent(params.stop ?? "")}`}>{t.discussion}</Link> : null}
         <Link className="thanks-back" href="/">{t.back}</Link>
       </section>
     </main>
