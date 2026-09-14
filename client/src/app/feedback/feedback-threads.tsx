@@ -31,7 +31,7 @@ export async function FeedbackThreads({ stopId, language }: { stopId: string; la
   const t = copy[lang];
   const locale = lang === "de" ? "de-DE" : lang === "it" ? "it-IT" : "en-GB";
 
-  return <section className="feedback-threads" aria-labelledby="feedback-threads-title">
+  return <section className="feedback-threads" id="feedback-threads" aria-labelledby="feedback-threads-title">
     <header><span>{t.eyebrow}</span><h2 id="feedback-threads-title">{t.title}</h2><p>{t.intro}</p></header>
     <div className="thread-list">
       {threads.map((thread) => <article className="thread" key={thread.feedback_id}>

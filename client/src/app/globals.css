@@ -182,6 +182,11 @@ nav a:hover { background: var(--blue-50); }
 }
 .stop-card-cta:hover { background: var(--blue-dark); }
 .stop-card-cta svg { width: 16px; height: 16px; }
+.stop-card-comments {
+  padding: 11px 16px; border: 1px solid var(--blue); border-radius: 4px;
+  color: var(--blue); font-size: 13px; font-weight: 700;
+}
+.stop-card-comments:hover { color: #fff; background: var(--blue); }
 .stop-card-map { color: var(--blue); font-size: 13px; font-weight: 700; }
 .stop-card-map:hover { text-decoration: underline; }
 
@@ -239,12 +244,16 @@ nav a:hover { background: var(--blue-50); }
 .map-panel-empty { color: var(--muted); }
 .transport-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 18px; }
 .transport-tags span { padding: 6px 10px; border-radius: 3px; color: var(--blue-deep); background: var(--sky); font-size: 11px; font-weight: 700; }
-.map-panel > a {
+.map-panel-actions { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.map-panel-actions > a { display: flex; align-items: center; border-radius: 4px; font-size: 13px; font-weight: 700; }
+.map-panel-feedback {
   display: flex; align-items: center; justify-content: space-between; padding: 13px 15px;
-  border-radius: 4px; color: #fff; background: var(--blue); font-size: 14px; font-weight: 700; transition: background .15s;
+  color: #fff; background: var(--blue); transition: background .15s;
 }
-.map-panel > a:hover { background: var(--blue-dark); }
-.map-panel > a svg { width: 16px; height: 16px; }
+.map-panel-feedback:hover { background: var(--blue-dark); }
+.map-panel-feedback svg { width: 16px; height: 16px; }
+.map-panel-comments { justify-content: center; padding: 12px 14px; border: 1px solid var(--blue); color: var(--blue); text-align: center; }
+.map-panel-comments:hover { color: #fff; background: var(--blue); }
 
 .map-stop-list {
   top: 26px; right: 26px; width: 260px; max-height: min(46vh, 420px); margin: 0; padding: 6px;
@@ -374,6 +383,7 @@ nav a:hover { background: var(--blue-50); }
   background: #eef3f7;
 }
 .feedback-threads {
+  scroll-margin-top: 24px;
   width: min(980px, 100%);
   padding: clamp(24px, 4vw, 40px);
   border: 1px solid #cbd8e2;
@@ -706,6 +716,7 @@ nav a:hover { background: var(--blue-50); }
   .map-section { min-height: 520px; }
   .map-intro { top: 14px; left: 14px; width: calc(100% - 28px); padding: 18px 20px; }
   .map-panel { left: 14px; bottom: 14px; width: calc(100% - 28px); padding: 20px; }
+  .map-panel-actions { grid-template-columns: 1fr; }
   /* The full-width panel owns the bottom edge; pinch and double-tap still zoom. */
   .leaflet-control-zoom { display: none; }
   .feedback-page { padding: 10px; }
