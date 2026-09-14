@@ -601,6 +601,7 @@ nav a:hover { background: var(--blue-50); }
 .contact-toggle input { width: 34px; height: 18px; flex: none; margin: 0; accent-color: #0870c7; }
 .privacy-note { display: grid; grid-template-columns: 14px 1fr; gap: 5px; color: #758592 !important; font-size: 8.5px !important; }
 .privacy-note a { color: #0868b7; text-decoration: underline; }
+.form-error { margin: 10px 0 0; padding: 9px 11px; border: 1px solid #e4a5aa; border-radius: 5px; color: #7a2930; background: #fff3f4; font-size: 10px; line-height: 1.4; }
 .review-card { overflow: hidden; border: 1px solid #d3dee6; border-radius: 6px; background: #fff; }
 .review-card h3 { margin: 0; padding: 11px 13px 4px; color: #173a56; font-size: 11px; }
 .review-card h3:not(:first-child) { margin-top: 6px; border-top: 1px solid #e0e7ec; }
