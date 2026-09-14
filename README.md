@@ -58,3 +58,23 @@ Or start them independently with `npm run dev:client` and `npm run dev:protected
 ## Checks
 
 Run `npm run lint`, `npm run typecheck`, and `npm run build` from the repository root.
+
+## Feedback burst capacity
+
+The public submission path can be verified with the included burst test. It sends
+150 real feedback reports over 500 ms by default and fails unless every request
+is accepted. Run it only against a disposable or staging Supabase project because
+the reports are intentionally retained just like genuine public feedback.
+
+```bash
+LOAD_TEST_SUPABASE_URL=https://your-staging-project.supabase.co \
+LOAD_TEST_SUPABASE_PUBLISHABLE_KEY=your-staging-publishable-key \
+LOAD_TEST_STOP_ID=a-published-stop-uuid \
+npm run loadtest:feedback
+```
+
+The test uses the publishable key and the same `create_feedback_report` RPC as the
+public form; it never needs a database password or service-role key. It reports
+throughput and p50, p95, p99, and maximum latency. Override the defaults with
+`LOAD_TEST_REQUESTS`, `LOAD_TEST_WINDOW_MS`, or `LOAD_TEST_TIMEOUT_MS` when testing
+a different traffic profile.
