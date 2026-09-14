@@ -15,6 +15,7 @@ export type MapLabels = {
   bus: string;
   accessible: string;
   feedback: string;
+  comments: string;
   attribution: string;
   loading: string;
   loadError: string;
@@ -210,12 +211,17 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
               <span>{labels.bus}</span>
               {selected.is_accessible ? <span>{labels.accessible}</span> : null}
             </div>
-            <a href={`/feedback?stop=${encodeURIComponent(selected.id)}&lang=${language}&name=${encodeURIComponent(stopName(selected))}`}>
-              {labels.feedback}
-              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M5 12h14m-5-5 5 5-5 5" />
-              </svg>
-            </a>
+            <div className="map-panel-actions">
+              <a className="map-panel-feedback" href={`/feedback?stop=${encodeURIComponent(selected.id)}&lang=${language}&name=${encodeURIComponent(stopName(selected))}`}>
+                {labels.feedback}
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M5 12h14m-5-5 5 5-5 5" />
+                </svg>
+              </a>
+              <a className="map-panel-comments" href={`/feedback?stop=${encodeURIComponent(selected.id)}&lang=${language}&name=${encodeURIComponent(stopName(selected))}#feedback-threads`}>
+                {labels.comments}
+              </a>
+            </div>
           </>
         ) : (
           <p className="map-panel-empty">{stops.length === 0 ? labels.noStops : filteredStops.length === 0 ? labels.noResults : labels.choose}</p>

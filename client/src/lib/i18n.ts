@@ -12,7 +12,7 @@ export const translations = {
       choose: "Wähle eine Haltestelle auf der Karte, um Feedback zu geben.",
       noStops: "Es sind noch keine Haltestellen veröffentlicht.",
       searchLabel: "Haltestellen auf der Karte durchsuchen", searchPlaceholder: "Name oder Gemeinde suchen …", noResults: "Keine passende Haltestelle gefunden.",
-      bus: "Bus", accessible: "Barrierefrei", feedback: "Feedback geben", attribution: OSM_ATTRIBUTION,
+      bus: "Bus", accessible: "Barrierefrei", feedback: "Feedback geben", comments: "Kommentare ansehen", attribution: OSM_ATTRIBUTION,
     },
     stops: {
       eyebrow: "Alle Haltestellen", title: "Haltestellen",
@@ -22,7 +22,7 @@ export const translations = {
       countOne: "Haltestelle gefunden", countMany: "Haltestellen gefunden",
       empty: "Keine Haltestelle gefunden.", emptyHint: "Versuche es mit einem anderen Namen oder einer Gemeinde.",
       noStops: "Es sind noch keine Haltestellen veröffentlicht.",
-      bus: "Bus", accessible: "Barrierefrei", feedback: "Feedback geben", onMap: "Auf der Karte ansehen",
+      bus: "Bus", accessible: "Barrierefrei", feedback: "Feedback geben", comments: "Kommentare ansehen", onMap: "Auf der Karte ansehen",
     },
     how: {
       eyebrow: "Einfach & schnell", title: "So funktioniert's",
@@ -112,7 +112,7 @@ export const translations = {
       choose: "Scegli una fermata sulla mappa per lasciare un feedback.",
       noStops: "Non ci sono ancora fermate pubblicate.",
       searchLabel: "Cerca fermate sulla mappa", searchPlaceholder: "Cerca nome o comune …", noResults: "Nessuna fermata corrispondente trovata.",
-      bus: "Bus", accessible: "Accessibile", feedback: "Lascia un feedback", attribution: OSM_ATTRIBUTION,
+      bus: "Bus", accessible: "Accessibile", feedback: "Lascia un feedback", comments: "Vedi i commenti", attribution: OSM_ATTRIBUTION,
     },
     stops: {
       eyebrow: "Tutte le fermate", title: "Fermate",
@@ -122,7 +122,7 @@ export const translations = {
       countOne: "fermata trovata", countMany: "fermate trovate",
       empty: "Nessuna fermata trovata.", emptyHint: "Prova con un altro nome o con un comune.",
       noStops: "Non ci sono ancora fermate pubblicate.",
-      bus: "Bus", accessible: "Accessibile", feedback: "Lascia un feedback", onMap: "Vedi sulla mappa",
+      bus: "Bus", accessible: "Accessibile", feedback: "Lascia un feedback", comments: "Vedi i commenti", onMap: "Vedi sulla mappa",
     },
     how: {
       eyebrow: "Semplice e veloce", title: "Come funziona",
@@ -212,7 +212,7 @@ export const translations = {
       choose: "Pick a stop on the map to give feedback.",
       noStops: "No stops have been published yet.",
       searchLabel: "Search stops on the map", searchPlaceholder: "Search by name or municipality …", noResults: "No matching stop found.",
-      bus: "Bus", accessible: "Accessible", feedback: "Give feedback", attribution: OSM_ATTRIBUTION,
+      bus: "Bus", accessible: "Accessible", feedback: "Give feedback", comments: "View comments", attribution: OSM_ATTRIBUTION,
     },
     stops: {
       eyebrow: "All stops", title: "Stops",
@@ -222,7 +222,7 @@ export const translations = {
       countOne: "stop found", countMany: "stops found",
       empty: "No stop found.", emptyHint: "Try another name or a municipality.",
       noStops: "No stops have been published yet.",
-      bus: "Bus", accessible: "Accessible", feedback: "Give feedback", onMap: "View on the map",
+      bus: "Bus", accessible: "Accessible", feedback: "Give feedback", comments: "View comments", onMap: "View on the map",
     },
     how: {
       eyebrow: "Simple & quick", title: "How it works",
