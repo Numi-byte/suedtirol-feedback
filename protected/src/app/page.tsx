@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { archiveBusStop, createBusStop, replyToFeedback, restoreBusStop, signOut, updateBusStop } from "./actions";
+import { archiveBusStop, createBusStop, restoreBusStop, signOut, updateBusStop } from "./actions";
 import { ConfirmButton } from "./confirm-button";
+import { FeedbackReplyForm } from "./feedback-reply-form";
 import { LanguageSwitch } from "./language-switch";
 import { LoginForm } from "./login-form";
 import { StopImportForm } from "./stop-import-form";
@@ -255,17 +256,15 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
                 return photoUrl ? <a href={photoUrl} target="_blank" rel="noreferrer" key={photo.id}>
                   {/* Signed storage URLs use the deployment's Supabase hostname. */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={photoUrl} alt={t.feedback.photoAlt} />
+                  <img src={photoUrl} alt={t.feedback.photoAlt} loading="lazy" decoding="async" />
                 </a> : null;
               })}</div>}
-              {reply ? <div className="existing-reply"><span>Öffentliche Antwort</span><p>{reply.body}</p></div> : null}
-              {canReply ? <form action={replyToFeedback} className="reply-form">
-                <input type="hidden" name="feedback_id" value={entry.id} />
-                <label htmlFor={`reply-${entry.id}`}>{reply ? "Öffentliche Antwort bearbeiten" : "Öffentlich antworten"}</label>
-                <textarea id={`reply-${entry.id}`} name="body" maxLength={2000} rows={3} defaultValue={reply?.body ?? ""} required />
-                <small>Die Antwort ist zusammen mit den gewählten Kategorien öffentlich sichtbar. Persönliche Angaben bleiben privat.</small>
-                <button type="submit">{reply ? "Antwort aktualisieren" : "Antwort veröffentlichen"}</button>
-              </form> : null}
+              {canReply ? <FeedbackReplyForm
+                key={`${entry.id}-${reply?.updated_at ?? "unanswered"}`}
+                feedbackId={entry.id}
+                reply={reply}
+                labels={t.feedback.reply}
+              /> : reply ? <div className="existing-reply"><span>{t.feedback.reply.answered}</span><p>{reply.body}</p></div> : null}
             </article>;
           })}
           {!feedback?.length && <p className="empty feedback-empty">{t.feedback.empty}</p>}

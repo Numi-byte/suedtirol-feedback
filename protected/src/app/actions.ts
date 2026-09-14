@@ -69,17 +69,20 @@ async function requireUser() {
 
 const FEEDBACK_REPLY_USER_ID = "bdee91d9-c969-4bd4-b336-8f7e780ead3e";
 
-export async function replyToFeedback(formData: FormData) {
+export type FeedbackReplyState = { error?: string; success?: boolean };
+
+export async function replyToFeedback(_state: FeedbackReplyState, formData: FormData): Promise<FeedbackReplyState> {
   const { supabase, user } = await requireUser();
-  if (user.id !== FEEDBACK_REPLY_USER_ID) throw new Error("You are not authorized to reply to public feedback.");
+  if (user.id !== FEEDBACK_REPLY_USER_ID) return { error: "You are not authorized to reply to public feedback." };
   const feedbackId = String(formData.get("feedback_id") ?? "");
   const body = String(formData.get("body") ?? "").trim();
-  if (!feedbackId) throw new Error("A feedback id is required.");
-  if (!body || body.length > 2000) throw new Error("A reply must contain between 1 and 2000 characters.");
+  if (!feedbackId) return { error: "A feedback id is required." };
+  if (!body || body.length > 2000) return { error: "A reply must contain between 1 and 2000 characters." };
 
   const { error } = await supabase.rpc("reply_to_feedback", { p_feedback_id: feedbackId, p_body: body });
-  if (error) throw new Error(error.message);
+  if (error) return { error: error.message };
   revalidatePath("/");
+  return { success: true };
 }
 
 export async function createBusStop(formData: FormData) {
