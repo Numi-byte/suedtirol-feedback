@@ -222,6 +222,12 @@ nav a:hover { background: var(--blue-50); }
 }
 .map-intro h2 { margin: 10px 0 8px; font-size: clamp(21px, 2.3vw, 27px); line-height: 1.15; }
 .map-intro p { margin: 0; color: var(--blue); font-size: 13px; font-weight: 700; }
+.map-search { display: flex; align-items: center; gap: 9px; margin-top: 15px; padding: 10px 11px; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+.map-search:focus-within { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0, 105, 180, .14); }
+.map-search svg { width: 18px; height: 18px; flex: none; color: var(--blue); }
+.map-search input { width: 100%; min-width: 0; padding: 0; border: 0; outline: 0; background: transparent; color: var(--navy); font-size: 14px; }
+.map-search input:focus { box-shadow: none; }
+.map-search input::placeholder { color: #8294a2; }
 
 .map-panel {
   left: 26px; bottom: 26px; width: min(340px, calc(100% - 52px)); padding: 24px;

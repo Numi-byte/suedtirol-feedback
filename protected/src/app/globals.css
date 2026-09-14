@@ -123,6 +123,11 @@ form button {
 form button:hover { background: var(--blue-dark); }
 
 /* ---------- stop list ---------- */
+.database-search { margin-top: 20px; }
+.database-search > div { display: flex; gap: 8px; margin-top: 7px; }
+.database-search input { flex: 1; }
+.database-search button { width: auto; padding-inline: 18px; }
+.database-search-count { margin: 10px 0 0; color: var(--blue); font-size: 12px; font-weight: 700; }
 .stop-list { margin-top: 18px; }
 .stop-list article, .stop-row { display: flex; gap: 12px; padding: 16px 0; border-top: 1px solid var(--line); }
 /* Each row selects its stop for editing. */

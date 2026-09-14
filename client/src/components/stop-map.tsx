@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Map as LeafletMap, Marker } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { stopName as nameFor } from "@/lib/stops";
@@ -18,6 +18,9 @@ export type MapLabels = {
   attribution: string;
   loading: string;
   loadError: string;
+  searchLabel: string;
+  searchPlaceholder: string;
+  noResults: string;
 };
 
 /** South Tyrol, used until the published stops define their own extent. */
@@ -48,10 +51,19 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
   const markersRef = useRef<Map<string, Marker>>(new Map());
   const fittedRef = useRef(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
   const [mapStatus, setMapStatus] = useState<"loading" | "ready" | "error">("loading");
 
   const stopName = (stop: BusStop) => nameFor(stop, language);
-  const selected = stops.find((stop) => stop.id === selectedId) ?? null;
+  const filteredStops = useMemo(() => {
+    const terms = query.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
+    if (!terms.length) return stops;
+    return stops.filter((stop) => {
+      const searchable = [stop.name_de, stop.name_it, stop.name_en, stop.municipality].join(" ").toLocaleLowerCase();
+      return terms.every((term) => searchable.includes(term));
+    });
+  }, [query, stops]);
+  const selected = filteredStops.find((stop) => stop.id === selectedId) ?? null;
 
   // Create the map once. Leaflet needs the DOM, so it is imported client-side only.
   useEffect(() => {
@@ -118,7 +130,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
       for (const marker of markersRef.current.values()) marker.remove();
       markersRef.current.clear();
 
-      for (const stop of stops) {
+      for (const stop of filteredStops) {
         const marker = L.marker([stop.latitude, stop.longitude], {
           icon: L.divIcon({
             className: "stop-marker",
@@ -158,7 +170,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stops, language, selectedId, mapStatus]);
+  }, [filteredStops, language, selectedId, mapStatus]);
 
   const focusStop = (stop: BusStop) => {
     setSelectedId(stop.id);
@@ -178,7 +190,14 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
       <div className="map-intro">
         <span className="mini-label">{labels.eyebrow}</span>
         <h2 id="map-heading">{labels.title}</h2>
-        <p>{stops.length} {labels.stopsAvailable}</p>
+        <p>{filteredStops.length} {labels.stopsAvailable}</p>
+        <label className="map-search" htmlFor="map-stop-search">
+          <span className="sr-only">{labels.searchLabel}</span>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="11" cy="11" r="7" /><path d="m16 16 4.5 4.5" />
+          </svg>
+          <input id="map-stop-search" type="search" value={query} placeholder={labels.searchPlaceholder} autoComplete="off" onChange={(event) => setQuery(event.target.value)} />
+        </label>
       </div>
 
       <div className="map-panel" aria-live="polite">
@@ -199,13 +218,13 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
             </a>
           </>
         ) : (
-          <p className="map-panel-empty">{stops.length > 0 ? labels.choose : labels.noStops}</p>
+          <p className="map-panel-empty">{stops.length === 0 ? labels.noStops : filteredStops.length === 0 ? labels.noResults : labels.choose}</p>
         )}
       </div>
 
-      {stops.length > 0 ? (
+      {filteredStops.length > 0 ? (
         <ul className="map-stop-list">
-          {stops.map((stop) => (
+          {filteredStops.map((stop) => (
             <li key={stop.id}>
               <button type="button" aria-current={stop.id === selectedId} onClick={() => focusStop(stop)}>
                 <strong>{stopName(stop)}</strong>
