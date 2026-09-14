@@ -15,6 +15,7 @@ const copy = {
     summaryTitle: "Deine Angaben",
     copy: "Angaben kopieren", copied: "Kopiert",
     discussion: "Öffentliche Beiträge ansehen", back: "Zurück zur Karte",
+    photoWarning: "Das Feedback wurde gespeichert, aber das Foto konnte nicht hochgeladen werden.",
   },
   it: {
     kicker: "Riscontro inviato",
@@ -26,6 +27,7 @@ const copy = {
     summaryTitle: "I tuoi dati",
     copy: "Copia i dati", copied: "Copiato",
     discussion: "Vedi i contributi pubblici", back: "Torna alla mappa",
+    photoWarning: "Il riscontro è stato salvato, ma non è stato possibile caricare la foto.",
   },
   en: {
     kicker: "Feedback sent",
@@ -37,6 +39,7 @@ const copy = {
     summaryTitle: "Your details",
     copy: "Copy details", copied: "Copied",
     discussion: "View public posts", back: "Back to the map",
+    photoWarning: "Your feedback was saved, but the photo could not be uploaded.",
   },
 } as const;
 
@@ -49,7 +52,7 @@ const CheckIcon = () => (
 export default async function ThanksPage({
   searchParams,
 }: {
-  searchParams: Promise<{ lang?: string; stop?: string; stop_id?: string; cats?: string; sev?: string; msg?: string }>;
+  searchParams: Promise<{ lang?: string; stop?: string; stop_id?: string; cats?: string; sev?: string; msg?: string; photo?: string }>;
 }) {
   const params = await searchParams;
   const language = (["de", "it", "en"].includes(params.lang ?? "") ? params.lang : "de") as Language;
@@ -72,6 +75,7 @@ export default async function ThanksPage({
         <span>{t.kicker}</span>
         <h1>{t.title}</h1>
         <p>{t.body}</p>
+        {params.photo === "failed" ? <p className="form-error" role="status">{t.photoWarning}</p> : null}
         <p>
           {t.contactBefore}
           <a href={buildFeedbackFormUrl(handoff, language)} target="_blank" rel="noreferrer">{t.contactLink}</a>
