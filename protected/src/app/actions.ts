@@ -67,6 +67,21 @@ async function requireUser() {
   return { supabase, user };
 }
 
+const FEEDBACK_REPLY_USER_ID = "bdee91d9-c969-4bd4-b336-8f7e780ead3e";
+
+export async function replyToFeedback(formData: FormData) {
+  const { supabase, user } = await requireUser();
+  if (user.id !== FEEDBACK_REPLY_USER_ID) throw new Error("You are not authorized to reply to public feedback.");
+  const feedbackId = String(formData.get("feedback_id") ?? "");
+  const body = String(formData.get("body") ?? "").trim();
+  if (!feedbackId) throw new Error("A feedback id is required.");
+  if (!body || body.length > 2000) throw new Error("A reply must contain between 1 and 2000 characters.");
+
+  const { error } = await supabase.rpc("reply_to_feedback", { p_feedback_id: feedbackId, p_body: body });
+  if (error) throw new Error(error.message);
+  revalidatePath("/");
+}
+
 export async function createBusStop(formData: FormData) {
   const { supabase, user } = await requireUser();
   const { error } = await supabase.from("bus_stops").insert({ ...readStopFields(formData), created_by: user.id });

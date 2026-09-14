@@ -1,4 +1,5 @@
 import { FeedbackForm } from "./feedback-form";
+import { FeedbackThreads } from "./feedback-threads";
 
 export default async function FeedbackPage({
   searchParams,
@@ -16,6 +17,7 @@ export default async function FeedbackPage({
         stopLocation={params.location ?? "Südtirol"}
         language={language}
       />
+      <FeedbackThreads stopId={params.stop ?? ""} language={language} />
     </main>
   );
 }

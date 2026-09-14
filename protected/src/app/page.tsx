@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { archiveBusStop, createBusStop, restoreBusStop, signOut, updateBusStop } from "./actions";
+import { archiveBusStop, createBusStop, replyToFeedback, restoreBusStop, signOut, updateBusStop } from "./actions";
 import { ConfirmButton } from "./confirm-button";
 import { LanguageSwitch } from "./language-switch";
 import { LoginForm } from "./login-form";
@@ -16,6 +16,7 @@ export const dynamic = "force-dynamic";
 type CategoryLabels = { label_de: string; label_it: string; label_en: string };
 type FeedbackCategory = { category_slug: string; feedback_categories: CategoryLabels[] };
 type FeedbackPhoto = { id: string; storage_path: string };
+type FeedbackReply = { id: string; body: string; created_at: string; updated_at: string };
 type Severity = "low" | "medium" | "high";
 type Status = "new" | "in_review" | "resolved" | "dismissed";
 
@@ -72,7 +73,7 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
   const editing = selectedId ? stops.find((stop) => stop.id === selectedId) ?? null : null;
   const { data: feedback } = user ? await supabase
     .from("stop_feedback")
-    .select("id,severity,description,overall_rating,cleanliness_rating,safety_rating,accessibility_rating,information_rating,shelter_rating,has_shelter,has_seating,has_lighting,comment,email,consent_to_contact,language,status,created_at,bus_stops(name_de,name_it,name_en,municipality),stop_feedback_categories(category_slug,feedback_categories(label_de,label_it,label_en)),stop_feedback_photos(id,storage_path)")
+    .select("id,severity,description,overall_rating,cleanliness_rating,safety_rating,accessibility_rating,information_rating,shelter_rating,has_shelter,has_seating,has_lighting,comment,email,consent_to_contact,language,status,created_at,bus_stops(name_de,name_it,name_en,municipality),stop_feedback_categories(category_slug,feedback_categories(label_de,label_it,label_en)),stop_feedback_photos(id,storage_path),feedback_replies(id,body,created_at,updated_at)")
     .order("created_at", { ascending: false })
     .limit(250) : { data: [] };
 
@@ -86,6 +87,7 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
     photo.signedUrl && photoPaths[index] ? [[photoPaths[index], photo.signedUrl]] : [],
   ));
   const newFeedbackCount = (feedback ?? []).filter((entry) => entry.status === "new").length;
+  const canReply = user?.id === "bdee91d9-c969-4bd4-b336-8f7e780ead3e";
 
   if (!user) return (
     <main className="login-page">
@@ -190,6 +192,7 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
             const stop = Array.isArray(entry.bus_stops) ? entry.bus_stops[0] : entry.bus_stops;
             const categories = (entry.stop_feedback_categories as FeedbackCategory[] | null) ?? [];
             const photos = (entry.stop_feedback_photos as FeedbackPhoto[] | null) ?? [];
+            const reply = ((entry.feedback_replies as FeedbackReply[] | null) ?? [])[0];
             const isLegacyRating = entry.overall_rating !== null;
             const status = (entry.status ?? "new") as Status;
             const severity = entry.severity as Severity | null;
@@ -221,6 +224,14 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
                   <img src={photoUrl} alt={t.feedback.photoAlt} />
                 </a> : null;
               })}</div>}
+              {reply ? <div className="existing-reply"><span>Öffentliche Antwort</span><p>{reply.body}</p></div> : null}
+              {canReply ? <form action={replyToFeedback} className="reply-form">
+                <input type="hidden" name="feedback_id" value={entry.id} />
+                <label htmlFor={`reply-${entry.id}`}>{reply ? "Öffentliche Antwort bearbeiten" : "Öffentlich antworten"}</label>
+                <textarea id={`reply-${entry.id}`} name="body" maxLength={2000} rows={3} defaultValue={reply?.body ?? ""} required />
+                <small>Die Antwort ist zusammen mit den gewählten Kategorien öffentlich sichtbar. Persönliche Angaben bleiben privat.</small>
+                <button type="submit">{reply ? "Antwort aktualisieren" : "Antwort veröffentlichen"}</button>
+              </form> : null}
             </article>;
           })}
           {!feedback?.length && <p className="empty feedback-empty">{t.feedback.empty}</p>}
