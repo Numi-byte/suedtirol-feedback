@@ -1,10 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/components/language-provider";
 
 const companyName = "STA – Südtiroler Transportstrukturen AG";
+const footerHrefs = [
+  "https://www.sta.bz.it/de/impressum/",
+  "https://www.suedtirolmobil.info/de/service-und-kontakt/privacy",
+  "https://www.suedtirolmobil.info/de/service-und-kontakt",
+] as const;
 
 /**
  * The home screen is a fixed app shell around the map, so its footer is pinned
@@ -24,7 +28,7 @@ export function SiteFooter() {
         <div className="footer-inner">
           <p className="footer-company">{companyName}</p>
           <div className="footer-links">
-            {t.footer.links.map((link) => <Link key={link} href="/about">{link}</Link>)}
+            {t.footer.links.map((link, index) => <a key={link} href={footerHrefs[index]}>{link}</a>)}
           </div>
         </div>
       </footer>
@@ -36,7 +40,7 @@ export function SiteFooter() {
       <div className="footer-inner">
         <p className="footer-company">{companyName}</p>
         <div className="footer-links">
-          {t.footer.links.map((link) => <Link key={link} href="/about">{link}</Link>)}
+          {t.footer.links.map((link, index) => <a key={link} href={footerHrefs[index]}>{link}</a>)}
         </div>
       </div>
     </footer>
