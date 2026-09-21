@@ -8,9 +8,11 @@ export const translations = {
     nav: { find: "Haltestellen", how: "So funktioniert's", about: "Über das Projekt", language: "Sprache ändern", service: "Service Desk", cta: "Feedback geben", home: "Startseite" },
     map: {
       eyebrow: "Haltestellenkarte", title: "Finde deine Haltestelle.", stopsAvailable: "Haltestellen verfügbar",
+      loading: "Karte wird geladen …", loadError: "Die Karte konnte nicht geladen werden.",
       choose: "Wähle eine Haltestelle auf der Karte, um Feedback zu geben.",
       noStops: "Es sind noch keine Haltestellen veröffentlicht.",
-      bus: "Bus", accessible: "Barrierefrei", feedback: "Feedback geben", attribution: OSM_ATTRIBUTION,
+      searchLabel: "Haltestellen auf der Karte durchsuchen", searchPlaceholder: "Name oder Gemeinde suchen …", noResults: "Keine passende Haltestelle gefunden.",
+      bus: "Bus", accessible: "Barrierefrei", feedback: "Feedback geben", comments: "Kommentare ansehen", attribution: OSM_ATTRIBUTION,
     },
     stops: {
       eyebrow: "Alle Haltestellen", title: "Haltestellen",
@@ -20,7 +22,7 @@ export const translations = {
       countOne: "Haltestelle gefunden", countMany: "Haltestellen gefunden",
       empty: "Keine Haltestelle gefunden.", emptyHint: "Versuche es mit einem anderen Namen oder einer Gemeinde.",
       noStops: "Es sind noch keine Haltestellen veröffentlicht.",
-      bus: "Bus", accessible: "Barrierefrei", feedback: "Feedback geben", onMap: "Auf der Karte ansehen",
+      bus: "Bus", accessible: "Barrierefrei", feedback: "Feedback geben", comments: "Kommentare ansehen", onMap: "Auf der Karte ansehen",
     },
     how: {
       eyebrow: "Einfach & schnell", title: "So funktioniert's",
@@ -100,15 +102,17 @@ export const translations = {
       closing: "Denn wer den öffentlichen Verkehr täglich nutzt, weiß am besten, was vor Ort gut funktioniert – und wo es noch Verbesserungspotenzial gibt.",
       tagline: "Für alle, die Südtirol täglich in Bewegung halten.", cta: "Jetzt Feedback geben",
     },
-    footer: { note: "Ein Projekt für den öffentlichen Nahverkehr in Südtirol.", links: ["Impressum", "Datenschutz", "Barrierefreiheit", "Kontakt"] },
+    footer: { note: "Ein Projekt für den öffentlichen Nahverkehr in Südtirol.", links: ["Impressum", "Datenschutz", "Kontakt"] },
   },
   it: {
     nav: { find: "Fermate", how: "Come funziona", about: "Il progetto", language: "Cambia lingua", service: "Service Desk", cta: "Lascia un feedback", home: "Home" },
     map: {
       eyebrow: "Mappa delle fermate", title: "Trova la tua fermata.", stopsAvailable: "fermate disponibili",
+      loading: "Caricamento della mappa …", loadError: "Non è stato possibile caricare la mappa.",
       choose: "Scegli una fermata sulla mappa per lasciare un feedback.",
       noStops: "Non ci sono ancora fermate pubblicate.",
-      bus: "Bus", accessible: "Accessibile", feedback: "Lascia un feedback", attribution: OSM_ATTRIBUTION,
+      searchLabel: "Cerca fermate sulla mappa", searchPlaceholder: "Cerca nome o comune …", noResults: "Nessuna fermata corrispondente trovata.",
+      bus: "Bus", accessible: "Accessibile", feedback: "Lascia un feedback", comments: "Vedi i commenti", attribution: OSM_ATTRIBUTION,
     },
     stops: {
       eyebrow: "Tutte le fermate", title: "Fermate",
@@ -118,7 +122,7 @@ export const translations = {
       countOne: "fermata trovata", countMany: "fermate trovate",
       empty: "Nessuna fermata trovata.", emptyHint: "Prova con un altro nome o con un comune.",
       noStops: "Non ci sono ancora fermate pubblicate.",
-      bus: "Bus", accessible: "Accessibile", feedback: "Lascia un feedback", onMap: "Vedi sulla mappa",
+      bus: "Bus", accessible: "Accessibile", feedback: "Lascia un feedback", comments: "Vedi i commenti", onMap: "Vedi sulla mappa",
     },
     how: {
       eyebrow: "Semplice e veloce", title: "Come funziona",
@@ -198,15 +202,17 @@ export const translations = {
       closing: "Perché chi usa il trasporto pubblico ogni giorno sa meglio di chiunque altro che cosa funziona sul posto – e dove c'è ancora margine di miglioramento.",
       tagline: "Per chi tiene in movimento l'Alto Adige ogni giorno.", cta: "Lascia un feedback",
     },
-    footer: { note: "Un progetto per il trasporto pubblico locale in Alto Adige.", links: ["Note legali", "Privacy", "Accessibilità", "Contatti"] },
+    footer: { note: "Un progetto per il trasporto pubblico locale in Alto Adige.", links: ["Note legali", "Privacy", "Contatti"] },
   },
   en: {
     nav: { find: "Stops", how: "How it works", about: "About the project", language: "Change language", service: "Service desk", cta: "Give feedback", home: "Home" },
     map: {
       eyebrow: "Stop map", title: "Find your stop.", stopsAvailable: "stops available",
+      loading: "Loading map …", loadError: "The map could not be loaded.",
       choose: "Pick a stop on the map to give feedback.",
       noStops: "No stops have been published yet.",
-      bus: "Bus", accessible: "Accessible", feedback: "Give feedback", attribution: OSM_ATTRIBUTION,
+      searchLabel: "Search stops on the map", searchPlaceholder: "Search by name or municipality …", noResults: "No matching stop found.",
+      bus: "Bus", accessible: "Accessible", feedback: "Give feedback", comments: "View comments", attribution: OSM_ATTRIBUTION,
     },
     stops: {
       eyebrow: "All stops", title: "Stops",
@@ -216,7 +222,7 @@ export const translations = {
       countOne: "stop found", countMany: "stops found",
       empty: "No stop found.", emptyHint: "Try another name or a municipality.",
       noStops: "No stops have been published yet.",
-      bus: "Bus", accessible: "Accessible", feedback: "Give feedback", onMap: "View on the map",
+      bus: "Bus", accessible: "Accessible", feedback: "Give feedback", comments: "View comments", onMap: "View on the map",
     },
     how: {
       eyebrow: "Simple & quick", title: "How it works",
@@ -296,6 +302,6 @@ export const translations = {
       closing: "Because the people who use public transport every day know best what works on the ground — and where there is still room for improvement.",
       tagline: "For the people who keep South Tyrol moving every day.", cta: "Give feedback now",
     },
-    footer: { note: "A project for local public transport in South Tyrol.", links: ["Imprint", "Privacy", "Accessibility", "Contact"] },
+    footer: { note: "A project for local public transport in South Tyrol.", links: ["Imprint", "Privacy", "Contact"] },
   },
 } as const;

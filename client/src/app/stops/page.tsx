@@ -37,6 +37,9 @@ export default function StopsPage() {
     return [...found].sort((a, b) => stopName(a, language).localeCompare(stopName(b, language)));
   }, [stops, query, language]);
 
+  const feedbackHref = (stop: BusStop) =>
+    `/feedback?stop=${encodeURIComponent(stop.id)}&lang=${language}&name=${encodeURIComponent(stopName(stop, language))}`;
+
   return (
     <main className="content-page">
       <div className="page-title"><h1>{t.stops.title}</h1></div>
@@ -89,9 +92,12 @@ export default function StopsPage() {
                 <div className="stop-card-actions">
                   <Link
                     className="stop-card-cta"
-                    href={`/feedback?stop=${encodeURIComponent(stop.id)}&lang=${language}&name=${encodeURIComponent(stopName(stop, language))}`}
+                    href={feedbackHref(stop)}
                   >
                     {t.stops.feedback} <ArrowIcon />
+                  </Link>
+                  <Link className="stop-card-comments" href={`${feedbackHref(stop)}#feedback-threads`}>
+                    {t.stops.comments}
                   </Link>
                   <Link className="stop-card-map" href="/">{t.stops.onMap}</Link>
                 </div>

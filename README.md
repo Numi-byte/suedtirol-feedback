@@ -58,3 +58,17 @@ Or start them independently with `npm run dev:client` and `npm run dev:protected
 ## Checks
 
 Run `npm run lint`, `npm run typecheck`, and `npm run build` from the repository root.
+
+## Public submission capacity and safety
+
+Feedback is submitted from each visitor's browser directly to the transactional
+`create_feedback_report` Supabase RPC. Optional photos are also uploaded directly
+to the private storage bucket and registered only after a report exists. As a
+result, a short burst of public submissions does not funnel large multipart bodies
+through the Next.js server or hold their files in application-server memory.
+
+The database RPC and storage policies remain the security boundary: they validate
+published stops, category and severity values, upload type and size, and the
+report-owned storage path. The browser additionally prevents duplicate clicks,
+checks the photo before making any request, and shows a recoverable error instead
+of replacing the page with a server error.

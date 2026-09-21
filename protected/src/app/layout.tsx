@@ -1,11 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { getLanguage } from "@/lib/language";
 import "./globals.css";
 
 export const metadata: Metadata = { title: "südtirolmobil feedback portal", description: "Internal feedback administration portal." };
 
-export const viewport: Viewport = { themeColor: "#0069b4" };
+export const viewport: Viewport = { themeColor: "#005980" };
 
-export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
-  return <html lang="en"><body>{children}</body></html>;
+export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
+  const language = await getLanguage();
+  return <html lang={language}><body>{children}</body></html>;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Map as LeafletMap, Marker } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { stopName as nameFor } from "@/lib/stops";
@@ -15,7 +15,13 @@ export type MapLabels = {
   bus: string;
   accessible: string;
   feedback: string;
+  comments: string;
   attribution: string;
+  loading: string;
+  loadError: string;
+  searchLabel: string;
+  searchPlaceholder: string;
+  noResults: string;
 };
 
 /** South Tyrol, used until the published stops define their own extent. */
@@ -46,16 +52,26 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
   const markersRef = useRef<Map<string, Marker>>(new Map());
   const fittedRef = useRef(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [mapStatus, setMapStatus] = useState<"loading" | "ready" | "error">("loading");
 
   const stopName = (stop: BusStop) => nameFor(stop, language);
-  const selected = stops.find((stop) => stop.id === selectedId) ?? null;
+  const filteredStops = useMemo(() => {
+    const terms = query.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
+    if (!terms.length) return stops;
+    return stops.filter((stop) => {
+      const searchable = [stop.name_de, stop.name_it, stop.name_en, stop.municipality].join(" ").toLocaleLowerCase();
+      return terms.every((term) => searchable.includes(term));
+    });
+  }, [query, stops]);
+  const selected = filteredStops.find((stop) => stop.id === selectedId) ?? null;
 
   // Create the map once. Leaflet needs the DOM, so it is imported client-side only.
   useEffect(() => {
     let cancelled = false;
     const markers = markersRef.current;
 
-    (async () => {
+    const initialiseMap = async () => {
       const L = (await import("leaflet")).default;
       if (cancelled || !containerRef.current || mapRef.current) return;
 
@@ -65,17 +81,35 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
         zoomControl: false,
         scrollWheelZoom: true,
       });
-      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
         attribution: labels.attribution,
-      }).addTo(map);
+        updateWhenIdle: true,
+        keepBuffer: 1,
+      });
+      tiles.once("load", () => {
+        if (!cancelled) setMapStatus("ready");
+      });
+      tiles.addTo(map);
       L.control.zoom({ position: "bottomright" }).addTo(map);
       map.attributionControl.setPrefix(false);
       mapRef.current = map;
-    })();
+    };
+    const start = () => initialiseMap().catch(() => {
+      if (!cancelled) setMapStatus("error");
+    });
+    const scheduler: {
+      requestIdleCallback?: Window["requestIdleCallback"];
+      cancelIdleCallback?: Window["cancelIdleCallback"];
+    } = window;
+    const idleId: number = scheduler.requestIdleCallback
+      ? scheduler.requestIdleCallback(start, { timeout: 1200 })
+      : globalThis.setTimeout(start, 1) as unknown as number;
 
     return () => {
       cancelled = true;
+      if (scheduler.cancelIdleCallback) scheduler.cancelIdleCallback(idleId);
+      else globalThis.clearTimeout(idleId);
       mapRef.current?.remove();
       mapRef.current = null;
       markers.clear();
@@ -97,7 +131,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
       for (const marker of markersRef.current.values()) marker.remove();
       markersRef.current.clear();
 
-      for (const stop of stops) {
+      for (const stop of filteredStops) {
         const marker = L.marker([stop.latitude, stop.longitude], {
           icon: L.divIcon({
             className: "stop-marker",
@@ -137,7 +171,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stops, language, selectedId]);
+  }, [filteredStops, language, selectedId, mapStatus]);
 
   const focusStop = (stop: BusStop) => {
     setSelectedId(stop.id);
@@ -146,12 +180,25 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
 
   return (
     <div className="map-canvas">
-      <div className="map-surface" ref={containerRef} role="application" aria-label={labels.title} />
+      <div className="map-surface" ref={containerRef} role="application" aria-label={labels.title} aria-busy={mapStatus === "loading"} />
+      {mapStatus !== "ready" ? (
+        <div className={`map-loading ${mapStatus === "error" ? "error" : ""}`} role="status" aria-live="polite">
+          {mapStatus === "loading" ? <span className="loading-spinner" aria-hidden="true" /> : null}
+          <p>{mapStatus === "error" ? labels.loadError : labels.loading}</p>
+        </div>
+      ) : null}
 
       <div className="map-intro">
         <span className="mini-label">{labels.eyebrow}</span>
         <h2 id="map-heading">{labels.title}</h2>
-        <p>{stops.length} {labels.stopsAvailable}</p>
+        <p>{filteredStops.length} {labels.stopsAvailable}</p>
+        <label className="map-search" htmlFor="map-stop-search">
+          <span className="sr-only">{labels.searchLabel}</span>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="11" cy="11" r="7" /><path d="m16 16 4.5 4.5" />
+          </svg>
+          <input id="map-stop-search" type="search" value={query} placeholder={labels.searchPlaceholder} autoComplete="off" onChange={(event) => setQuery(event.target.value)} />
+        </label>
       </div>
 
       <div className="map-panel" aria-live="polite">
@@ -164,21 +211,26 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
               <span>{labels.bus}</span>
               {selected.is_accessible ? <span>{labels.accessible}</span> : null}
             </div>
-            <a href={`/feedback?stop=${encodeURIComponent(selected.id)}&lang=${language}&name=${encodeURIComponent(stopName(selected))}`}>
-              {labels.feedback}
-              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M5 12h14m-5-5 5 5-5 5" />
-              </svg>
-            </a>
+            <div className="map-panel-actions">
+              <a className="map-panel-feedback" href={`/feedback?stop=${encodeURIComponent(selected.id)}&lang=${language}&name=${encodeURIComponent(stopName(selected))}`}>
+                {labels.feedback}
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M5 12h14m-5-5 5 5-5 5" />
+                </svg>
+              </a>
+              <a className="map-panel-comments" href={`/feedback?stop=${encodeURIComponent(selected.id)}&lang=${language}&name=${encodeURIComponent(stopName(selected))}#feedback-threads`}>
+                {labels.comments}
+              </a>
+            </div>
           </>
         ) : (
-          <p className="map-panel-empty">{stops.length > 0 ? labels.choose : labels.noStops}</p>
+          <p className="map-panel-empty">{stops.length === 0 ? labels.noStops : filteredStops.length === 0 ? labels.noResults : labels.choose}</p>
         )}
       </div>
 
-      {stops.length > 0 ? (
+      {filteredStops.length > 0 ? (
         <ul className="map-stop-list">
-          {stops.map((stop) => (
+          {filteredStops.map((stop) => (
             <li key={stop.id}>
               <button type="button" aria-current={stop.id === selectedId} onClick={() => focusStop(stop)}>
                 <strong>{stopName(stop)}</strong>

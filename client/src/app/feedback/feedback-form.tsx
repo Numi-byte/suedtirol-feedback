@@ -1,9 +1,29 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { submitFeedback } from "./actions";
+import { useRouter } from "next/navigation";
+import { getSupabaseConfig } from "@/lib/supabase/config";
+
+const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+const photoExtensions = new Map([
+  ["image/jpeg", "jpg"],
+  ["image/png", "png"],
+  ["image/webp", "webp"],
+]);
+
+async function publicRequest(url: string, publishableKey: string, init: RequestInit, timeoutMs = 30_000) {
+  return fetch(url, {
+    ...init,
+    headers: {
+      apikey: publishableKey,
+      Authorization: `Bearer ${publishableKey}`,
+      ...init.headers,
+    },
+    signal: AbortSignal.timeout(timeoutMs),
+  });
+}
 
 const categories = [
   { slug: "weather_protection", icon: "shelter", label: "Witterungsschutz fehlt" },
@@ -46,7 +66,17 @@ function BusStopIcon() {
   return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="5" y="4" width="14" height="14" rx="3" /><path d="M8 8h8v5H8zM8 18v2M16 18v2" /><circle cx="8.5" cy="15.5" r=".7" fill="currentColor" /><circle cx="15.5" cy="15.5" r=".7" fill="currentColor" /></svg>;
 }
 
+function SubmitButton({ disabled, pending }: { disabled: boolean; pending: boolean }) {
+  return (
+    <button type="submit" disabled={disabled || pending} aria-disabled={disabled || pending}>
+      {pending ? <span className="button-spinner" aria-hidden="true" /> : <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="m21 3-7.5 18-3.8-7.7L2 9.5Z" /><path d="m9.7 13.3 5-4.5" /></svg>}
+      {pending ? "Feedback wird gesendet …" : "Feedback senden"}
+    </button>
+  );
+}
+
 export function FeedbackForm({ stopId, stopName, stopLocation, language }: { stopId: string; stopName: string; stopLocation: string; language: string }) {
+  const router = useRouter();
   const [step, setStep] = useState(1);
   const [selected, setSelected] = useState<string[]>([]);
   const [level, setLevel] = useState("medium");
@@ -54,12 +84,99 @@ export function FeedbackForm({ stopId, stopName, stopLocation, language }: { sto
   const [contact, setContact] = useState(false);
   const [email, setEmail] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
+  const [photoError, setPhotoError] = useState("");
+  const [submitError, setSubmitError] = useState("");
+  const [pending, setPending] = useState(false);
+  const submissionStarted = useRef(false);
   const preview = useMemo(() => photo ? URL.createObjectURL(photo) : "", [photo]);
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
   const activeCategories = categories.filter((item) => selected.includes(item.slug));
 
   function toggleCategory(slug: string) {
     setSelected((current) => current.includes(slug) ? current.filter((value) => value !== slug) : [...current, slug]);
+  }
+
+  function selectPhoto(file: File | null) {
+    if (file && (!photoExtensions.has(file.type) || file.size > MAX_PHOTO_BYTES)) {
+      setPhoto(null);
+      setPhotoError("Das Foto muss JPG, PNG oder WebP und höchstens 10 MB groß sein.");
+      return;
+    }
+    setPhoto(file);
+    setPhotoError("");
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (submissionStarted.current || pending) return;
+
+    if (!stopId || selected.length === 0) {
+      setSubmitError("Bitte wählen Sie mindestens eine Kategorie aus.");
+      return;
+    }
+    if (photo && (!photoExtensions.has(photo.type) || photo.size > MAX_PHOTO_BYTES)) {
+      setSubmitError("Das Foto muss JPG, PNG oder WebP und höchstens 10 MB groß sein.");
+      return;
+    }
+
+    submissionStarted.current = true;
+    setPending(true);
+    setSubmitError("");
+
+    try {
+      const { url, publishableKey } = getSupabaseConfig();
+      const reportResponse = await publicRequest(`${url}/rest/v1/rpc/create_feedback_report`, publishableKey, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          p_bus_stop_id: stopId,
+          p_categories: selected,
+          p_severity: level,
+          p_description: description.trim() || null,
+          p_email: contact ? email.trim() : null,
+          p_consent_to_contact: contact,
+          p_language: language,
+        }),
+      });
+      if (!reportResponse.ok) throw new Error("report");
+      const feedbackId: unknown = await reportResponse.json();
+      if (typeof feedbackId !== "string") throw new Error("report");
+
+      let photoUploadFailed = false;
+      if (photo) {
+        try {
+          const extension = photoExtensions.get(photo.type);
+          const path = `${feedbackId}/${crypto.randomUUID()}.${extension}`;
+          const uploadResponse = await publicRequest(`${url}/storage/v1/object/feedback-photos/${path}`, publishableKey, {
+            method: "POST",
+            headers: { "Content-Type": photo.type, "x-upsert": "false" },
+            body: photo,
+          }, 60_000);
+          if (!uploadResponse.ok) throw new Error("upload");
+
+          const registrationResponse = await publicRequest(`${url}/rest/v1/rpc/register_feedback_photo`, publishableKey, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ p_feedback_id: feedbackId, p_storage_path: path }),
+          });
+          photoUploadFailed = !registrationResponse.ok;
+        } catch {
+          photoUploadFailed = true;
+        }
+      }
+
+      const handoff = new URLSearchParams({ lang: language, stop_id: stopId });
+      if (stopName.trim()) handoff.set("stop", stopName.trim());
+      if (selected.length) handoff.set("cats", selected.join(","));
+      handoff.set("sev", level);
+      if (description.trim()) handoff.set("msg", description.trim().slice(0, 500));
+      if (photoUploadFailed) handoff.set("photo", "failed");
+      router.push(`/feedback/thanks?${handoff.toString()}`);
+    } catch {
+      submissionStarted.current = false;
+      setPending(false);
+      setSubmitError("Das Feedback konnte gerade nicht gesendet werden. Bitte versuchen Sie es erneut.");
+    }
   }
 
   return (
@@ -78,8 +195,9 @@ export function FeedbackForm({ stopId, stopName, stopLocation, language }: { sto
         ))}
       </ol>
 
-      <form action={submitFeedback} className="feedback-wizard">
+      <form className="feedback-wizard" onSubmit={handleSubmit}>
         <input type="hidden" name="stop_id" value={stopId} />
+        <input type="hidden" name="stop_name" value={stopName} />
         <input type="hidden" name="language" value={language} />
         <input type="hidden" name="severity" value={level} />
 
@@ -110,9 +228,10 @@ export function FeedbackForm({ stopId, stopName, stopLocation, language }: { sto
           <span className="character-count">{description.length} / 500</span>
           <label className="field-label" htmlFor="photo">Foto hinzufügen <em>(optional)</em></label>
           <label className="photo-upload" htmlFor="photo">
-            <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setPhoto(event.target.files?.[0] ?? null)} />
+            <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => selectPhoto(event.target.files?.[0] ?? null)} />
             {preview ? <Image src={preview} width={240} height={135} unoptimized alt="Vorschau des ausgewählten Fotos" /> : <><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M7 18H5a4 4 0 0 1-.4-8A7 7 0 0 1 18 8a5 5 0 0 1 1 9.9H17" /><path d="m9 13 3-3 3 3M12 10v10" /></svg><span><b>Foto hierher ziehen oder klicken, um Dateien auszuwählen</b><small>JPG, PNG oder WebP, max. 10 MB</small></span></>}
           </label>
+          {photoError && <p className="form-error" role="alert">{photoError}</p>}
           <label className="contact-toggle"><span>Ich möchte bei Rückfragen kontaktiert werden <em>(optional)</em></span><input type="checkbox" name="consent_to_contact" checked={contact} onChange={(event) => setContact(event.target.checked)} /></label>
           {contact && <><label className="field-label" htmlFor="email">E-Mail-Adresse</label><input id="email" name="email" type="email" maxLength={320} required value={email} onChange={(event) => setEmail(event.target.value)} /></>}
           <p className="privacy-note"><span>▣</span> Ihre Daten werden ausschließlich zur Bearbeitung dieses Feedbacks verwendet und nicht veröffentlicht. <Link href="/about">Datenschutz</Link></p>
@@ -131,7 +250,8 @@ export function FeedbackForm({ stopId, stopName, stopLocation, language }: { sto
             <h3>Kontakt</h3><p>{contact ? <>Ich möchte kontaktiert werden<br />{email}</> : "Keine Kontaktaufnahme gewünscht"}</p>
           </div>
           <aside><span>i</span><p>Ihr Feedback hilft uns, Haltestellen sicherer und komfortabler zu machen. Vielen Dank!</p></aside>
-          <div className="submit-actions"><button type="button" onClick={() => setStep(2)}>Zurück</button><button type="submit" disabled={!stopId || !selected.length}><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="m21 3-7.5 18-3.8-7.7L2 9.5Z" /><path d="m9.7 13.3 5-4.5" /></svg> Feedback senden</button></div>
+          {submitError && <p className="form-error" role="alert">{submitError}</p>}
+          <div className="submit-actions"><button type="button" disabled={pending} onClick={() => setStep(2)}>Zurück</button><SubmitButton disabled={!stopId || !selected.length} pending={pending} /></div>
         </fieldset>
       </form>
       <footer className="feedback-dialog-footer">

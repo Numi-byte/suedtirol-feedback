@@ -1,5 +1,98 @@
 import Link from "next/link";
+import { CopySummary } from "../copy-summary";
+import type { Language } from "@/lib/i18n";
+import { buildFeedbackFormUrl, composeSummary } from "@/lib/feedback-handoff";
+import type { Handoff } from "@/lib/feedback-handoff";
 
-export default function ThanksPage() {
-  return <main className="feedback-page"><section className="thanks"><span>südtirolmobil feedback</span><h1>Danke · Grazie · Thank you!</h1><p>Deine Rückmeldung ist gespeichert und hilft, die Haltestellen in Südtirol zu verbessern.</p><Link href="/">Zurück zur Karte</Link></section></main>;
+const copy = {
+  de: {
+    kicker: "Feedback gesendet",
+    title: "Danke für deine Rückmeldung!",
+    body: "Deine Meinung ist bei uns angekommen. Sie zählt und hilft uns dabei, die Haltestellen in Südtirol kontinuierlich zu verbessern. Vielen Dank dafür!",
+    contactBefore: "Wenn du weitere Fragen, Anregungen oder Beschwerden hast, kannst du uns gerne über unser ",
+    contactLink: "Feedbackformular",
+    contactAfter: " kontaktieren.",
+    summaryTitle: "Deine Angaben",
+    copy: "Angaben kopieren", copied: "Kopiert",
+    discussion: "Öffentliche Beiträge ansehen", back: "Zurück zur Karte",
+    photoWarning: "Das Feedback wurde gespeichert, aber das Foto konnte nicht hochgeladen werden.",
+  },
+  it: {
+    kicker: "Riscontro inviato",
+    title: "Grazie per il tuo riscontro!",
+    body: "La tua opinione è arrivata. Conta e ci aiuta a migliorare costantemente le fermate in Alto Adige. Grazie di cuore!",
+    contactBefore: "Se hai altre domande, suggerimenti o reclami, puoi contattarci tramite il nostro ",
+    contactLink: "modulo di feedback",
+    contactAfter: ".",
+    summaryTitle: "I tuoi dati",
+    copy: "Copia i dati", copied: "Copiato",
+    discussion: "Vedi i contributi pubblici", back: "Torna alla mappa",
+    photoWarning: "Il riscontro è stato salvato, ma non è stato possibile caricare la foto.",
+  },
+  en: {
+    kicker: "Feedback sent",
+    title: "Thank you for your feedback!",
+    body: "Your opinion has reached us. It counts and helps us keep improving the stops across South Tyrol. Thank you for that!",
+    contactBefore: "If you have further questions, suggestions or complaints, you are welcome to contact us through our ",
+    contactLink: "feedback form",
+    contactAfter: ".",
+    summaryTitle: "Your details",
+    copy: "Copy details", copied: "Copied",
+    discussion: "View public posts", back: "Back to the map",
+    photoWarning: "Your feedback was saved, but the photo could not be uploaded.",
+  },
+} as const;
+
+const CheckIcon = () => (
+  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m4 12.5 5.5 5.5L20 7" />
+  </svg>
+);
+
+export default async function ThanksPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ lang?: string; stop?: string; stop_id?: string; cats?: string; sev?: string; msg?: string; photo?: string }>;
+}) {
+  const params = await searchParams;
+  const language = (["de", "it", "en"].includes(params.lang ?? "") ? params.lang : "de") as Language;
+  const t = copy[language];
+
+  const handoff: Handoff | null = params.stop
+    ? {
+        stop: params.stop,
+        categories: (params.cats ?? "").split(",").filter(Boolean),
+        severity: params.sev ?? "",
+        description: params.msg ?? "",
+      }
+    : null;
+  const summary = handoff ? composeSummary(handoff, language) : "";
+
+  return (
+    <main className="feedback-page">
+      <section className="thanks">
+        <div className="thanks-mark" aria-hidden="true"><CheckIcon /></div>
+        <span>{t.kicker}</span>
+        <h1>{t.title}</h1>
+        <p>{t.body}</p>
+        {params.photo === "failed" ? <p className="form-error" role="status">{t.photoWarning}</p> : null}
+        <p>
+          {t.contactBefore}
+          <a href={buildFeedbackFormUrl(handoff, language)} target="_blank" rel="noreferrer">{t.contactLink}</a>
+          {t.contactAfter}
+        </p>
+
+        {summary ? (
+          <div className="thanks-summary">
+            <h2>{t.summaryTitle}</h2>
+            <pre>{summary}</pre>
+            <CopySummary summary={summary} label={t.copy} copiedLabel={t.copied} />
+          </div>
+        ) : null}
+
+        {params.stop_id ? <Link className="thanks-discussion" href={`/feedback?stop=${encodeURIComponent(params.stop_id)}&lang=${language}&name=${encodeURIComponent(params.stop ?? "")}`}>{t.discussion}</Link> : null}
+        <Link className="thanks-back" href="/">{t.back}</Link>
+      </section>
+    </main>
+  );
 }
