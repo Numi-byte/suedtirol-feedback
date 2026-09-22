@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Map as LeafletMap, Marker } from "leaflet";
 import "leaflet/dist/leaflet.css";
+import busIcon from "@/components/Bus.png";
 import { stopName as nameFor } from "@/lib/stops";
 import type { BusStop } from "@/lib/stops";
 
@@ -22,26 +23,16 @@ export type MapLabels = {
   searchLabel: string;
   searchPlaceholder: string;
   noResults: string;
+  popularStops: string;
 };
 
 /** South Tyrol, used until the published stops define their own extent. */
 const REGION_CENTER: [number, number] = [46.6, 11.4];
 const REGION_ZOOM = 9;
 
-/** Bus-stop pin: white bus glyph on a südtirolmobil-blue teardrop. */
-function markerSvg(selected: boolean) {
-  const body = selected ? "#003f6d" : "#0069b4";
-  return `
-    <svg viewBox="0 0 32 42" width="32" height="42" aria-hidden="true">
-      <path d="M16 1a15 15 0 0 0-15 15c0 10.5 15 25 15 25s15-14.5 15-25A15 15 0 0 0 16 1Z"
-            fill="${body}" stroke="#fff" stroke-width="2.4" />
-      <g transform="translate(7.5 6.5) scale(0.72)">
-        <path fill="#fff" d="M6 2h12a3 3 0 0 1 3 3v11a2.5 2.5 0 0 1-1.5 2.3V19a1.75 1.75 0 0 1-3.5 0v-1h-8v1a1.75 1.75 0 0 1-3.5 0v-.7A2.5 2.5 0 0 1 3 16V5a3 3 0 0 1 3-3Z" />
-        <rect x="5.2" y="4.6" width="13.6" height="5.6" rx="1.1" fill="${body}" />
-        <circle cx="7.2" cy="14" r="1.45" fill="${body}" />
-        <circle cx="16.8" cy="14" r="1.45" fill="${body}" />
-      </g>
-    </svg>`;
+/** Use the supplied transport artwork consistently for every map marker. */
+function markerImage(selected: boolean) {
+  return `<img src="${busIcon.src}" alt="" aria-hidden="true" class="${selected ? "is-selected" : ""}" />`;
 }
 
 type StopMapProps = { stops: BusStop[]; language: "de" | "it" | "en"; labels: MapLabels };
@@ -64,6 +55,13 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
       return terms.every((term) => searchable.includes(term));
     });
   }, [query, stops]);
+  const listedStops = useMemo(() => {
+    if (query.trim()) return filteredStops;
+    return [...stops]
+      .sort((a, b) => b.feedback_count - a.feedback_count || stopName(a).localeCompare(stopName(b)))
+      .slice(0, 5);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredStops, language, query, stops]);
   const selected = filteredStops.find((stop) => stop.id === selectedId) ?? null;
 
   // Create the map once. Leaflet needs the DOM, so it is imported client-side only.
@@ -135,9 +133,9 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
         const marker = L.marker([stop.latitude, stop.longitude], {
           icon: L.divIcon({
             className: "stop-marker",
-            html: markerSvg(stop.id === selectedId),
-            iconSize: [32, 42],
-            iconAnchor: [16, 42],
+            html: markerImage(stop.id === selectedId),
+            iconSize: [44, 44],
+            iconAnchor: [22, 22],
           }),
           title: stopName(stop),
           alt: `${stopName(stop)} – ${stop.municipality}`,
@@ -189,9 +187,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
       ) : null}
 
       <div className="map-intro">
-        <span className="mini-label">{labels.eyebrow}</span>
         <h2 id="map-heading">{labels.title}</h2>
-        <p>{filteredStops.length} {labels.stopsAvailable}</p>
         <label className="map-search" htmlFor="map-stop-search">
           <span className="sr-only">{labels.searchLabel}</span>
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -199,6 +195,22 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
           </svg>
           <input id="map-stop-search" type="search" value={query} placeholder={labels.searchPlaceholder} autoComplete="off" onChange={(event) => setQuery(event.target.value)} />
         </label>
+        <div className="map-quick-heading">
+          {query.trim() ? `${filteredStops.length} ${labels.stopsAvailable}` : labels.popularStops}
+        </div>
+        {listedStops.length > 0 ? (
+          <ul className="map-stop-list">
+            {listedStops.map((stop) => (
+              <li key={stop.id}>
+                <button type="button" aria-current={stop.id === selectedId} onClick={() => focusStop(stop)}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={busIcon.src} alt="" aria-hidden="true" />
+                  <span><strong>{stopName(stop)}</strong><small>{stop.municipality}</small></span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : <p className="map-search-empty">{labels.noResults}</p>}
       </div>
 
       <div className="map-panel" aria-live="polite">
@@ -228,18 +240,6 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
         )}
       </div>
 
-      {filteredStops.length > 0 ? (
-        <ul className="map-stop-list">
-          {filteredStops.map((stop) => (
-            <li key={stop.id}>
-              <button type="button" aria-current={stop.id === selectedId} onClick={() => focusStop(stop)}>
-                <strong>{stopName(stop)}</strong>
-                <small>{stop.municipality}</small>
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : null}
     </div>
   );
 }

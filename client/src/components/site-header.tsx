@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandLogo } from "@/components/brand-logo";
 import { useLanguage } from "@/components/language-provider";
-import { languages } from "@/lib/i18n";
 
 const PhoneIcon = () => (
   <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
@@ -13,7 +12,7 @@ const PhoneIcon = () => (
 );
 
 export function SiteHeader() {
-  const { language, setLanguage, t } = useLanguage();
+  const { t } = useLanguage();
   const pathname = usePathname();
   const current = (href: string) => (pathname === href ? "page" : undefined);
 
@@ -26,13 +25,6 @@ export function SiteHeader() {
       <div className="utility-bar">
         <div className="utility-inner">
           <a className="utility-link" href="tel:+390471220880"><PhoneIcon /> {t.nav.service} +39 0471 220 880</a>
-          <div className="language-switch" role="group" aria-label={t.nav.language}>
-            {languages.map((code) => (
-              <button key={code} type="button" aria-pressed={language === code} onClick={() => setLanguage(code)}>
-                {code.toUpperCase()}
-              </button>
-            ))}
-          </div>
         </div>
       </div>
 

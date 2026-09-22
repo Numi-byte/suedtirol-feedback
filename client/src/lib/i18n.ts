@@ -7,11 +7,11 @@ export const translations = {
   de: {
     nav: { find: "Haltestellen", how: "So funktioniert's", about: "Über das Projekt", language: "Sprache ändern", service: "Service Desk", cta: "Feedback geben", home: "Startseite" },
     map: {
-      eyebrow: "Haltestellenkarte", title: "Finde deine Haltestelle.", stopsAvailable: "Haltestellen verfügbar",
+      eyebrow: "Haltestellenkarte", title: "Finde deine Haltestelle", stopsAvailable: "Haltestellen verfügbar",
       loading: "Karte wird geladen …", loadError: "Die Karte konnte nicht geladen werden.",
       choose: "Wähle eine Haltestelle auf der Karte, um Feedback zu geben.",
       noStops: "Es sind noch keine Haltestellen veröffentlicht.",
-      searchLabel: "Haltestellen auf der Karte durchsuchen", searchPlaceholder: "Name oder Gemeinde suchen …", noResults: "Keine passende Haltestelle gefunden.",
+      searchLabel: "Haltestellen auf der Karte durchsuchen", searchPlaceholder: "Wo möchtest du einsteigen?", noResults: "Keine passende Haltestelle gefunden.", popularStops: "Meistbewertete Haltestellen",
       bus: "Bus", accessible: "Barrierefrei", feedback: "Feedback geben", comments: "Kommentare ansehen", attribution: OSM_ATTRIBUTION,
     },
     stops: {
@@ -107,11 +107,11 @@ export const translations = {
   it: {
     nav: { find: "Fermate", how: "Come funziona", about: "Il progetto", language: "Cambia lingua", service: "Service Desk", cta: "Lascia un feedback", home: "Home" },
     map: {
-      eyebrow: "Mappa delle fermate", title: "Trova la tua fermata.", stopsAvailable: "fermate disponibili",
+      eyebrow: "Mappa delle fermate", title: "Trova la tua fermata", stopsAvailable: "fermate disponibili",
       loading: "Caricamento della mappa …", loadError: "Non è stato possibile caricare la mappa.",
       choose: "Scegli una fermata sulla mappa per lasciare un feedback.",
       noStops: "Non ci sono ancora fermate pubblicate.",
-      searchLabel: "Cerca fermate sulla mappa", searchPlaceholder: "Cerca nome o comune …", noResults: "Nessuna fermata corrispondente trovata.",
+      searchLabel: "Cerca fermate sulla mappa", searchPlaceholder: "Da dove vuoi partire?", noResults: "Nessuna fermata corrispondente trovata.", popularStops: "Fermate più valutate",
       bus: "Bus", accessible: "Accessibile", feedback: "Lascia un feedback", comments: "Vedi i commenti", attribution: OSM_ATTRIBUTION,
     },
     stops: {
@@ -207,11 +207,11 @@ export const translations = {
   en: {
     nav: { find: "Stops", how: "How it works", about: "About the project", language: "Change language", service: "Service desk", cta: "Give feedback", home: "Home" },
     map: {
-      eyebrow: "Stop map", title: "Find your stop.", stopsAvailable: "stops available",
+      eyebrow: "Stop map", title: "Find your stop", stopsAvailable: "stops available",
       loading: "Loading map …", loadError: "The map could not be loaded.",
       choose: "Pick a stop on the map to give feedback.",
       noStops: "No stops have been published yet.",
-      searchLabel: "Search stops on the map", searchPlaceholder: "Search by name or municipality …", noResults: "No matching stop found.",
+      searchLabel: "Search stops on the map", searchPlaceholder: "Where would you like to depart?", noResults: "No matching stop found.", popularStops: "Most rated stops",
       bus: "Bus", accessible: "Accessible", feedback: "Give feedback", comments: "View comments", attribution: OSM_ATTRIBUTION,
     },
     stops: {

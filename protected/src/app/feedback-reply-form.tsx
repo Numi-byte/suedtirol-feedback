@@ -25,7 +25,12 @@ export function FeedbackReplyForm({ feedbackId, reply, labels }: { feedbackId: s
     return <div className="existing-reply">
       <div className="existing-reply-heading">
         <span><span className="reply-check" aria-hidden="true">✓</span>{labels.answered}</span>
-        <button type="button" className="reply-edit" onClick={() => setEditing(true)}>{labels.edit}</button>
+        <button type="button" className="reply-edit" onClick={() => setEditing(true)}>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 20h4l11-11-4-4L4 16v4Zm13-17 4 4-1.5 1.5-4-4L17 3Z" />
+          </svg>
+          {labels.edit}
+        </button>
       </div>
       <p>{reply.body}</p>
     </div>;

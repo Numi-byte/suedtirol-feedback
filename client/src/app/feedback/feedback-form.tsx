@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } 
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import busIcon from "@/components/Bus.png";
 import { getSupabaseConfig } from "@/lib/supabase/config";
 
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
@@ -62,10 +63,6 @@ function CategoryIcon({ name }: { name: IconName }) {
   return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>;
 }
 
-function BusStopIcon() {
-  return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="5" y="4" width="14" height="14" rx="3" /><path d="M8 8h8v5H8zM8 18v2M16 18v2" /><circle cx="8.5" cy="15.5" r=".7" fill="currentColor" /><circle cx="15.5" cy="15.5" r=".7" fill="currentColor" /></svg>;
-}
-
 function SubmitButton({ disabled, pending }: { disabled: boolean; pending: boolean }) {
   return (
     <button type="submit" disabled={disabled || pending} aria-disabled={disabled || pending}>
@@ -86,6 +83,8 @@ export function FeedbackForm({ stopId, stopName, stopLocation, language }: { sto
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoError, setPhotoError] = useState("");
   const [submitError, setSubmitError] = useState("");
+  const [showCategoryError, setShowCategoryError] = useState(false);
+  const [showEmailError, setShowEmailError] = useState(false);
   const [pending, setPending] = useState(false);
   const submissionStarted = useRef(false);
   const preview = useMemo(() => photo ? URL.createObjectURL(photo) : "", [photo]);
@@ -94,6 +93,25 @@ export function FeedbackForm({ stopId, stopName, stopLocation, language }: { sto
 
   function toggleCategory(slug: string) {
     setSelected((current) => current.includes(slug) ? current.filter((value) => value !== slug) : [...current, slug]);
+    setShowCategoryError(false);
+  }
+
+  const emailIsValid = !contact || /^\S+@\S+\.\S+$/.test(email.trim());
+
+  function goToDetails() {
+    if (!selected.length) {
+      setShowCategoryError(true);
+      return;
+    }
+    setStep(2);
+  }
+
+  function goToReview() {
+    if (!emailIsValid) {
+      setShowEmailError(true);
+      return;
+    }
+    setStep(3);
   }
 
   function selectPhoto(file: File | null) {
@@ -111,7 +129,15 @@ export function FeedbackForm({ stopId, stopName, stopLocation, language }: { sto
     if (submissionStarted.current || pending) return;
 
     if (!stopId || selected.length === 0) {
+      setShowCategoryError(true);
+      setStep(1);
       setSubmitError("Bitte wählen Sie mindestens eine Kategorie aus.");
+      return;
+    }
+    if (!emailIsValid) {
+      setShowEmailError(true);
+      setStep(2);
+      setSubmitError("Bitte geben Sie eine gültige E-Mail-Adresse ein.");
       return;
     }
     if (photo && (!photoExtensions.has(photo.type) || photo.size > MAX_PHOTO_BYTES)) {
@@ -182,8 +208,9 @@ export function FeedbackForm({ stopId, stopName, stopLocation, language }: { sto
   return (
     <section className="feedback-dialog" aria-labelledby="feedback-title">
       <header className="feedback-heading">
-        <span className="stop-symbol"><BusStopIcon /></span>
-        <div><h1 id="feedback-title">Feedback zur Haltestelle</h1><p>●&nbsp; {stopName} · {stopLocation}</p></div>
+        <span className="stop-symbol"><Image src={busIcon} width={54} height={54} alt="" priority /></span>
+        <div className="feedback-heading-copy"><h1 id="feedback-title">Feedback zur Haltestelle</h1><p>●&nbsp; {stopName} · {stopLocation}</p></div>
+        <p className="heading-required"><span>*</span> Pflichtfeld</p>
         <Link href="/" aria-label="Feedback schließen">×</Link>
       </header>
 
@@ -195,14 +222,14 @@ export function FeedbackForm({ stopId, stopName, stopLocation, language }: { sto
         ))}
       </ol>
 
-      <form className="feedback-wizard" onSubmit={handleSubmit}>
+      <form className="feedback-wizard" onSubmit={handleSubmit} noValidate>
         <input type="hidden" name="stop_id" value={stopId} />
         <input type="hidden" name="stop_name" value={stopName} />
         <input type="hidden" name="language" value={language} />
         <input type="hidden" name="severity" value={level} />
 
-        <fieldset className={`wizard-panel ${step === 1 ? "current" : ""}`}>
-          <legend><span>1</span> Kategorie auswählen</legend>
+        <fieldset className={`wizard-panel ${step === 1 ? "current" : ""} ${showCategoryError ? "panel-invalid" : ""}`} aria-describedby={showCategoryError ? "category-error" : undefined}>
+          <legend><span>1</span> Kategorie auswählen <b className="required-mark" aria-label="Pflichtfeld">*</b></legend>
           <p>Wählen Sie eine oder mehrere Kategorien aus, die zu den fehlenden Elementen an dieser Haltestelle passen.</p>
           <div className="category-list">
             {categories.map((item) => <label key={item.slug} className={selected.includes(item.slug) ? "checked" : ""}>
@@ -210,8 +237,9 @@ export function FeedbackForm({ stopId, stopName, stopLocation, language }: { sto
               <i><CategoryIcon name={item.icon} /></i><span>{item.label}</span>
             </label>)}
           </div>
+          {showCategoryError && <p id="category-error" className="field-error" role="alert">Bitte wählen Sie mindestens eine Kategorie aus.</p>}
           <small className="panel-hint"><span>i</span> Sie können mehrere Kategorien auswählen.</small>
-          <button type="button" className="mobile-next" disabled={!selected.length} onClick={() => setStep(2)}>Weiter</button>
+          <button type="button" className="mobile-next" onClick={goToDetails}>Weiter</button>
         </fieldset>
 
         <fieldset className={`wizard-panel ${step === 2 ? "current" : ""}`}>
@@ -232,10 +260,11 @@ export function FeedbackForm({ stopId, stopName, stopLocation, language }: { sto
             {preview ? <Image src={preview} width={240} height={135} unoptimized alt="Vorschau des ausgewählten Fotos" /> : <><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M7 18H5a4 4 0 0 1-.4-8A7 7 0 0 1 18 8a5 5 0 0 1 1 9.9H17" /><path d="m9 13 3-3 3 3M12 10v10" /></svg><span><b>Foto hierher ziehen oder klicken, um Dateien auszuwählen</b><small>JPG, PNG oder WebP, max. 10 MB</small></span></>}
           </label>
           {photoError && <p className="form-error" role="alert">{photoError}</p>}
-          <label className="contact-toggle"><span>Ich möchte bei Rückfragen kontaktiert werden <em>(optional)</em></span><input type="checkbox" name="consent_to_contact" checked={contact} onChange={(event) => setContact(event.target.checked)} /></label>
-          {contact && <><label className="field-label" htmlFor="email">E-Mail-Adresse</label><input id="email" name="email" type="email" maxLength={320} required value={email} onChange={(event) => setEmail(event.target.value)} /></>}
+          <label className="contact-toggle"><span>Ich möchte bei Rückfragen kontaktiert werden <em>(optional)</em></span><input type="checkbox" name="consent_to_contact" checked={contact} onChange={(event) => { setContact(event.target.checked); setShowEmailError(false); }} /></label>
+          {contact && <div className={`email-field ${showEmailError ? "field-invalid" : ""}`}><label className="field-label" htmlFor="email">E-Mail-Adresse <b className="required-mark" aria-label="Pflichtfeld">*</b></label><input id="email" name="email" type="email" maxLength={320} required aria-invalid={showEmailError} aria-describedby={showEmailError ? "email-error" : undefined} value={email} onChange={(event) => { setEmail(event.target.value); setShowEmailError(false); }} />{showEmailError && <p id="email-error" className="field-error" role="alert">Bitte geben Sie eine gültige E-Mail-Adresse ein.</p>}</div>}
           <p className="privacy-note"><span>▣</span> Ihre Daten werden ausschließlich zur Bearbeitung dieses Feedbacks verwendet und nicht veröffentlicht. <Link href="/about">Datenschutz</Link></p>
-          <div className="mobile-actions"><button type="button" onClick={() => setStep(1)}>Zurück</button><button type="button" disabled={!selected.length} onClick={() => setStep(3)}>Weiter</button></div>
+          <p className="required-note"><span>*</span> Pflichtfeld</p>
+          <div className="mobile-actions"><button type="button" onClick={() => setStep(1)}>Zurück</button><button type="button" onClick={goToReview}>Weiter</button></div>
         </fieldset>
 
         <fieldset className={`wizard-panel review-panel ${step === 3 ? "current" : ""}`}>
@@ -251,7 +280,7 @@ export function FeedbackForm({ stopId, stopName, stopLocation, language }: { sto
           </div>
           <aside><span>i</span><p>Ihr Feedback hilft uns, Haltestellen sicherer und komfortabler zu machen. Vielen Dank!</p></aside>
           {submitError && <p className="form-error" role="alert">{submitError}</p>}
-          <div className="submit-actions"><button type="button" disabled={pending} onClick={() => setStep(2)}>Zurück</button><SubmitButton disabled={!stopId || !selected.length} pending={pending} /></div>
+          <div className="submit-actions"><button type="button" disabled={pending} onClick={() => setStep(2)}>Zurück</button><SubmitButton disabled={!stopId} pending={pending} /></div>
         </fieldset>
       </form>
       <footer className="feedback-dialog-footer">
