@@ -177,6 +177,10 @@ form button:hover { background: var(--blue-dark); }
 .feedback-summary { display: grid; grid-template-columns: auto auto; align-items: baseline; gap: 2px 9px; flex: none; }
 .feedback-summary strong { color: var(--blue-800); font-size: 22px; }
 .feedback-summary span { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+.reply-filters { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 20px; }
+.reply-filters a { padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px; color: var(--navy); background: #fff; font-size: 12px; font-weight: 700; text-decoration: none; }
+.reply-filters a:hover { border-color: var(--blue); color: var(--blue); }
+.reply-filters a[aria-current="page"] { border-color: var(--blue); color: #fff; background: var(--blue); }
 .feedback-list { display: grid; gap: 14px; margin-top: 24px; }
 .feedback-entry { border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
 .feedback-entry > header { display: flex; justify-content: space-between; gap: 20px; padding: 16px 18px; background: var(--surface); }
