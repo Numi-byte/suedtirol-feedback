@@ -218,18 +218,18 @@ nav a:hover { background: var(--blue-50); }
 @media (prefers-reduced-motion: reduce) { .loading-spinner, .button-spinner { animation-duration: 1.8s; } }
 
 /* Leaflet panes run to z-index 700, so the floating UI sits above them. */
-.map-intro, .map-panel, .map-stop-list { position: absolute; z-index: 900; }
+.map-intro, .map-panel { position: absolute; z-index: 900; }
 
 .map-intro {
-  top: 26px; left: 26px; width: min(370px, calc(100% - 52px)); padding: 22px 24px;
-  border-radius: 6px; border-top: 3px solid var(--blue);
+  top: 26px; left: 26px; width: min(400px, calc(100% - 52px)); padding: 24px;
+  border-radius: 18px;
   background: rgba(255, 255, 255, .97); box-shadow: 0 12px 32px rgba(0, 43, 77, .18);
 }
-.map-intro h2 { margin: 10px 0 8px; font-size: clamp(21px, 2.3vw, 27px); line-height: 1.15; }
+.map-intro h2 { margin: 0 0 18px; color: #161616; font-size: clamp(23px, 2.3vw, 28px); line-height: 1.15; }
 .map-intro p { margin: 0; color: var(--blue); font-size: 13px; font-weight: 700; }
-.map-search { display: flex; align-items: center; gap: 9px; margin-top: 15px; padding: 10px 11px; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+.map-search { display: flex; align-items: center; gap: 9px; padding: 12px 16px; border: 1px solid #222; border-radius: 26px; background: #f4f4f4; }
 .map-search:focus-within { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0, 105, 180, .14); }
-.map-search svg { width: 18px; height: 18px; flex: none; color: var(--blue); }
+.map-search svg { width: 18px; height: 18px; flex: none; color: #666; }
 .map-search input { width: 100%; min-width: 0; padding: 0; border: 0; outline: 0; background: transparent; color: var(--navy); font-size: 14px; }
 .map-search input:focus { box-shadow: none; }
 .map-search input::placeholder { color: #8294a2; }
@@ -255,27 +255,23 @@ nav a:hover { background: var(--blue-50); }
 .map-panel-comments { justify-content: center; padding: 12px 14px; border: 1px solid var(--blue); color: var(--blue); text-align: center; }
 .map-panel-comments:hover { color: #fff; background: var(--blue); }
 
-.map-stop-list {
-  top: 26px; right: 26px; width: 260px; max-height: min(46vh, 420px); margin: 0; padding: 6px;
-  overflow-y: auto; list-style: none; border-radius: 6px;
-  background: rgba(255, 255, 255, .97); box-shadow: 0 12px 32px rgba(0, 43, 77, .18);
-}
+.map-quick-heading { margin-top: 16px; padding: 10px 0 8px; border-top: 1px solid #aaa; color: #6d6d6d; font-size: 13px; }
+.map-stop-list { max-height: min(42vh, 330px); margin: 0; padding: 0; overflow-y: auto; list-style: none; }
 .map-stop-list button {
-  width: 100%; padding: 11px 12px; border: 0; border-radius: 4px;
-  background: transparent; text-align: left; cursor: pointer;
+  display: flex; align-items: center; gap: 11px; width: 100%; padding: 8px 4px; border: 0; border-radius: 8px;
+  color: #222; background: transparent; text-align: left; cursor: pointer;
 }
-.map-stop-list button:hover { background: var(--sky); }
-.map-stop-list button[aria-current="true"] { background: var(--blue); }
+.map-stop-list button:hover, .map-stop-list button[aria-current="true"] { background: var(--sky); }
+.map-stop-list img { width: 30px; height: 30px; flex: none; object-fit: contain; }
 .map-stop-list strong, .map-stop-list small { display: block; }
-.map-stop-list strong { color: var(--navy); font-size: 14px; font-weight: 700; }
+.map-stop-list strong { color: #222; font-size: 14px; font-weight: 500; }
 .map-stop-list small { margin-top: 2px; color: var(--muted); font-size: 11px; }
-.map-stop-list button[aria-current="true"] strong,
-.map-stop-list button[aria-current="true"] small { color: #fff; }
+.map-search-empty { padding: 12px 4px 4px; color: var(--muted) !important; font-weight: 400 !important; }
 
 /* Bus-stop markers and Leaflet chrome, restyled to the brand. */
-.stop-marker { background: none; border: 0; filter: drop-shadow(0 4px 8px rgba(0, 43, 77, .35)); transition: transform .15s; }
-/* Overrides the global 1.25rem svg sizing, which would squash the pin. */
-.stop-marker svg { width: 32px; height: 42px; }
+.stop-marker { background: none; border: 0; transition: transform .15s; }
+.stop-marker img { width: 44px; height: 44px; object-fit: contain; filter: drop-shadow(0 4px 5px rgba(0, 43, 77, .28)); transition: transform .15s; }
+.stop-marker img.is-selected { transform: scale(1.2); }
 .stop-marker:hover { transform: translateY(-3px); }
 .stop-marker:focus-visible { outline: 3px solid var(--blue-deep); outline-offset: 3px; border-radius: 4px; }
 .leaflet-container { font: inherit; background: #dce6ee; }

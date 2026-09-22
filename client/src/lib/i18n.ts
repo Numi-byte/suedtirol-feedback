@@ -11,7 +11,7 @@ export const translations = {
       loading: "Karte wird geladen …", loadError: "Die Karte konnte nicht geladen werden.",
       choose: "Wähle eine Haltestelle auf der Karte, um Feedback zu geben.",
       noStops: "Es sind noch keine Haltestellen veröffentlicht.",
-      searchLabel: "Haltestellen auf der Karte durchsuchen", searchPlaceholder: "Name oder Gemeinde suchen …", noResults: "Keine passende Haltestelle gefunden.",
+      searchLabel: "Haltestellen auf der Karte durchsuchen", searchPlaceholder: "Wo möchtest du einsteigen?", noResults: "Keine passende Haltestelle gefunden.", popularStops: "Meistbewertete Haltestellen",
       bus: "Bus", accessible: "Barrierefrei", feedback: "Feedback geben", comments: "Kommentare ansehen", attribution: OSM_ATTRIBUTION,
     },
     stops: {
@@ -111,7 +111,7 @@ export const translations = {
       loading: "Caricamento della mappa …", loadError: "Non è stato possibile caricare la mappa.",
       choose: "Scegli una fermata sulla mappa per lasciare un feedback.",
       noStops: "Non ci sono ancora fermate pubblicate.",
-      searchLabel: "Cerca fermate sulla mappa", searchPlaceholder: "Cerca nome o comune …", noResults: "Nessuna fermata corrispondente trovata.",
+      searchLabel: "Cerca fermate sulla mappa", searchPlaceholder: "Da dove vuoi partire?", noResults: "Nessuna fermata corrispondente trovata.", popularStops: "Fermate più valutate",
       bus: "Bus", accessible: "Accessibile", feedback: "Lascia un feedback", comments: "Vedi i commenti", attribution: OSM_ATTRIBUTION,
     },
     stops: {
@@ -211,7 +211,7 @@ export const translations = {
       loading: "Loading map …", loadError: "The map could not be loaded.",
       choose: "Pick a stop on the map to give feedback.",
       noStops: "No stops have been published yet.",
-      searchLabel: "Search stops on the map", searchPlaceholder: "Search by name or municipality …", noResults: "No matching stop found.",
+      searchLabel: "Search stops on the map", searchPlaceholder: "Where would you like to depart?", noResults: "No matching stop found.", popularStops: "Most rated stops",
       bus: "Bus", accessible: "Accessible", feedback: "Give feedback", comments: "View comments", attribution: OSM_ATTRIBUTION,
     },
     stops: {
