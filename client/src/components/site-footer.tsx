@@ -59,8 +59,14 @@ export function SiteFooter() {
             <a className="footer-contact" href={footerHrefs[2]}>{t.footer.links[2]} <span aria-hidden="true">›</span></a>
           </address>
         )}
+        {pinned && <p className="footer-company">{companyName}</p>}
+        {pinned && (
+          <p className="footer-service">
+            <span>{t.nav.service}:</span>{" "}
+            <a href="tel:+390471220880">+39 0471 220 880</a>
+          </p>
+        )}
         <div className="footer-meta">
-          {pinned && <p className="footer-company">{companyName}</p>}
           <div className="footer-links">
             {t.footer.links.slice(0, 2).map((link, index) => <a key={link} href={footerHrefs[index]}>{link}</a>)}
           </div>
