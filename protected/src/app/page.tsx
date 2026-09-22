@@ -22,6 +22,15 @@ type Severity = "low" | "medium" | "high";
 type Status = "new" | "in_review" | "resolved" | "dismissed";
 type ReplyFilter = "all" | "replied" | "unreplied";
 
+/**
+ * PostgREST can embed the unique feedback reply as either a to-one object or
+ * an array, depending on which relationship metadata is present in its schema
+ * cache. Normalizing both shapes keeps the reply card and filters in sync.
+ */
+function getFeedbackReply(value: FeedbackReply | FeedbackReply[] | null | undefined) {
+  return Array.isArray(value) ? value[0] : value ?? undefined;
+}
+
 function formatSubmittedAt(value: string, language: Language) {
   return new Intl.DateTimeFormat(dateLocales[language], { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
 }
@@ -98,7 +107,7 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
 
   const replyFilter: ReplyFilter = replies === "replied" || replies === "unreplied" ? replies : "all";
   const hasReply = (entry: NonNullable<typeof feedback>[number]) =>
-    ((entry.feedback_replies as FeedbackReply[] | null) ?? []).length > 0;
+    Boolean(getFeedbackReply(entry.feedback_replies as FeedbackReply | FeedbackReply[] | null));
   const visibleFeedback = (feedback ?? []).filter((entry) =>
     replyFilter === "all" || (replyFilter === "replied" ? hasReply(entry) : !hasReply(entry)),
   );
@@ -251,7 +260,7 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
             const stop = Array.isArray(entry.bus_stops) ? entry.bus_stops[0] : entry.bus_stops;
             const categories = (entry.stop_feedback_categories as FeedbackCategory[] | null) ?? [];
             const photos = (entry.stop_feedback_photos as FeedbackPhoto[] | null) ?? [];
-            const reply = ((entry.feedback_replies as FeedbackReply[] | null) ?? [])[0];
+            const reply = getFeedbackReply(entry.feedback_replies as FeedbackReply | FeedbackReply[] | null);
             const isLegacyRating = entry.overall_rating !== null;
             const status = (entry.status ?? "new") as Status;
             const severity = entry.severity as Severity | null;

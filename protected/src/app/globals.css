@@ -213,8 +213,9 @@ form button:hover { background: var(--blue-dark); }
 .existing-reply-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
 .existing-reply span { color: var(--blue-deep); font-size: 10px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
 .existing-reply .reply-check { display: inline-grid; width: 18px; height: 18px; margin-right: 7px; place-items: center; border-radius: 50%; color: #fff; background: var(--green); font-size: 11px; letter-spacing: 0; }
-.existing-reply button.reply-edit { width: auto; padding: 7px 11px; border: 1px solid var(--blue); color: var(--blue); background: #fff; font-size: 12px; }
+.existing-reply button.reply-edit { display: inline-flex; align-items: center; gap: 6px; width: auto; padding: 7px 11px; border: 1px solid var(--blue); color: var(--blue); background: #fff; font-size: 12px; }
 .existing-reply button.reply-edit:hover { color: #fff; background: var(--blue); }
+.existing-reply button.reply-edit svg { width: 14px; height: 14px; fill: currentColor; }
 .existing-reply p { margin: 7px 0 0; color: var(--navy); font-size: 13px; line-height: 1.55; white-space: pre-wrap; }
 .reply-form { display: grid; grid-template-columns: 1fr auto; gap: 9px 14px; margin: 0 18px 18px; padding-top: 16px; border-top: 1px solid var(--line); }
 .reply-form label, .reply-form textarea, .reply-form small { grid-column: 1; }
