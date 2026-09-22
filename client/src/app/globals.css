@@ -384,7 +384,9 @@ nav a:hover { background: var(--blue-50); }
   justify-content: center;
   gap: 28px;
   padding: clamp(20px, 3vw, 44px);
-  background: #eef3f7;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(8, 104, 183, .08), transparent 32rem),
+    linear-gradient(145deg, #f5f8fa 0%, #e9f0f5 100%);
 }
 .feedback-threads {
   scroll-margin-top: 24px;
@@ -413,39 +415,40 @@ nav a:hover { background: var(--blue-50); }
 .thread-waiting { margin: 0 18px 16px 68px; color: #7b8995; font-size: 11px; font-style: italic; }
 .threads-empty { margin: 0; padding: 24px; border: 1px dashed #cbd8e2; border-radius: 6px; color: #627587; text-align: center; }
 .feedback-dialog {
-  width: min(1380px, 100%);
+  width: min(1180px, 100%);
   margin: 0 auto;
   overflow: hidden;
   border: 1px solid #cbd8e2;
-  border-radius: 14px;
+  border-radius: 18px;
   background: #fff;
-  box-shadow: 0 18px 55px rgba(0, 43, 77, .16);
+  box-shadow: 0 24px 64px rgba(0, 43, 77, .14);
 }
 .feedback-heading {
   display: flex;
   align-items: center;
   gap: 14px;
-  min-height: 82px;
-  padding: 18px 26px 12px;
+  min-height: 96px;
+  padding: 20px 30px 16px;
+  border-bottom: 1px solid #edf1f4;
 }
 .stop-symbol {
-  display: grid;
-  width: 46px;
-  height: 46px;
+  display: block;
+  width: 56px;
+  height: 56px;
   flex: none;
-  place-items: center;
-  border-radius: 50%;
-  color: #fff;
-  background: #0868b7;
+  filter: drop-shadow(0 5px 7px rgba(0, 59, 100, .18));
 }
-.stop-symbol svg { width: 25px; height: 25px; }
+.stop-symbol img { display: block; width: 56px; height: 56px; object-fit: contain; }
+.feedback-heading-copy { min-width: 0; }
 .feedback-heading h1 { margin: 0; font-size: 21px; line-height: 1.2; letter-spacing: -.015em; }
 .feedback-heading p { margin: 5px 0 0; color: #627587; font-size: 12px; }
+.feedback-heading .heading-required { margin: 0 14px 0 auto; color: #687b8a; font-size: 10px; white-space: nowrap; }
+.heading-required span, .required-mark, .required-note span { color: #c92f3c; font-style: normal; font-weight: 800; }
 .feedback-heading > a {
   display: grid;
   width: 36px;
   height: 36px;
-  margin-left: auto;
+  margin-left: 0;
   place-items: center;
   align-self: flex-start;
   border-radius: 50%;
@@ -458,7 +461,7 @@ nav a:hover { background: var(--blue-50); }
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   width: min(1040px, calc(100% - 80px));
-  margin: 0 auto 23px;
+  margin: 22px auto 25px;
   padding: 0;
   list-style: none;
 }
@@ -483,18 +486,21 @@ nav a:hover { background: var(--blue-50); }
 .feedback-wizard {
   display: grid;
   grid-template-columns: 1.06fr 1.06fr .94fr;
-  gap: 14px;
+  gap: 18px;
   margin: 0;
-  padding: 0 22px 22px;
+  padding: 0 28px 28px;
 }
 .wizard-panel {
   min-width: 0;
   margin: 0;
-  padding: 18px 20px 20px;
+  padding: 21px 22px 22px;
   border: 1px solid #d5dfe7;
-  border-radius: 8px;
-  background: #fff;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #fff 0%, #fbfcfd 100%);
+  box-shadow: 0 4px 14px rgba(22, 64, 91, .04);
+  transition: border-color .2s, box-shadow .2s;
 }
+.wizard-panel.panel-invalid { border-color: #d9535d; box-shadow: 0 0 0 3px rgba(201, 47, 60, .1); }
 .wizard-panel legend {
   display: flex;
   align-items: center;
@@ -578,6 +584,10 @@ nav a:hover { background: var(--blue-50); }
 .wizard-panel textarea { min-height: 94px; resize: vertical; }
 .wizard-panel textarea:focus,
 .wizard-panel input[type="email"]:focus { border-color: #3a91d5; box-shadow: 0 0 0 3px rgba(8, 104, 183, .11); }
+.field-invalid input[type="email"],
+.field-invalid input[type="email"]:focus { border-color: #d13d49; background: #fffafa; box-shadow: 0 0 0 3px rgba(201, 47, 60, .1); }
+.field-error { margin: 9px 0 0; color: #b42331; font-size: 10px; font-weight: 600; line-height: 1.4; }
+.required-note { margin: 11px 0 0 !important; color: #687b8a !important; font-size: 9px !important; }
 .character-count { display: block; margin-top: 4px; color: #748492; font-size: 9px; }
 .photo-upload {
   display: flex;
@@ -589,7 +599,7 @@ nav a:hover { background: var(--blue-50); }
   border: 1.5px dashed #6fa9da;
   border-radius: 6px;
   color: #24445d;
-  background: #fbfdff;
+  background: #f7fbfe;
   text-align: center;
   font-size: 10px;
   cursor: pointer;
@@ -683,9 +693,10 @@ nav a:hover { background: var(--blue-50); }
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  padding: 10px 26px;
+  padding: 12px 30px;
   border-top: 1px solid #e0e7ec;
-  color: #71818d;
+  color: #657886;
+  background: #f8fafb;
   font-size: 9px;
 }
 .feedback-dialog-footer span { display: flex; align-items: center; gap: 6px; }
