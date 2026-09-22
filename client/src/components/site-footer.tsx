@@ -1,9 +1,17 @@
 "use client";
 
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/components/language-provider";
+import worldIcon from "@/components/vector.png";
+import { languages, type Language } from "@/lib/i18n";
 
-const companyName = "STA – Südtiroler Transportstrukturen AG";
+const companyName = "Südtiroler Transportstrukturen AG";
+const languageNames: Record<Language, string> = {
+  de: "Deutsch",
+  it: "Italiano",
+  en: "English",
+};
 const footerHrefs = [
   "https://www.sta.bz.it/de/impressum/",
   "https://www.suedtirolmobil.info/de/service-und-kontakt/privacy",
@@ -16,31 +24,47 @@ const footerHrefs = [
  * route scrolls, and gets the full footer at the end of the document.
  */
 export function SiteFooter() {
-  const { t } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const pathname = usePathname();
   const pinned = pathname === "/";
 
   if (pathname.startsWith("/feedback")) return null;
 
-  if (pinned) {
-    return (
-      <footer className="site-footer site-footer-pinned">
-        <div className="footer-inner">
-          <p className="footer-company">{companyName}</p>
-          <div className="footer-links">
-            {t.footer.links.map((link, index) => <a key={link} href={footerHrefs[index]}>{link}</a>)}
-          </div>
-        </div>
-      </footer>
-    );
-  }
+  const languagePicker = (
+    <label className="footer-language">
+      <span>Language</span>
+      <span className="footer-language-select">
+        <Image src={worldIcon} alt="" aria-hidden="true" width={16} height={16} />
+        <select
+          aria-label={t.nav.language}
+          value={language}
+          onChange={(event) => setLanguage(event.target.value as Language)}
+        >
+          {languages.map((code) => <option key={code} value={code}>{languageNames[code]}</option>)}
+        </select>
+      </span>
+    </label>
+  );
 
   return (
-    <footer className="site-footer">
+    <footer className={`site-footer${pinned ? " site-footer-pinned" : ""}`}>
       <div className="footer-inner">
-        <p className="footer-company">{companyName}</p>
-        <div className="footer-links">
-          {t.footer.links.map((link, index) => <a key={link} href={footerHrefs[index]}>{link}</a>)}
+        {!pinned && (
+          <address className="footer-address">
+            <strong>{companyName}</strong>
+            <span>Gerbergasse 60, 39100 Bozen Italien</span>
+            <a href="tel:+390471312888">+39 0471 312 888</a>
+            <a href="mailto:info@sta.bz.it">info@sta.bz.it</a>
+            <span>Mwst. Nr. 00586190217</span>
+            <a className="footer-contact" href={footerHrefs[2]}>{t.footer.links[2]} <span aria-hidden="true">›</span></a>
+          </address>
+        )}
+        <div className="footer-meta">
+          {pinned && <p className="footer-company">{companyName}</p>}
+          <div className="footer-links">
+            {t.footer.links.slice(0, 2).map((link, index) => <a key={link} href={footerHrefs[index]}>{link}</a>)}
+          </div>
+          {languagePicker}
         </div>
       </div>
     </footer>
