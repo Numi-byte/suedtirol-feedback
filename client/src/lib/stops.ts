@@ -12,6 +12,7 @@ export type BusStop = {
   latitude: number;
   longitude: number;
   is_accessible: boolean;
+  feedback_count: number;
 };
 
 export function stopName(stop: BusStop, language: Language) {
