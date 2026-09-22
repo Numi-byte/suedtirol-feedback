@@ -51,8 +51,8 @@
   /* Licensed Monotype face; self-host the webfont files to get the real thing. */
   --font-brand: "Neue Frutiger World", Frutiger, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-display: "Ely Rounded", ui-rounded, "Segoe UI Rounded", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  /* Utility bar (38px) + nav row (96px); anchors and the map offset by it. */
-  --header-h: 134px;
+  /* Navigation row height; anchors and the map are offset by it. */
+  --header-h: 96px;
   /* Home pins its footer, so the map is sized around both bars. */
   --footer-h: 64px;
   --container: 1200px;
@@ -113,14 +113,6 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
   position: sticky; top: 0; z-index: 1200; background: #fff;
   border-bottom: 1px solid var(--line); box-shadow: 0 2px 12px rgba(0, 43, 77, .06);
 }
-.utility-bar { background: var(--blue-deep); color: #fff; }
-.utility-inner {
-  max-width: var(--shell); height: 38px; margin: auto; padding: 0 var(--shell-pad);
-  display: flex; align-items: center; justify-content: space-between; font-size: 12px;
-}
-.utility-link { display: flex; align-items: center; gap: 8px; font-weight: 600; opacity: .92; }
-.utility-link:hover { opacity: 1; }
-.utility-link svg { width: 14px; height: 14px; }
 .header-inner {
   max-width: var(--shell); height: 96px; margin: auto; padding: 20px var(--shell-pad);
   display: flex; align-items: center; justify-content: space-between; gap: 32px;
@@ -354,6 +346,9 @@ nav a:hover { background: var(--blue-50); }
 }
 .footer-inner { display: flex; justify-content: space-between; align-items: flex-start; gap: 48px; flex-wrap: wrap; }
 .footer-company { margin: 0; color: var(--blue-800); }
+.footer-service { margin: 0; color: var(--gray-800); white-space: nowrap; }
+.footer-service a { color: var(--blue); }
+.footer-service a:hover { color: var(--blue-dark); text-decoration: underline; }
 .footer-links { display: flex; gap: 26px; color: var(--gray-600); font-weight: 400; }
 .footer-links a:hover { color: var(--blue-800); text-decoration: underline; }
 .footer-address { display: flex; flex-direction: column; color: var(--gray-600); font-style: normal; }
@@ -371,8 +366,13 @@ nav a:hover { background: var(--blue-50); }
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 1100;
   height: var(--footer-h); display: flex; align-items: center; padding: 0 clamp(18px, 5vw, 80px);
 }
-.site-footer-pinned .footer-inner { width: 100%; flex-wrap: nowrap; align-items: center; gap: 20px; }
-.site-footer-pinned .footer-meta { width: 100%; }
+.site-footer-pinned .footer-inner { display: grid; grid-template-columns: 1fr auto 1fr; width: 100%; align-items: center; gap: 20px; }
+.site-footer-pinned .footer-meta { width: auto; margin-left: 0; justify-self: end; }
+.site-footer-pinned .footer-language { gap: 0; color: var(--gray-600); font-size: inherit; line-height: inherit; }
+.site-footer-pinned .footer-language > span:first-child,
+.site-footer-pinned .footer-language-select img { display: none; }
+.site-footer-pinned .footer-language-select { min-width: 0; height: 24px; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.site-footer-pinned .footer-language-select select { width: auto; height: 24px; padding: 0; border: 0; color: inherit; font-size: inherit; line-height: inherit; }
 .site-footer-pinned p { margin: 0; }
 
 /* ---------- feedback wizard ---------- */
@@ -723,8 +723,7 @@ nav a:hover { background: var(--blue-50); }
   .map-stop-list { display: none; }
 }
 @media (max-width: 560px) {
-  :root { --header-h: 110px; --shell-pad: 18px; }
-  .utility-inner { font-size: 11px; }
+  :root { --header-h: 72px; --shell-pad: 18px; }
   .header-inner { height: 72px; gap: 12px; padding: 8px var(--shell-pad); }
   .brand-logo { height: 34px; }
   .header-cta { display: none; }
@@ -749,7 +748,7 @@ nav a:hover { background: var(--blue-50); }
   .footer-inner { flex-direction: column; align-items: start; gap: 18px; }
   .footer-meta { width: 100%; margin-left: 0; justify-content: flex-start; flex-wrap: wrap; }
   .footer-links { flex-wrap: wrap; gap: 16px; }
-  .site-footer-pinned .footer-inner { flex-direction: row; }
+  .site-footer-pinned .footer-inner { display: flex; flex-direction: row; }
   .site-footer-pinned .footer-meta { justify-content: flex-end; flex-wrap: nowrap; }
-  .site-footer-pinned .footer-company, .site-footer-pinned .footer-links { display: none; }
+  .site-footer-pinned .footer-company, .site-footer-pinned .footer-service, .site-footer-pinned .footer-links { display: none; }
 }
