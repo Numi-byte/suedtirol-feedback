@@ -61,15 +61,16 @@ type BusStopRow = {
 };
 
 const STOPS_PER_PAGE = 10;
+const FEEDBACK_PER_PAGE = 10;
 
 function pageNumbers(currentPage: number, pageCount: number) {
   const firstPage = Math.max(1, Math.min(currentPage - 2, pageCount - 4));
   return Array.from({ length: Math.min(5, pageCount) }, (_, index) => firstPage + index);
 }
 
-export default async function PortalHomePage({ searchParams }: { searchParams: Promise<{ stop?: string; page?: string; q?: string; replies?: string }> }) {
+export default async function PortalHomePage({ searchParams }: { searchParams: Promise<{ stop?: string; page?: string; q?: string; replies?: string; feedbackPage?: string }> }) {
   const { language, t } = await getTranslations();
-  const { stop: selectedId, page: requestedPage, q, replies } = await searchParams;
+  const { stop: selectedId, page: requestedPage, q, replies, feedbackPage: requestedFeedbackPage } = await searchParams;
 
   if (!hasSupabaseConfig()) {
     return (
@@ -99,24 +100,52 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
   const currentPage = Math.min(Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1, pageCount);
   const stops = filteredActiveStops.slice((currentPage - 1) * STOPS_PER_PAGE, currentPage * STOPS_PER_PAGE);
   const editing = selectedId ? allActiveStops.find((stop) => stop.id === selectedId) ?? null : null;
-  const { data: feedback } = user ? await supabase
-    .from("stop_feedback")
-    .select("id,severity,description,overall_rating,cleanliness_rating,safety_rating,accessibility_rating,information_rating,shelter_rating,has_shelter,has_seating,has_lighting,comment,email,consent_to_contact,language,status,created_at,bus_stops(name_de,name_it,name_en,municipality),stop_feedback_categories(category_slug,feedback_categories(label_de,label_it,label_en)),stop_feedback_photos(id,storage_path),feedback_replies(id,body,created_at,updated_at)")
-    .order("created_at", { ascending: false })
-    .limit(250) : { data: [] };
-
   const replyFilter: ReplyFilter = replies === "replied" || replies === "unreplied" ? replies : "all";
-  const hasReply = (entry: NonNullable<typeof feedback>[number]) =>
-    Boolean(getFeedbackReply(entry.feedback_replies as FeedbackReply | FeedbackReply[] | null));
-  const visibleFeedback = (feedback ?? []).filter((entry) =>
-    replyFilter === "all" || (replyFilter === "replied" ? hasReply(entry) : !hasReply(entry)),
-  );
+  const parsedFeedbackPage = Number.parseInt(requestedFeedbackPage ?? "1", 10);
+  const requestedFeedbackPageNumber = Number.isFinite(parsedFeedbackPage) && parsedFeedbackPage > 0 ? parsedFeedbackPage : 1;
+  const feedbackSelect = "id,severity,description,overall_rating,cleanliness_rating,safety_rating,accessibility_rating,information_rating,shelter_rating,has_shelter,has_seating,has_lighting,comment,email,consent_to_contact,language,status,created_at,bus_stops(name_de,name_it,name_en,municipality),stop_feedback_categories(category_slug,feedback_categories(label_de,label_it,label_en)),stop_feedback_photos(id,storage_path),feedback_replies!left(id,body,created_at,updated_at)";
+  const buildFeedbackQuery = () => {
+    let query = supabase.from("stop_feedback").select(feedbackSelect, { count: "exact" });
+    if (replyFilter === "replied") query = query.not("feedback_replies", "is", null);
+    if (replyFilter === "unreplied") query = query.is("feedback_replies", null);
+    return query.order("created_at", { ascending: false });
+  };
+  let feedbackResult = user ? await buildFeedbackQuery().range(
+    (requestedFeedbackPageNumber - 1) * FEEDBACK_PER_PAGE,
+    requestedFeedbackPageNumber * FEEDBACK_PER_PAGE - 1,
+  ) : { data: [], count: 0 };
+  const feedbackCount = feedbackResult.count ?? 0;
+  const feedbackPageCount = Math.max(1, Math.ceil(feedbackCount / FEEDBACK_PER_PAGE));
+  const currentFeedbackPage = Math.min(requestedFeedbackPageNumber, feedbackPageCount);
+  if (user && currentFeedbackPage !== requestedFeedbackPageNumber) {
+    feedbackResult = await buildFeedbackQuery().range(
+      (currentFeedbackPage - 1) * FEEDBACK_PER_PAGE,
+      currentFeedbackPage * FEEDBACK_PER_PAGE - 1,
+    );
+  }
+  const visibleFeedback = feedbackResult.data ?? [];
+  const [{ count: allFeedbackCount }, { count: newFeedbackCount }] = user
+    ? await Promise.all([
+      supabase.from("stop_feedback").select("id", { count: "exact", head: true }),
+      supabase.from("stop_feedback").select("id", { count: "exact", head: true }).eq("status", "new"),
+    ])
+    : [{ count: 0 }, { count: 0 }];
   const feedbackFilterHref = (filter: ReplyFilter) => {
     const params = new URLSearchParams();
     if (selectedId) params.set("stop", selectedId);
     if (requestedPage) params.set("page", requestedPage);
     if (q) params.set("q", q);
     if (filter !== "all") params.set("replies", filter);
+    const query = params.toString();
+    return `${query ? `?${query}` : ""}#feedback-inbox`;
+  };
+  const feedbackPageHref = (feedbackPage: number) => {
+    const params = new URLSearchParams();
+    if (selectedId) params.set("stop", selectedId);
+    if (requestedPage) params.set("page", requestedPage);
+    if (q) params.set("q", q);
+    if (replyFilter !== "all") params.set("replies", replyFilter);
+    if (feedbackPage > 1) params.set("feedbackPage", String(feedbackPage));
     const query = params.toString();
     return `${query ? `?${query}` : ""}#feedback-inbox`;
   };
@@ -130,7 +159,6 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
   const photoUrls = new Map<string, string>((signedPhotos ?? []).flatMap((photo, index) =>
     photo.signedUrl && photoPaths[index] ? [[photoPaths[index], photo.signedUrl]] : [],
   ));
-  const newFeedbackCount = (feedback ?? []).filter((entry) => entry.status === "new").length;
   const canReply = user?.id === "bdee91d9-c969-4bd4-b336-8f7e780ead3e";
 
   if (!user) return (
@@ -246,7 +274,7 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
       <section className="feedback-card" id="feedback-inbox">
         <div className="feedback-heading-row">
           <div className="card-heading"><span>{t.feedback.kicker}</span><h2>{t.feedback.title}</h2><p>{t.feedback.note}</p></div>
-          <div className="feedback-summary" aria-label={t.feedback.summaryLabel}><strong>{feedback?.length ?? 0}</strong><span>{t.feedback.reports}</span><strong>{newFeedbackCount}</strong><span>{t.feedback.fresh}</span></div>
+          <div className="feedback-summary" aria-label={t.feedback.summaryLabel}><strong>{allFeedbackCount ?? 0}</strong><span>{t.feedback.reports}</span><strong>{newFeedbackCount ?? 0}</strong><span>{t.feedback.fresh}</span></div>
         </div>
         <nav className="reply-filters" aria-label={t.feedback.filter.label}>
           {(["all", "replied", "unreplied"] as const).map((filter) => (
@@ -302,6 +330,18 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
           })}
           {!visibleFeedback.length && <p className="empty feedback-empty">{replyFilter === "all" ? t.feedback.empty : t.feedback.filter.empty}</p>}
         </div>
+        {feedbackPageCount > 1 ? <nav className="stop-pagination feedback-pagination" aria-label={t.feedback.paginationLabel}>
+          {currentFeedbackPage > 1
+            ? <Link href={feedbackPageHref(currentFeedbackPage - 1)}>{t.stops.previous}</Link>
+            : <span className="disabled" aria-disabled="true">{t.stops.previous}</span>}
+          <div className="page-numbers">
+            {pageNumbers(currentFeedbackPage, feedbackPageCount).map((page) => <Link href={feedbackPageHref(page)} key={page} aria-current={page === currentFeedbackPage ? "page" : undefined}>{page}</Link>)}
+          </div>
+          {currentFeedbackPage < feedbackPageCount
+            ? <Link href={feedbackPageHref(currentFeedbackPage + 1)}>{t.stops.next}</Link>
+            : <span className="disabled" aria-disabled="true">{t.stops.next}</span>}
+          <span className="page-summary">{t.stops.page} {currentFeedbackPage} {t.stops.of} {feedbackPageCount} · {feedbackCount} {t.feedback.reports}</span>
+        </nav> : null}
       </section>
     </main>
     </>

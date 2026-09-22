@@ -54,7 +54,8 @@ export const translations = {
     stops: { kicker: "Datenbank", count: "Haltestellen", empty: "Noch keine Haltestellen. Lege den ersten Standort an.", searchLabel: "Haltestellen durchsuchen", searchPlaceholder: "Name, Gemeinde oder Nummer …", search: "Suchen", results: "Treffer", emptySearch: "Keine passende Haltestelle gefunden.", paginationLabel: "Seitennavigation der Haltestellen", previous: "Zurück", next: "Weiter", page: "Seite", of: "von" },
     feedback: {
       kicker: "Eingegangene Rückmeldungen", title: "Haltestellen-Feedback",
-      note: "Bis zu 250 aktuelle Meldungen. Fotos und Kontaktdaten bleiben angemeldeten Portalnutzerinnen und -nutzern vorbehalten.",
+      note: "Alle Meldungen, seitenweise angezeigt. Fotos und Kontaktdaten bleiben angemeldeten Portalnutzerinnen und -nutzern vorbehalten.",
+      paginationLabel: "Seitennavigation der Rückmeldungen",
       summaryLabel: "Übersicht der Rückmeldungen", reports: "Meldungen", fresh: "neu",
       unavailableStop: "Haltestelle nicht verfügbar",
       ratingResponse: "Bewertung", reportedIssue: "Gemeldeter Mangel",
@@ -121,7 +122,8 @@ export const translations = {
     stops: { kicker: "Banca dati", count: "fermate", empty: "Nessuna fermata. Crea la prima posizione.", searchLabel: "Cerca fermate", searchPlaceholder: "Nome, comune o codice …", search: "Cerca", results: "risultati", emptySearch: "Nessuna fermata corrispondente trovata.", paginationLabel: "Navigazione delle pagine delle fermate", previous: "Indietro", next: "Avanti", page: "Pagina", of: "di" },
     feedback: {
       kicker: "Riscontri ricevuti", title: "Feedback sulle fermate",
-      note: "Fino a 250 segnalazioni recenti. Le foto e i dati di contatto restano riservati agli utenti autenticati del portale.",
+      note: "Tutte le segnalazioni, visualizzate pagina per pagina. Le foto e i dati di contatto restano riservati agli utenti autenticati del portale.",
+      paginationLabel: "Navigazione delle pagine dei riscontri",
       summaryLabel: "Riepilogo dei riscontri", reports: "segnalazioni", fresh: "nuove",
       unavailableStop: "Fermata non disponibile",
       ratingResponse: "Valutazione", reportedIssue: "Carenza segnalata",
@@ -188,7 +190,8 @@ export const translations = {
     stops: { kicker: "Database", count: "bus stops", empty: "No stops yet. Add the first location.", searchLabel: "Search bus stops", searchPlaceholder: "Name, municipality or stop code …", search: "Search", results: "results", emptySearch: "No matching bus stop found.", paginationLabel: "Bus stop page navigation", previous: "Previous", next: "Next", page: "Page", of: "of" },
     feedback: {
       kicker: "Submitted responses", title: "Stop feedback",
-      note: "Up to 250 recent reports. Photos and contact details remain private to authenticated portal users.",
+      note: "All reports, displayed one page at a time. Photos and contact details remain private to authenticated portal users.",
+      paginationLabel: "Feedback page navigation",
       summaryLabel: "Feedback summary", reports: "reports", fresh: "new",
       unavailableStop: "Unavailable stop",
       ratingResponse: "Rating response", reportedIssue: "Reported issue",
