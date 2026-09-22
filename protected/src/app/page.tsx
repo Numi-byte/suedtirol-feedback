@@ -20,6 +20,7 @@ type FeedbackPhoto = { id: string; storage_path: string };
 type FeedbackReply = { id: string; body: string; created_at: string; updated_at: string };
 type Severity = "low" | "medium" | "high";
 type Status = "new" | "in_review" | "resolved" | "dismissed";
+type ReplyFilter = "all" | "replied" | "unreplied";
 
 function formatSubmittedAt(value: string, language: Language) {
   return new Intl.DateTimeFormat(dateLocales[language], { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
@@ -57,9 +58,9 @@ function pageNumbers(currentPage: number, pageCount: number) {
   return Array.from({ length: Math.min(5, pageCount) }, (_, index) => firstPage + index);
 }
 
-export default async function PortalHomePage({ searchParams }: { searchParams: Promise<{ stop?: string; page?: string; q?: string }> }) {
+export default async function PortalHomePage({ searchParams }: { searchParams: Promise<{ stop?: string; page?: string; q?: string; replies?: string }> }) {
   const { language, t } = await getTranslations();
-  const { stop: selectedId, page: requestedPage, q } = await searchParams;
+  const { stop: selectedId, page: requestedPage, q, replies } = await searchParams;
 
   if (!hasSupabaseConfig()) {
     return (
@@ -95,7 +96,23 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
     .order("created_at", { ascending: false })
     .limit(250) : { data: [] };
 
-  const photoPaths = (feedback ?? []).flatMap((entry) =>
+  const replyFilter: ReplyFilter = replies === "replied" || replies === "unreplied" ? replies : "all";
+  const hasReply = (entry: NonNullable<typeof feedback>[number]) =>
+    ((entry.feedback_replies as FeedbackReply[] | null) ?? []).length > 0;
+  const visibleFeedback = (feedback ?? []).filter((entry) =>
+    replyFilter === "all" || (replyFilter === "replied" ? hasReply(entry) : !hasReply(entry)),
+  );
+  const feedbackFilterHref = (filter: ReplyFilter) => {
+    const params = new URLSearchParams();
+    if (selectedId) params.set("stop", selectedId);
+    if (requestedPage) params.set("page", requestedPage);
+    if (q) params.set("q", q);
+    if (filter !== "all") params.set("replies", filter);
+    const query = params.toString();
+    return `${query ? `?${query}` : ""}#feedback-inbox`;
+  };
+
+  const photoPaths = visibleFeedback.flatMap((entry) =>
     (entry.stop_feedback_photos as FeedbackPhoto[] | null ?? []).map((photo) => photo.storage_path),
   );
   const { data: signedPhotos } = photoPaths.length
@@ -217,13 +234,20 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
           </div> : null}
         </section>
       </div>
-      <section className="feedback-card">
+      <section className="feedback-card" id="feedback-inbox">
         <div className="feedback-heading-row">
           <div className="card-heading"><span>{t.feedback.kicker}</span><h2>{t.feedback.title}</h2><p>{t.feedback.note}</p></div>
           <div className="feedback-summary" aria-label={t.feedback.summaryLabel}><strong>{feedback?.length ?? 0}</strong><span>{t.feedback.reports}</span><strong>{newFeedbackCount}</strong><span>{t.feedback.fresh}</span></div>
         </div>
+        <nav className="reply-filters" aria-label={t.feedback.filter.label}>
+          {(["all", "replied", "unreplied"] as const).map((filter) => (
+            <Link href={feedbackFilterHref(filter)} key={filter} aria-current={replyFilter === filter ? "page" : undefined}>
+              {t.feedback.filter[filter]}
+            </Link>
+          ))}
+        </nav>
         <div className="feedback-list">
-          {feedback?.map((entry) => {
+          {visibleFeedback.map((entry) => {
             const stop = Array.isArray(entry.bus_stops) ? entry.bus_stops[0] : entry.bus_stops;
             const categories = (entry.stop_feedback_categories as FeedbackCategory[] | null) ?? [];
             const photos = (entry.stop_feedback_photos as FeedbackPhoto[] | null) ?? [];
@@ -267,7 +291,7 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
               /> : reply ? <div className="existing-reply"><span>{t.feedback.reply.answered}</span><p>{reply.body}</p></div> : null}
             </article>;
           })}
-          {!feedback?.length && <p className="empty feedback-empty">{t.feedback.empty}</p>}
+          {!visibleFeedback.length && <p className="empty feedback-empty">{replyFilter === "all" ? t.feedback.empty : t.feedback.filter.empty}</p>}
         </div>
       </section>
     </main>
