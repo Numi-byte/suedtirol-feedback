@@ -8,6 +8,7 @@ import { StopImportForm } from "./stop-import-form";
 import { BrandLogo } from "@/components/brand-logo";
 import { dateLocales } from "@/lib/i18n";
 import type { Language } from "@/lib/i18n";
+import { canReplyToFeedback } from "@/lib/feedback-reply-authorization";
 import { getTranslations } from "@/lib/language";
 import { hasSupabaseConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
@@ -159,7 +160,7 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
   const photoUrls = new Map<string, string>((signedPhotos ?? []).flatMap((photo, index) =>
     photo.signedUrl && photoPaths[index] ? [[photoPaths[index], photo.signedUrl]] : [],
   ));
-  const canReply = user?.id === "bdee91d9-c969-4bd4-b336-8f7e780ead3e";
+  const canReply = canReplyToFeedback(user?.id);
 
   if (!user) return (
     <main className="login-page">
