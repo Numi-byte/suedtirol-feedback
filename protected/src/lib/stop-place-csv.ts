@@ -1,6 +1,7 @@
 export type StopPlaceImportRow = {
   nameDe: string;
   nameIt: string;
+  nameEn: string;
   latitude: number;
   longitude: number;
   stopCode: string;
@@ -97,6 +98,10 @@ export function readStopPlaceCsv(source: string, onSkipped?: (message: string) =
     const latitude = Number(coordinates[2]);
     const nameDe = value("name_de");
     const nameIt = value("name_it");
+    // Current stop_place exports do not include English names. Keep the
+    // application's third language populated with the documented German
+    // fallback, but prefer name_en if a future export supplies it.
+    const nameEn = value("name_en") || nameDe;
     const stopCode = value("private_code");
     const publicationTimestamp = Date.parse(value("publication_timestamp"));
     if (!nameDe || !nameIt || !stopCode || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
@@ -110,13 +115,14 @@ export function readStopPlaceCsv(source: string, onSkipped?: (message: string) =
 
     const existing = newestByStopCode.get(stopCode);
     if (!existing || publicationTimestamp > existing.publicationTimestamp) {
-      newestByStopCode.set(stopCode, { nameDe, nameIt, latitude, longitude, stopCode, publicationTimestamp });
+      newestByStopCode.set(stopCode, { nameDe, nameIt, nameEn, latitude, longitude, stopCode, publicationTimestamp });
     }
   });
 
   return Array.from(newestByStopCode.values(), (stop) => ({
     nameDe: stop.nameDe,
     nameIt: stop.nameIt,
+    nameEn: stop.nameEn,
     latitude: stop.latitude,
     longitude: stop.longitude,
     stopCode: stop.stopCode,
