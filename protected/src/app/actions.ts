@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { LANGUAGE_COOKIE, getTranslations } from "@/lib/language";
 import { languages } from "@/lib/i18n";
+import { canReplyToFeedback } from "@/lib/feedback-reply-authorization";
 import { createClient } from "@/lib/supabase/server";
 
 export async function setLanguage(formData: FormData) {
@@ -67,13 +68,11 @@ async function requireUser() {
   return { supabase, user };
 }
 
-const FEEDBACK_REPLY_USER_ID = "bdee91d9-c969-4bd4-b336-8f7e780ead3e";
-
 export type FeedbackReplyState = { error?: string; success?: boolean };
 
 export async function replyToFeedback(_state: FeedbackReplyState, formData: FormData): Promise<FeedbackReplyState> {
   const { supabase, user } = await requireUser();
-  if (user.id !== FEEDBACK_REPLY_USER_ID) return { error: "You are not authorized to reply to public feedback." };
+  if (!canReplyToFeedback(user.id)) return { error: "You are not authorized to reply to public feedback." };
   const feedbackId = String(formData.get("feedback_id") ?? "");
   const body = String(formData.get("body") ?? "").trim();
   if (!feedbackId) return { error: "A feedback id is required." };
