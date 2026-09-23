@@ -5,7 +5,7 @@ import { importStopPlaceBatch } from "./actions";
 import { readStopPlaceCsv } from "@/lib/stop-place-csv";
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
-const BATCH_SIZE = 25;
+const BATCH_SIZE = 250;
 
 export function StopImportForm({ labels }: { labels: { file: string; active: string; submit: string; hint: string } }) {
   const inputRef = useRef<HTMLInputElement>(null);
