@@ -179,6 +179,9 @@ export async function importStopPlaceBatch(rows: StopPlaceBatchRow[], published:
       const values = newRows.slice(offset, offset + 250).map((stop) => ({
         name_de: stop.nameDe, name_it: stop.nameIt, name_en: stop.nameEn,
         municipality: "", stop_code: stop.stopCode,
+        // stop_place centroid_location is (longitude,latitude,). The parser
+        // names both values explicitly and they are persisted in their
+        // respective database columns here.
         latitude: stop.latitude, longitude: stop.longitude,
         is_published: published, archived_at: null, created_by: user.id,
         updated_at: new Date().toISOString(),

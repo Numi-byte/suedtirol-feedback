@@ -20,6 +20,21 @@ function normalizeHeader(value: string) {
   return value.trim().replace(/^\uFEFF/, "").replace(/\\_/g, "_").toLowerCase();
 }
 
+/**
+ * PostgreSQL exports centroid_location as (longitude,latitude,) rather than
+ * the more commonly displayed latitude/longitude order. Return named values
+ * so the two numbers cannot accidentally be swapped at the database boundary.
+ */
+function parseCentroidLocation(value: string) {
+  const coordinates = value.match(/^\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,?\s*\)$/);
+  if (!coordinates) return null;
+
+  return {
+    longitude: Number(coordinates[1]),
+    latitude: Number(coordinates[2]),
+  };
+}
+
 function parseCsv(source: string) {
   const rows: string[][] = [];
   let row: string[] = [];
@@ -89,13 +104,12 @@ export function readStopPlaceCsv(source: string, onSkipped?: (message: string) =
   rows.forEach((row, rowIndex) => {
     if (row.every((value) => !value.trim())) return;
     const value = (name: string) => row[columns.get(name)!]?.trim() ?? "";
-    const coordinates = value("centroid_location").match(/^\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,?\s*\)$/);
+    const coordinates = parseCentroidLocation(value("centroid_location"));
     if (!coordinates) {
       onSkipped?.(`CSV data row ${rowIndex + 1}: invalid centroid_location.`);
       return [];
     }
-    const longitude = Number(coordinates[1]);
-    const latitude = Number(coordinates[2]);
+    const { longitude, latitude } = coordinates;
     const nameDe = value("name_de");
     const nameIt = value("name_it");
     // Current stop_place exports do not include English names. Keep the
