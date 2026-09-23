@@ -6,7 +6,9 @@ export type StopPlaceImportRow = {
   stopCode: string;
 };
 
-const REQUIRED_COLUMNS = ["name_it", "name_de", "centroid_location", "private_code"] as const;
+type DatedStopPlaceImportRow = StopPlaceImportRow & { publicationTimestamp: number };
+
+const REQUIRED_COLUMNS = ["publication_timestamp", "name_it", "name_de", "centroid_location", "private_code"] as const;
 const STOP_PLACE_COLUMNS = [
   "tid", "publication_timestamp", "id_version", "valid_between_from_date",
   "valid_between_to_date", "name_it", "name_de", "short_name_it",
@@ -81,8 +83,10 @@ export function readStopPlaceCsv(source: string, onSkipped?: (message: string) =
   else if (firstDataRow > 0) rows.splice(0, firstDataRow);
   const columns = new Map(header.map((name, index) => [name, index]));
 
-  return rows.flatMap((row, rowIndex) => {
-    if (row.every((value) => !value.trim())) return [];
+  const newestByStopCode = new Map<string, DatedStopPlaceImportRow>();
+
+  rows.forEach((row, rowIndex) => {
+    if (row.every((value) => !value.trim())) return;
     const value = (name: string) => row[columns.get(name)!]?.trim() ?? "";
     const coordinates = value("centroid_location").match(/^\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,?\s*\)$/);
     if (!coordinates) {
@@ -94,10 +98,27 @@ export function readStopPlaceCsv(source: string, onSkipped?: (message: string) =
     const nameDe = value("name_de");
     const nameIt = value("name_it");
     const stopCode = value("private_code");
+    const publicationTimestamp = Date.parse(value("publication_timestamp"));
     if (!nameDe || !nameIt || !stopCode || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
       onSkipped?.(`CSV data row ${rowIndex + 1}: incomplete stop data.`);
-      return [];
+      return;
     }
-    return [{ nameDe, nameIt, latitude, longitude, stopCode }];
+    if (!Number.isFinite(publicationTimestamp)) {
+      onSkipped?.(`CSV data row ${rowIndex + 1}: invalid publication_timestamp.`);
+      return;
+    }
+
+    const existing = newestByStopCode.get(stopCode);
+    if (!existing || publicationTimestamp > existing.publicationTimestamp) {
+      newestByStopCode.set(stopCode, { nameDe, nameIt, latitude, longitude, stopCode, publicationTimestamp });
+    }
   });
+
+  return Array.from(newestByStopCode.values(), (stop) => ({
+    nameDe: stop.nameDe,
+    nameIt: stop.nameIt,
+    latitude: stop.latitude,
+    longitude: stop.longitude,
+    stopCode: stop.stopCode,
+  }));
 }
