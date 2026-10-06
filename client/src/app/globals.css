@@ -20,12 +20,15 @@
   src: url("/fonts/NeueFrutigerWorld-Bold.woff2") format("woff2");
   font-weight: 700; font-style: normal; font-display: swap;
 }
+*/
+
 @font-face {
   font-family: "Ely Rounded";
-  src: url("/fonts/ElyRounded-Bold.woff2") format("woff2");
-  font-weight: 700; font-style: normal; font-display: swap;
+  src: url("/fonts/ElyRounded-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
 }
-*/
 
 /* südtirolmobil design language: white surfaces, one strong brand blue,
    humanist sans type, rectilinear cards, generous but even spacing. */
@@ -744,6 +747,35 @@ nav a:hover { background: var(--blue-50); }
 .feedback-dialog-footer span { display: flex; align-items: center; gap: 6px; }
 .feedback-dialog-footer svg { width: 14px; height: 14px; color: #46748f; }
 .feedback-dialog-footer a { color: #0868b7; font-weight: 700; }
+
+/* Shared primary action style; long translated labels can grow past 100px. */
+:is(.header-cta, .stop-card-cta, .map-panel-feedback, .thanks-back,
+    .wizard-panel button[type="submit"], .mobile-actions button:last-child, .mobile-next) {
+  min-width: 100px;
+  height: 36px;
+  min-height: 36px;
+  padding: 8px;
+  border: 0;
+  border-radius: 28px;
+  background: #007eb5;
+  color: #fff;
+  font-family: var(--font-brand);
+  font-weight: 500;
+  font-style: normal;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.thanks-back { display: inline-flex; }
+:is(.header-cta, .stop-card-cta, .map-panel-feedback, .thanks-back,
+    .wizard-panel button[type="submit"], .mobile-actions button:last-child, .mobile-next):hover {
+  background: #006a99;
+}
 
 /* ---------- responsive ---------- */
 @media (max-width: 1100px) {
