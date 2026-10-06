@@ -18,7 +18,7 @@ export function SiteHeader() {
     <header className="site-header">
       <div className="header-inner">
         <Link className="brand" href="/" aria-label={t.nav.home}>
-          <BrandLogo />
+          <BrandLogo sub="" />
         </Link>
 
         <nav aria-label="Primary navigation">

@@ -30,12 +30,14 @@ export default function AboutPage() {
       </section>
 
       <div className="about-photo">
-        <Image
-          src={aboutPhoto}
-          alt={photoAlt[language]}
-          sizes="(min-width: 1600px) 1440px, (min-width: 400px) 90vw, calc(100vw - 40px)"
-          placeholder="blur"
-        />
+        <div className="about-photo-frame">
+          <Image
+            src={aboutPhoto}
+            alt={photoAlt[language]}
+            sizes="(min-width: 1000px) 1260px, (min-width: 400px) 126vw, calc((100vw - 40px) * 1.4)"
+            placeholder="blur"
+          />
+        </div>
       </div>
 
       {t.about.sections.map((section, index) => (
