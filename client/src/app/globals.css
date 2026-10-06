@@ -179,6 +179,31 @@ nav a:hover { background: var(--blue-50); }
 .stop-card-map:hover { text-decoration: underline; }
 
 /* ---------- about ---------- */
+.about-page h1,
+.about-page h2 { overflow-wrap: anywhere; }
+.about-page .help-section-tinted { padding-inline: 0; }
+.about-page .help-section-tinted > .about-section-content {
+  max-width: 1600px;
+  padding-inline: clamp(20px, 5vw, 80px);
+}
+.about-page .about-closing {
+  margin-inline: 0;
+  padding-left: 0;
+  border-left: 0;
+}
+.about-photo {
+  max-width: 1600px;
+  margin: 0 auto 44px;
+  padding-inline: clamp(20px, 5vw, 80px);
+}
+.about-photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  object-position: center;
+}
 .help-section-tinted + .help-section-tinted { padding-top: 0; }
 
 /* ---------- section furniture ---------- */
