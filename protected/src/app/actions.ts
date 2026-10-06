@@ -139,29 +139,8 @@ export async function restoreBusStop(formData: FormData) {
   revalidatePath("/");
 }
 
-type ReverseAddress = { address?: Record<string, string>; display_name?: string };
-
-async function municipalityAt(latitude: number, longitude: number) {
-  const endpoint = process.env.REVERSE_GEOCODING_URL ?? "https://nominatim.openstreetmap.org/reverse";
-  const url = new URL(endpoint);
-  url.searchParams.set("format", "jsonv2");
-  url.searchParams.set("lat", String(latitude));
-  url.searchParams.set("lon", String(longitude));
-  url.searchParams.set("zoom", "10");
-  url.searchParams.set("addressdetails", "1");
-  url.searchParams.set("accept-language", "de");
-  const response = await fetch(url, {
-    headers: { "User-Agent": "suedtirol-feedback-stop-import/1.0" },
-    signal: AbortSignal.timeout(12_000),
-  });
-  if (!response.ok) throw new Error(`Reverse geocoding returned ${response.status}.`);
-  const result = await response.json() as ReverseAddress;
-  const address = result.address ?? {};
-  return address.municipality ?? address.town ?? address.city ?? address.village ?? address.county ?? "";
-}
-
 export type StopPlaceBatchRow = {
-  nameDe: string; nameIt: string; latitude: number; longitude: number; stopCode: string;
+  nameDe: string; nameIt: string; nameEn: string; latitude: number; longitude: number; stopCode: string;
 };
 
 export type ImportBatchResult = { imported: number; skipped: number; errors: string[] };
@@ -174,49 +153,47 @@ export type ImportBatchResult = { imported: number; skipped: number; errors: str
 export async function importStopPlaceBatch(rows: StopPlaceBatchRow[], published: boolean): Promise<ImportBatchResult> {
   try {
     const { supabase, user } = await requireUser();
-    if (!Array.isArray(rows) || !rows.length || rows.length > 25) throw new Error("An import batch must contain between 1 and 25 stops.");
+    if (!Array.isArray(rows) || !rows.length || rows.length > 250) throw new Error("An import batch must contain between 1 and 250 stops.");
     rows.forEach((row) => {
-      if (!row.nameDe?.trim() || !row.nameIt?.trim() || !row.stopCode?.trim() ||
+      if (!row.nameDe?.trim() || !row.nameIt?.trim() || !row.nameEn?.trim() || !row.stopCode?.trim() ||
         !Number.isFinite(row.latitude) || !Number.isFinite(row.longitude) ||
         row.latitude < -90 || row.latitude > 90 || row.longitude < -180 || row.longitude > 180) {
         throw new Error("The import batch contains invalid stop data.");
       }
     });
-    const imported = [];
-    const failures: string[] = [];
+    const stopCodes = rows.map((row) => row.stopCode.trim());
+    const { data: existingStops, error: existingStopsError } = await supabase
+      .from("bus_stops")
+      .select("stop_code")
+      .in("stop_code", stopCodes);
+    if (existingStopsError) throw new Error(existingStopsError.message);
 
-    // Resolve in small groups so a large upload is reasonably quick without
-    // flooding the configured reverse-geocoding service.
-    for (let offset = 0; offset < rows.length; offset += 5) {
-      const group = rows.slice(offset, offset + 5);
-      const resolved = await Promise.all(group.map(async (stop) => {
-        try {
-          const municipality = await municipalityAt(stop.latitude, stop.longitude);
-          if (!municipality) throw new Error("No municipality found.");
-          return { ...stop, municipality };
-        } catch (error) {
-          failures.push(`${stop.stopCode}: ${error instanceof Error ? error.message : "lookup failed"}`);
-          return null;
-        }
-      }));
-      imported.push(...resolved.filter((stop) => stop !== null));
-    }
-    if (!imported.length) return { imported: 0, skipped: failures.length, errors: failures.slice(0, 3) };
+    const existingStopCodes = new Set((existingStops ?? []).map((stop) => stop.stop_code));
+    const newRows = rows.filter((row) => !existingStopCodes.has(row.stopCode.trim()));
+    if (!newRows.length) return { imported: 0, skipped: rows.length, errors: [] };
 
-    for (let offset = 0; offset < imported.length; offset += 250) {
-      const values = imported.slice(offset, offset + 250).map((stop) => ({
-        name_de: stop.nameDe, name_it: stop.nameIt, name_en: stop.nameDe,
-        municipality: stop.municipality, stop_code: stop.stopCode,
+    // Reverse-geocoding every row made valid stops disappear whenever the
+    // external service rate-limited or timed out. Municipality is absent from
+    // stop_place.csv and is allowed to be blank, so it must not gate imports.
+    for (let offset = 0; offset < newRows.length; offset += 250) {
+      const values = newRows.slice(offset, offset + 250).map((stop) => ({
+        name_de: stop.nameDe, name_it: stop.nameIt, name_en: stop.nameEn,
+        municipality: "", stop_code: stop.stopCode,
+        // stop_place centroid_location is (longitude,latitude,). The parser
+        // names both values explicitly and they are persisted in their
+        // respective database columns here.
         latitude: stop.latitude, longitude: stop.longitude,
         is_published: published, archived_at: null, created_by: user.id,
         updated_at: new Date().toISOString(),
       }));
-      const { error } = await supabase.from("bus_stops").upsert(values, { onConflict: "stop_code" });
+      // A concurrent import may have inserted a code since the lookup above.
+      // Ignore that conflict rather than modifying or duplicating the stop.
+      const { error } = await supabase.from("bus_stops").upsert(values, { onConflict: "stop_code", ignoreDuplicates: true });
       if (error) throw new Error(error.message);
     }
     revalidatePath("/");
     revalidatePath("/api/stops");
-    return { imported: imported.length, skipped: failures.length, errors: failures.slice(0, 3) };
+    return { imported: newRows.length, skipped: existingStopCodes.size, errors: [] };
   } catch (error) {
     throw new Error(error instanceof Error ? error.message : "The CSV batch could not be imported.");
   }

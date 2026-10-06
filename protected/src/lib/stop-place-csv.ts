@@ -1,12 +1,15 @@
 export type StopPlaceImportRow = {
   nameDe: string;
   nameIt: string;
+  nameEn: string;
   latitude: number;
   longitude: number;
   stopCode: string;
 };
 
-const REQUIRED_COLUMNS = ["name_it", "name_de", "centroid_location", "private_code"] as const;
+type DatedStopPlaceImportRow = StopPlaceImportRow & { publicationTimestamp: number };
+
+const REQUIRED_COLUMNS = ["publication_timestamp", "name_it", "name_de", "centroid_location", "private_code"] as const;
 const STOP_PLACE_COLUMNS = [
   "tid", "publication_timestamp", "id_version", "valid_between_from_date",
   "valid_between_to_date", "name_it", "name_de", "short_name_it",
@@ -15,6 +18,21 @@ const STOP_PLACE_COLUMNS = [
 
 function normalizeHeader(value: string) {
   return value.trim().replace(/^\uFEFF/, "").replace(/\\_/g, "_").toLowerCase();
+}
+
+/**
+ * PostgreSQL exports centroid_location as (longitude,latitude,) rather than
+ * the more commonly displayed latitude/longitude order. Return named values
+ * so the two numbers cannot accidentally be swapped at the database boundary.
+ */
+function parseCentroidLocation(value: string) {
+  const coordinates = value.match(/^\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,?\s*\)$/);
+  if (!coordinates) return null;
+
+  return {
+    longitude: Number(coordinates[1]),
+    latitude: Number(coordinates[2]),
+  };
 }
 
 function parseCsv(source: string) {
@@ -81,23 +99,46 @@ export function readStopPlaceCsv(source: string, onSkipped?: (message: string) =
   else if (firstDataRow > 0) rows.splice(0, firstDataRow);
   const columns = new Map(header.map((name, index) => [name, index]));
 
-  return rows.flatMap((row, rowIndex) => {
-    if (row.every((value) => !value.trim())) return [];
+  const newestByStopCode = new Map<string, DatedStopPlaceImportRow>();
+
+  rows.forEach((row, rowIndex) => {
+    if (row.every((value) => !value.trim())) return;
     const value = (name: string) => row[columns.get(name)!]?.trim() ?? "";
-    const coordinates = value("centroid_location").match(/^\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,?\s*\)$/);
+    const coordinates = parseCentroidLocation(value("centroid_location"));
     if (!coordinates) {
       onSkipped?.(`CSV data row ${rowIndex + 1}: invalid centroid_location.`);
       return [];
     }
-    const longitude = Number(coordinates[1]);
-    const latitude = Number(coordinates[2]);
+    const { longitude, latitude } = coordinates;
     const nameDe = value("name_de");
     const nameIt = value("name_it");
+    // Current stop_place exports do not include English names. Keep the
+    // application's third language populated with the documented German
+    // fallback, but prefer name_en if a future export supplies it.
+    const nameEn = value("name_en") || nameDe;
     const stopCode = value("private_code");
+    const publicationTimestamp = Date.parse(value("publication_timestamp"));
     if (!nameDe || !nameIt || !stopCode || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
       onSkipped?.(`CSV data row ${rowIndex + 1}: incomplete stop data.`);
-      return [];
+      return;
     }
-    return [{ nameDe, nameIt, latitude, longitude, stopCode }];
+    if (!Number.isFinite(publicationTimestamp)) {
+      onSkipped?.(`CSV data row ${rowIndex + 1}: invalid publication_timestamp.`);
+      return;
+    }
+
+    const existing = newestByStopCode.get(stopCode);
+    if (!existing || publicationTimestamp > existing.publicationTimestamp) {
+      newestByStopCode.set(stopCode, { nameDe, nameIt, nameEn, latitude, longitude, stopCode, publicationTimestamp });
+    }
   });
+
+  return Array.from(newestByStopCode.values(), (stop) => ({
+    nameDe: stop.nameDe,
+    nameIt: stop.nameIt,
+    nameEn: stop.nameEn,
+    latitude: stop.latitude,
+    longitude: stop.longitude,
+    stopCode: stop.stopCode,
+  }));
 }

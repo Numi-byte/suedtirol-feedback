@@ -2,30 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Neue Frutiger World is a licensed Monotype face, so its files are not in the
-   repo and the navbar currently renders in the fallback stack. Drop the webfont
-   files into client/public/fonts/ and uncomment to switch it on.
 @font-face {
-  font-family: "Neue Frutiger World";
-  src: url("/fonts/NeueFrutigerWorld-Regular.woff2") format("woff2");
-  font-weight: 400; font-style: normal; font-display: swap;
+  font-family: "Frutiger";
+  src: url("/fonts/Frutiger-Light.otf") format("opentype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
 }
 @font-face {
-  font-family: "Neue Frutiger World";
-  src: url("/fonts/NeueFrutigerWorld-Medium.woff2") format("woff2");
-  font-weight: 500; font-style: normal; font-display: swap;
+  font-family: "Frutiger";
+  src: url("/fonts/Frutiger-Roman%201.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
 @font-face {
-  font-family: "Neue Frutiger World";
-  src: url("/fonts/NeueFrutigerWorld-Bold.woff2") format("woff2");
-  font-weight: 700; font-style: normal; font-display: swap;
+  font-family: "Frutiger";
+  src: url("/fonts/Frutiger-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
 }
+
+
 @font-face {
   font-family: "Ely Rounded";
-  src: url("/fonts/ElyRounded-Bold.woff2") format("woff2");
-  font-weight: 700; font-style: normal; font-display: swap;
+  src: url("/fonts/ElyRounded-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
 }
-*/
 
 /* südtirolmobil design language: white surfaces, one strong brand blue,
    humanist sans type, rectilinear cards, generous but even spacing. */
@@ -48,8 +54,7 @@
   --gray-800: #2a424d;
   --gray-950: #0f2733;
   --blue-800: #055a81;
-  /* Licensed Monotype face; self-host the webfont files to get the real thing. */
-  --font-brand: "Neue Frutiger World", Frutiger, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-brand: "Frutiger", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-display: "Ely Rounded", ui-rounded, "Segoe UI Rounded", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
   /* Navigation row height; anchors and the map are offset by it. */
   --header-h: 96px;
@@ -72,7 +77,7 @@ body {
   min-height: 100vh;
   background: #fff;
   color: var(--text);
-  font-family: "Helvetica Neue", Helvetica, Arial, "Segoe UI", system-ui, sans-serif;
+  font-family: var(--font-brand);
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
 }
@@ -104,8 +109,10 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
   padding-left: clamp(20px, 5vw, 80px); padding-right: clamp(20px, 5vw, 80px);
 }
 .page-title h1 {
+  width: 1264px; max-width: 100%; min-width: 0; min-height: 80px;
   margin: 0; color: var(--blue-800); font-family: var(--font-display); font-style: normal; font-weight: 700;
   font-size: 80px; line-height: 80px; letter-spacing: -.03em;
+  opacity: 1; overflow-wrap: anywhere;
 }
 
 /* ---------- header ---------- */
@@ -179,6 +186,46 @@ nav a:hover { background: var(--blue-50); }
 .stop-card-map:hover { text-decoration: underline; }
 
 /* ---------- about ---------- */
+.about-page h1,
+.about-page h2 { overflow-wrap: anywhere; }
+.about-page .help-section-tinted { padding-inline: 0; }
+.about-page .help-section-tinted > .about-section-content {
+  max-width: 1600px;
+  padding-inline: clamp(20px, 5vw, 80px);
+}
+.about-page .about-closing {
+  margin-inline: 0;
+  padding-left: 0;
+  border-left: 0;
+}
+.about-photo {
+  max-width: 1600px;
+  margin: 0 auto 44px;
+  padding-inline: clamp(20px, 5vw, 80px);
+}
+.about-photo-frame {
+  --about-photo-zoom: 1.4;
+  --about-photo-offset-y: 26%;
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  aspect-ratio: 360 / 132;
+  margin-block: 16px;
+  padding: 16px 8px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.about-photo img {
+  position: absolute;
+  left: 50%;
+  top: calc(50% + var(--about-photo-offset-y));
+  display: block;
+  width: calc(100% * var(--about-photo-zoom));
+  max-width: none;
+  height: auto;
+  transform: translate(-50%, -50%);
+}
 .help-section-tinted + .help-section-tinted { padding-top: 0; }
 
 /* ---------- section furniture ---------- */
@@ -702,6 +749,35 @@ nav a:hover { background: var(--blue-50); }
 .feedback-dialog-footer span { display: flex; align-items: center; gap: 6px; }
 .feedback-dialog-footer svg { width: 14px; height: 14px; color: #46748f; }
 .feedback-dialog-footer a { color: #0868b7; font-weight: 700; }
+
+/* Shared primary action style; long translated labels can grow past 100px. */
+:is(.header-cta, .stop-card-cta, .map-panel-feedback, .thanks-back,
+    .wizard-panel button[type="submit"], .mobile-actions button:last-child, .mobile-next) {
+  min-width: 100px;
+  height: 36px;
+  min-height: 36px;
+  padding: 8px;
+  border: 0;
+  border-radius: 28px;
+  background: #007eb5;
+  color: #fff;
+  font-family: var(--font-brand);
+  font-weight: 500;
+  font-style: normal;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.thanks-back { display: inline-flex; }
+:is(.header-cta, .stop-card-cta, .map-panel-feedback, .thanks-back,
+    .wizard-panel button[type="submit"], .mobile-actions button:last-child, .mobile-next):hover {
+  background: #006a99;
+}
 
 /* ---------- responsive ---------- */
 @media (max-width: 1100px) {
