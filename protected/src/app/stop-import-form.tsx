@@ -7,7 +7,10 @@ import { readStopPlaceCsv } from "@/lib/stop-place-csv";
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
 const BATCH_SIZE = 250;
 
-export function StopImportForm({ labels }: { labels: { file: string; active: string; submit: string; hint: string } }) {
+export function StopImportForm({ labels, onPendingChange }: {
+  labels: { file: string; active: string; submit: string; hint: string };
+  onPendingChange?: (pending: boolean) => void;
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState<{ error?: string; success?: string }>({});
@@ -29,6 +32,7 @@ export function StopImportForm({ labels }: { labels: { file: string; active: str
     if (!file || !file.name.toLowerCase().endsWith(".csv")) return setResult({ error: "Select a .csv file." });
     if (file.size > MAX_FILE_SIZE) return setResult({ error: "The CSV must be 50 MB or smaller." });
     setPending(true);
+    onPendingChange?.(true);
     setResult({});
     setInvalidRows([]);
     let imported = 0;
@@ -58,6 +62,7 @@ export function StopImportForm({ labels }: { labels: { file: string; active: str
       form.reset();
       if (inputRef.current) inputRef.current.value = "";
       setPending(false);
+      onPendingChange?.(false);
     }
   }
 

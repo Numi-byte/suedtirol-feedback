@@ -8,6 +8,8 @@ import { languages } from "@/lib/i18n";
 import { canReplyToFeedback } from "@/lib/feedback-reply-authorization";
 import { createClient } from "@/lib/supabase/server";
 import type { StopPlaceImportRow } from "@/lib/stop-place-csv";
+import type { StopPointImportRow } from "@/lib/stop-point-csv";
+import { stopPointIdentity } from "@/lib/stop-point-csv";
 
 export async function setLanguage(formData: FormData) {
   const requested = String(formData.get("language") ?? "");
@@ -155,7 +157,7 @@ export async function importStopPlaceBatch(rows: StopPlaceBatchRow[], published:
     if (!Array.isArray(rows) || !rows.length || rows.length > 250) throw new Error("An import batch must contain between 1 and 250 stops.");
     rows.forEach((row) => {
       if (!row.nameDe?.trim() || !row.nameIt?.trim() || !row.nameEn?.trim() || !row.stopCode?.trim() ||
-          !row.idVersion?.trim() || !Number.isFinite(Date.parse(row.publicationTimestamp)) ||
+        !row.idVersion?.trim() || !Number.isFinite(Date.parse(row.publicationTimestamp)) ||
         !Number.isFinite(row.latitude) || !Number.isFinite(row.longitude) ||
         row.latitude < -90 || row.latitude > 90 || row.longitude < -180 || row.longitude > 180) {
         throw new Error("The import batch contains invalid stop data.");
@@ -183,4 +185,32 @@ export async function importStopPlaceBatch(rows: StopPlaceBatchRow[], published:
   } catch (error) {
     throw new Error(error instanceof Error ? error.message : "The CSV batch could not be imported.");
   }
+}
+
+export type StopPointBatchResult = { imported: number; unmatched: number; errors: string[] };
+
+export async function importStopPointBatch(rows: StopPointImportRow[]): Promise<StopPointBatchResult> {
+  const { supabase } = await requireUser();
+  if (!Array.isArray(rows) || rows.length < 1 || rows.length > 250) throw new Error("An import batch must contain between 1 and 250 points.");
+  for (const row of rows) {
+    if (!stopPointIdentity(row.idVersion) || !row.pointNumber?.trim() || !row.nameDe?.trim() || !row.nameIt?.trim() ||
+      !Number.isFinite(row.latitude) || row.latitude < -90 || row.latitude > 90 ||
+      !Number.isFinite(row.longitude) || row.longitude < -180 || row.longitude > 180) {
+      throw new Error("The import batch contains invalid stop-point data.");
+    }
+  }
+  const { data, error } = await supabase.rpc("import_stop_point_batch", {
+    p_rows: rows.map((row) => ({
+      id_version: row.idVersion.trim(), point_number: row.pointNumber.trim(),
+      latitude: row.latitude, longitude: row.longitude, name_de: row.nameDe.trim(), name_it: row.nameIt.trim(),
+    })),
+  });
+  if (error) throw new Error(error.message);
+  if (!data || !Number.isInteger(data.imported) || !Number.isInteger(data.unmatched) ||
+    data.imported < 0 || data.unmatched < 0 || data.imported + data.unmatched !== rows.length ||
+    !Array.isArray(data.errors) || !data.errors.every((message: unknown) => typeof message === "string")) {
+    throw new Error("The database returned an invalid stop-point import result.");
+  }
+  revalidatePath("/");
+  return data as StopPointBatchResult;
 }

@@ -1,3 +1,5 @@
+import { parseCsv } from "./csv.ts";
+
 export type StopPlaceImportRow = {
   nameDe: string;
   nameIt: string;
@@ -23,7 +25,7 @@ function normalizeHeader(value: string) {
 }
 
 /**
- * * PostgreSQL exports centroid_location as (longitude,latitude,altitude) rather than
+ * PostgreSQL exports centroid_location as (longitude,latitude,altitude) rather than
  * the more commonly displayed latitude/longitude order. Return named values
  * so the two numbers cannot accidentally be swapped at the database boundary.
  */
@@ -35,42 +37,10 @@ function parseCentroidLocation(value: string) {
   if (!coordinates.slice(0, 2).every((coordinate) => numeric.test(coordinate) && Number.isFinite(Number(coordinate)))) return null;
   // Altitude is not used by the map, but must be empty or a valid number.
   if (coordinates.length === 3 && coordinates[2] &&
-      (!numeric.test(coordinates[2]) || !Number.isFinite(Number(coordinates[2])))) return null;
+    (!numeric.test(coordinates[2]) || !Number.isFinite(Number(coordinates[2])))) return null;
   return { longitude: Number(coordinates[0]), latitude: Number(coordinates[1]) };
 }
 
-function parseCsv(source: string) {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let field = "";
-  let quoted = false;
-
-  for (let index = 0; index < source.length; index += 1) {
-    const character = source[index];
-    if (quoted) {
-      if (character === '"' && source[index + 1] === '"') {
-        field += '"';
-        index += 1;
-      } else if (character === '"') quoted = false;
-      else field += character;
-    } else if (character === '"') quoted = true;
-    else if (character === ",") {
-      row.push(field);
-      field = "";
-    } else if (character === "\n") {
-      row.push(field.replace(/\r$/, ""));
-      rows.push(row);
-      row = [];
-      field = "";
-    } else field += character;
-  }
-  if (field || row.length) {
-    row.push(field.replace(/\r$/, ""));
-    rows.push(row);
-  }
-  if (quoted) throw new Error("The CSV contains an unterminated quoted field.");
-  return rows;
-}
 
 export function readStopPlaceCsv(source: string, onSkipped?: (message: string) => void): StopPlaceImportRow[] {
   const rows = parseCsv(source.replace(/^\uFEFF/, ""));
@@ -93,7 +63,7 @@ export function readStopPlaceCsv(source: string, onSkipped?: (message: string) =
   });
   const firstDataRow = rows.findIndex((row) => row.some((value) => value.trim()));
   const isHeaderlessStopPlace = firstDataRow >= 0 && rows[firstDataRow].length >= STOP_PLACE_COLUMNS.length &&
-      parseCentroidLocation(rows[firstDataRow][8]?.trim() ?? "") !== null;
+    parseCentroidLocation(rows[firstDataRow][8]?.trim() ?? "") !== null;
   if (headerIndex < 0 && !isHeaderlessStopPlace) {
     const detected = rows[0]?.map(normalizeHeader).filter(Boolean).slice(0, 8).join(", ") || "none";
     throw new Error(`Missing CSV columns: ${REQUIRED_COLUMNS.join(", ")}. Detected first row: ${detected}.`);

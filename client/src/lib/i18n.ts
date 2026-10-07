@@ -7,6 +7,7 @@ export const translations = {
   de: {
     nav: { find: "Haltestellen", how: "So funktioniert's", about: "Über das Projekt", language: "Sprache ändern", service: "Service Desk", cta: "Feedback geben", home: "Startseite" },
     map: {
+      stopPoints: "Haltepunkte", pointsLoading: "Haltepunkte werden geladen …", pointsError: "Haltepunkte konnten nicht geladen werden.", noPoints: "Noch keine Haltepunkte importiert.",
       eyebrow: "Haltestellenkarte", title: "Finde deine Haltestelle", stopsAvailable: "Haltestellen verfügbar",
       loading: "Karte wird geladen …", loadError: "Die Karte konnte nicht geladen werden.",
       choose: "Wähle eine Haltestelle auf der Karte, um Feedback zu geben.",
@@ -107,6 +108,7 @@ export const translations = {
   it: {
     nav: { find: "Fermate", how: "Come funziona", about: "Il progetto", language: "Cambia lingua", service: "Service Desk", cta: "Lascia un feedback", home: "Home" },
     map: {
+      stopPoints: "punti di fermata", pointsLoading: "Caricamento dei punti di fermata …", pointsError: "Impossibile caricare i punti di fermata.", noPoints: "Nessun punto di fermata importato.",
       eyebrow: "Mappa delle fermate", title: "Trova la tua fermata", stopsAvailable: "fermate disponibili",
       loading: "Caricamento della mappa …", loadError: "Non è stato possibile caricare la mappa.",
       choose: "Scegli una fermata sulla mappa per lasciare un feedback.",
@@ -207,6 +209,7 @@ export const translations = {
   en: {
     nav: { find: "Stops", how: "How it works", about: "About the project", language: "Change language", service: "Service desk", cta: "Give feedback", home: "Home" },
     map: {
+      stopPoints: "stop points", pointsLoading: "Loading stop points …", pointsError: "Stop points could not be loaded.", noPoints: "No stop points imported yet.",
       eyebrow: "Stop map", title: "Find your stop", stopsAvailable: "stops available",
       loading: "Loading map …", loadError: "The map could not be loaded.",
       choose: "Pick a stop on the map to give feedback.",

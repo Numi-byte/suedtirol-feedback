@@ -33,6 +33,13 @@ export const translations = {
       file: "stop_place.csv", active: "Auf der öffentlichen Karte anzeigen", submit: "CSV importieren",
       hint: "Bis 50 MB. Die Datei bleibt im Browser und wird nach dem Import aus dem Speicher freigegeben. Benötigt werden name_it, name_de, centroid_location und private_code; als englischer Name wird der deutsche verwendet.",
     },
+    pointImporter: {
+      toggleLabel: "Importtyp wählen", places: "Haltestellen (Stop places)", points: "Haltepunkte (Stop points)",
+      kicker: "CSV-Import", title: "Haltepunkte importieren",
+      subtitle: "Importiere zuerst die Haltestellen. Jeder Haltepunkt wird anhand seiner Kennung der zugehörigen Haltestelle zugeordnet.",
+      file: "Haltepunkte (.csv)", submit: "CSV importieren",
+      hint: "Bis 50 MB. Die CSV benötigt in Zeile 1 die Spalten id_version, point_number, latitude, longitude, name_de und name_it. Die Datei bleibt im Browser. Fehlende oder mehrdeutige Haltestellen werden gemeldet.",
+    },
     editor: {
       kicker: "Neuer Standort", title: "Haltestelle hinzufügen",
       subtitle: "Trage alle drei öffentlichen Namen und die exakten WGS84-Koordinaten ein.",
@@ -101,6 +108,13 @@ export const translations = {
       file: "stop_place.csv", active: "Mostra sulla mappa pubblica", submit: "Importa CSV",
       hint: "Fino a 50 MB. Il file resta nel browser e viene rimosso dalla memoria dopo l'importazione. Sono necessari name_it, name_de, centroid_location e private_code; come nome inglese viene usato quello tedesco.",
     },
+    pointImporter: {
+      toggleLabel: "Scegli il tipo di importazione", places: "Fermate (Stop places)", points: "Punti di fermata (Stop points)",
+      kicker: "Importazione CSV", title: "Importa i punti di fermata",
+      subtitle: "Importa prima le fermate. Ogni punto viene collegato alla fermata tramite il suo identificativo.",
+      file: "Punti di fermata (.csv)", submit: "Importa CSV",
+      hint: "Fino a 50 MB. La prima riga del CSV deve contenere id_version, point_number, latitude, longitude, name_de e name_it. Il file resta nel browser. Le fermate mancanti o ambigue vengono segnalate.",
+    },
     editor: {
       kicker: "Nuova posizione", title: "Aggiungi una fermata",
       subtitle: "Inserisci tutti e tre i nomi pubblici e le coordinate WGS84 esatte.",
@@ -168,6 +182,13 @@ export const translations = {
       subtitle: "Upload stop_place.csv. Names, stop code, and coordinates are imported directly.",
       file: "stop_place.csv", active: "Publish on client map", submit: "Import CSV",
       hint: "Up to 50 MB. The file stays in the browser and is released from memory after import. It needs name_it, name_de, centroid_location and private_code; the German name is used for English.",
+    },
+    pointImporter: {
+      toggleLabel: "Choose import type", places: "Stop places", points: "Stop points",
+      kicker: "CSV import", title: "Import stop points",
+      subtitle: "Import stop places first. Each point is linked to its parent stop place using its identifier.",
+      file: "Stop points (.csv)", submit: "Import CSV",
+      hint: "Up to 50 MB. The CSV must have row 1 headers: id_version, point_number, latitude, longitude, name_de, name_it. The file stays in your browser. Missing or ambiguous parent places are reported.",
     },
     editor: {
       kicker: "New location", title: "Add a bus stop",
