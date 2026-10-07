@@ -11,6 +11,16 @@ export function StopImportForm({ labels }: { labels: { file: string; active: str
   const inputRef = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState<{ error?: string; success?: string }>({});
+  const [invalidRows, setInvalidRows] = useState<string[]>([]);
+
+  function downloadInvalidRows() {
+    const url = URL.createObjectURL(new Blob([invalidRows.join("\n")], { type: "text/plain;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "stop-import-invalid-rows.txt";
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -20,27 +30,28 @@ export function StopImportForm({ labels }: { labels: { file: string; active: str
     if (file.size > MAX_FILE_SIZE) return setResult({ error: "The CSV must be 50 MB or smaller." });
     setPending(true);
     setResult({});
+    setInvalidRows([]);
+    let imported = 0;
     try {
       // The file is read and parsed only in this browser. Only normalized rows
       // are sent to the server in small batches; localStorage is never used.
       const parseErrors: string[] = [];
       const rows = readStopPlaceCsv(await file.text(), (message) => parseErrors.push(message));
-      if (!rows.length) throw new Error("The CSV contains no stops.");
+      setInvalidRows(parseErrors);
+      if (!rows.length) throw new Error(`The CSV contains no valid stops. ${parseErrors.slice(0, 3).join(" ")}`);
       const published = new FormData(form).get("is_published") === "on";
-      let imported = 0;
-      let skipped = parseErrors.length;
-      const errors: string[] = parseErrors.slice(0, 3);
+      let unchanged = 0;
       for (let offset = 0; offset < rows.length; offset += BATCH_SIZE) {
         const batch = rows.slice(offset, offset + BATCH_SIZE);
         const response = await importStopPlaceBatch(batch, published);
         imported += response.imported;
-        skipped += response.skipped;
-        errors.push(...response.errors);
+        unchanged += response.skipped;
         setResult({ success: `${Math.min(offset + BATCH_SIZE, rows.length)} / ${rows.length} valid rows processed…` });
       }
-      setResult({ success: `${imported} stops imported${skipped ? `; ${skipped} skipped. ${errors.slice(0, 3).join(" ")}` : "."}` });
+      setResult({ success: `${imported} stops inserted or updated; ${unchanged} unchanged or older stops; ${parseErrors.length} invalid CSV rows. ${parseErrors.slice(0, 3).join(" ")}` });
     } catch (error) {
-      setResult({ error: error instanceof Error ? error.message : "The CSV could not be imported." });
+      const message = error instanceof Error ? error.message : "The CSV could not be imported.";
+      setResult({ error: `${imported} stops inserted or updated before the import stopped. ${message} You can safely retry the file.` });
     } finally {
       // Drop the browser's reference to the File immediately after processing.
       // The temporary text/row values then become eligible for garbage collection.
@@ -56,6 +67,7 @@ export function StopImportForm({ labels }: { labels: { file: string; active: str
     <p>{labels.hint}</p>
     {result.error ? <p className="import-result error" role="alert">{result.error}</p> : null}
     {result.success ? <p className="import-result success" role="status">{result.success}</p> : null}
+    {invalidRows.length > 0 && <button type="button" onClick={downloadInvalidRows}>Download all {invalidRows.length} invalid-row details</button>}
     <button disabled={pending} type="submit">{pending ? "…" : labels.submit}</button>
   </form>;
 }
