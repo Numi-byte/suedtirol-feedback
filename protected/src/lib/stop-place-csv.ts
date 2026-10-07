@@ -5,11 +5,13 @@ export type StopPlaceImportRow = {
   latitude: number;
   longitude: number;
   stopCode: string;
+  idVersion: string;
+  publicationTimestamp: string;
 };
 
-type DatedStopPlaceImportRow = StopPlaceImportRow & { publicationTimestamp: number };
+type DatedStopPlaceImportRow = StopPlaceImportRow & { timestamp: number };
 
-const REQUIRED_COLUMNS = ["publication_timestamp", "name_it", "name_de", "centroid_location", "private_code"] as const;
+const REQUIRED_COLUMNS = ["publication_timestamp", "id_version", "name_it", "name_de", "centroid_location", "private_code"] as const;
 const STOP_PLACE_COLUMNS = [
   "tid", "publication_timestamp", "id_version", "valid_between_from_date",
   "valid_between_to_date", "name_it", "name_de", "short_name_it",
@@ -21,18 +23,20 @@ function normalizeHeader(value: string) {
 }
 
 /**
- * PostgreSQL exports centroid_location as (longitude,latitude,) rather than
+ * * PostgreSQL exports centroid_location as (longitude,latitude,altitude) rather than
  * the more commonly displayed latitude/longitude order. Return named values
  * so the two numbers cannot accidentally be swapped at the database boundary.
  */
 function parseCentroidLocation(value: string) {
-  const coordinates = value.match(/^\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,?\s*\)$/);
-  if (!coordinates) return null;
-
-  return {
-    longitude: Number(coordinates[1]),
-    latitude: Number(coordinates[2]),
-  };
+  if (!value.startsWith("(") || !value.endsWith(")")) return null;
+  const coordinates = value.slice(1, -1).split(",").map((coordinate) => coordinate.trim());
+  if (coordinates.length < 2 || coordinates.length > 3) return null;
+  const numeric = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i;
+  if (!coordinates.slice(0, 2).every((coordinate) => numeric.test(coordinate) && Number.isFinite(Number(coordinate)))) return null;
+  // Altitude is not used by the map, but must be empty or a valid number.
+  if (coordinates.length === 3 && coordinates[2] &&
+      (!numeric.test(coordinates[2]) || !Number.isFinite(Number(coordinates[2])))) return null;
+  return { longitude: Number(coordinates[0]), latitude: Number(coordinates[1]) };
 }
 
 function parseCsv(source: string) {
@@ -89,7 +93,7 @@ export function readStopPlaceCsv(source: string, onSkipped?: (message: string) =
   });
   const firstDataRow = rows.findIndex((row) => row.some((value) => value.trim()));
   const isHeaderlessStopPlace = firstDataRow >= 0 && rows[firstDataRow].length >= STOP_PLACE_COLUMNS.length &&
-    /^\(\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*,?\s*\)$/.test(rows[firstDataRow][8]?.trim() ?? "");
+      parseCentroidLocation(rows[firstDataRow][8]?.trim() ?? "") !== null;
   if (headerIndex < 0 && !isHeaderlessStopPlace) {
     const detected = rows[0]?.map(normalizeHeader).filter(Boolean).slice(0, 8).join(", ") || "none";
     throw new Error(`Missing CSV columns: ${REQUIRED_COLUMNS.join(", ")}. Detected first row: ${detected}.`);
@@ -106,30 +110,38 @@ export function readStopPlaceCsv(source: string, onSkipped?: (message: string) =
     const value = (name: string) => row[columns.get(name)!]?.trim() ?? "";
     const coordinates = parseCentroidLocation(value("centroid_location"));
     if (!coordinates) {
-      onSkipped?.(`CSV data row ${rowIndex + 1}: invalid centroid_location.`);
+      onSkipped?.(`CSV data row ${rowIndex + 1}: invalid centroid_location ${JSON.stringify(value("centroid_location"))}.`);
       return [];
     }
     const { longitude, latitude } = coordinates;
-    const nameDe = value("name_de");
-    const nameIt = value("name_it");
+    const nameDe = value("name_de") || value("name_it");
+    const nameIt = value("name_it") || value("name_de");
     // Current stop_place exports do not include English names. Keep the
     // application's third language populated with the documented German
     // fallback, but prefer name_en if a future export supplies it.
     const nameEn = value("name_en") || nameDe;
     const stopCode = value("private_code");
+    const idVersion = value("id_version");
     const publicationTimestamp = Date.parse(value("publication_timestamp"));
-    if (!nameDe || !nameIt || !stopCode || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
-      onSkipped?.(`CSV data row ${rowIndex + 1}: incomplete stop data.`);
+    if (!nameDe || !nameIt || !stopCode || !idVersion || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+      const problems = [
+        ...(!nameDe || !nameIt ? ["missing name_de and name_it"] : []),
+        ...(!stopCode ? ["missing private_code"] : []),
+        ...(!idVersion ? ["missing id_version"] : []),
+        ...(latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180 ? ["coordinates outside geographic bounds"] : []),
+      ];
+      onSkipped?.(`CSV data row ${rowIndex + 1}: ${problems.join("; ")}.`);
       return;
     }
     if (!Number.isFinite(publicationTimestamp)) {
-      onSkipped?.(`CSV data row ${rowIndex + 1}: invalid publication_timestamp.`);
+      onSkipped?.(`CSV data row ${rowIndex + 1}: invalid publication_timestamp ${JSON.stringify(value("publication_timestamp"))}.`);
       return;
     }
 
     const existing = newestByStopCode.get(stopCode);
-    if (!existing || publicationTimestamp > existing.publicationTimestamp) {
-      newestByStopCode.set(stopCode, { nameDe, nameIt, nameEn, latitude, longitude, stopCode, publicationTimestamp });
+    if (!existing || publicationTimestamp >= existing.timestamp) {
+      newestByStopCode.set(stopCode, { nameDe, nameIt, nameEn, latitude, longitude, stopCode, idVersion,
+        publicationTimestamp: new Date(publicationTimestamp).toISOString(), timestamp: publicationTimestamp });
     }
   });
 
@@ -140,5 +152,7 @@ export function readStopPlaceCsv(source: string, onSkipped?: (message: string) =
     latitude: stop.latitude,
     longitude: stop.longitude,
     stopCode: stop.stopCode,
+    idVersion: stop.idVersion,
+    publicationTimestamp: stop.publicationTimestamp,
   }));
 }
