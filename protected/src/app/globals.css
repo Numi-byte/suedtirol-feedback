@@ -144,6 +144,12 @@ form button {
 }
 form button:hover { background: var(--blue-dark); }
 
+.import-toggle { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; margin-bottom: 24px; border-radius: 28px; background: var(--sky); }
+.import-toggle button { min-height: 36px; padding: 8px 16px; border: 0; border-radius: 28px; background: transparent; color: var(--navy); font-size: 14px; line-height: 20px; font-weight: 500; cursor: pointer; }
+.import-toggle button[aria-pressed="true"] { background: #007eb5; color: #fff; }
+.import-toggle button:disabled { opacity: .5; cursor: wait; }
+.import-toggle button:focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
+
 /* ---------- stop list ---------- */
 .database-search { margin-top: 20px; }
 .database-search > div { display: flex; gap: 8px; margin-top: 7px; }

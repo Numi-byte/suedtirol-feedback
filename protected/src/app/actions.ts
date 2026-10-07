@@ -7,6 +7,9 @@ import { LANGUAGE_COOKIE, getTranslations } from "@/lib/language";
 import { languages } from "@/lib/i18n";
 import { canReplyToFeedback } from "@/lib/feedback-reply-authorization";
 import { createClient } from "@/lib/supabase/server";
+import type { StopPlaceImportRow } from "@/lib/stop-place-csv";
+import type { StopPointImportRow } from "@/lib/stop-point-csv";
+import { stopPointIdentity } from "@/lib/stop-point-csv";
 
 export async function setLanguage(formData: FormData) {
   const requested = String(formData.get("language") ?? "");
@@ -139,9 +142,7 @@ export async function restoreBusStop(formData: FormData) {
   revalidatePath("/");
 }
 
-export type StopPlaceBatchRow = {
-  nameDe: string; nameIt: string; nameEn: string; latitude: number; longitude: number; stopCode: string;
-};
+export type StopPlaceBatchRow = StopPlaceImportRow;
 
 export type ImportBatchResult = { imported: number; skipped: number; errors: string[] };
 
@@ -152,49 +153,64 @@ export type ImportBatchResult = { imported: number; skipped: number; errors: str
  */
 export async function importStopPlaceBatch(rows: StopPlaceBatchRow[], published: boolean): Promise<ImportBatchResult> {
   try {
-    const { supabase, user } = await requireUser();
+    const { supabase } = await requireUser();
     if (!Array.isArray(rows) || !rows.length || rows.length > 250) throw new Error("An import batch must contain between 1 and 250 stops.");
     rows.forEach((row) => {
       if (!row.nameDe?.trim() || !row.nameIt?.trim() || !row.nameEn?.trim() || !row.stopCode?.trim() ||
+        !row.idVersion?.trim() || !Number.isFinite(Date.parse(row.publicationTimestamp)) ||
         !Number.isFinite(row.latitude) || !Number.isFinite(row.longitude) ||
         row.latitude < -90 || row.latitude > 90 || row.longitude < -180 || row.longitude > 180) {
         throw new Error("The import batch contains invalid stop data.");
       }
     });
-    const stopCodes = rows.map((row) => row.stopCode.trim());
-    const { data: existingStops, error: existingStopsError } = await supabase
-      .from("bus_stops")
-      .select("stop_code")
-      .in("stop_code", stopCodes);
-    if (existingStopsError) throw new Error(existingStopsError.message);
-
-    const existingStopCodes = new Set((existingStops ?? []).map((stop) => stop.stop_code));
-    const newRows = rows.filter((row) => !existingStopCodes.has(row.stopCode.trim()));
-    if (!newRows.length) return { imported: 0, skipped: rows.length, errors: [] };
-
-    // Reverse-geocoding every row made valid stops disappear whenever the
-    // external service rate-limited or timed out. Municipality is absent from
-    // stop_place.csv and is allowed to be blank, so it must not gate imports.
-    for (let offset = 0; offset < newRows.length; offset += 250) {
-      const values = newRows.slice(offset, offset + 250).map((stop) => ({
-        name_de: stop.nameDe, name_it: stop.nameIt, name_en: stop.nameEn,
-        municipality: "", stop_code: stop.stopCode,
-        // stop_place centroid_location is (longitude,latitude,). The parser
-        // names both values explicitly and they are persisted in their
-        // respective database columns here.
+    // The database compares source timestamps atomically, so a concurrent or
+    // older upload cannot overwrite a newer version. Existing UUIDs and staff
+    // settings are preserved, including stops that already carry feedback.
+    const { data, error } = await supabase.rpc("import_stop_place_batch", {
+      p_rows: rows.map((stop) => ({
+        name_de: stop.nameDe.trim(), name_it: stop.nameIt.trim(), name_en: stop.nameEn.trim(),
+        stop_code: stop.stopCode.trim(), id_version: stop.idVersion.trim(),
+        publication_timestamp: stop.publicationTimestamp,
         latitude: stop.latitude, longitude: stop.longitude,
-        is_published: published, archived_at: null, created_by: user.id,
-        updated_at: new Date().toISOString(),
-      }));
-      // A concurrent import may have inserted a code since the lookup above.
-      // Ignore that conflict rather than modifying or duplicating the stop.
-      const { error } = await supabase.from("bus_stops").upsert(values, { onConflict: "stop_code", ignoreDuplicates: true });
-      if (error) throw new Error(error.message);
+      })),
+      p_published: published,
+    });
+    if (error) throw new Error(error.message);
+    if (!Number.isInteger(data) || data < 0 || data > rows.length) {
+      throw new Error("The database returned an invalid import count.");
     }
     revalidatePath("/");
     revalidatePath("/api/stops");
-    return { imported: newRows.length, skipped: existingStopCodes.size, errors: [] };
+    return { imported: data, skipped: rows.length - data, errors: [] };
   } catch (error) {
     throw new Error(error instanceof Error ? error.message : "The CSV batch could not be imported.");
   }
+}
+
+export type StopPointBatchResult = { imported: number; unmatched: number; errors: string[] };
+
+export async function importStopPointBatch(rows: StopPointImportRow[]): Promise<StopPointBatchResult> {
+  const { supabase } = await requireUser();
+  if (!Array.isArray(rows) || rows.length < 1 || rows.length > 250) throw new Error("An import batch must contain between 1 and 250 points.");
+  for (const row of rows) {
+    if (!stopPointIdentity(row.idVersion) || !row.pointNumber?.trim() || !row.nameDe?.trim() || !row.nameIt?.trim() ||
+      !Number.isFinite(row.latitude) || row.latitude < -90 || row.latitude > 90 ||
+      !Number.isFinite(row.longitude) || row.longitude < -180 || row.longitude > 180) {
+      throw new Error("The import batch contains invalid stop-point data.");
+    }
+  }
+  const { data, error } = await supabase.rpc("import_stop_point_batch", {
+    p_rows: rows.map((row) => ({
+      id_version: row.idVersion.trim(), point_number: row.pointNumber.trim(),
+      latitude: row.latitude, longitude: row.longitude, name_de: row.nameDe.trim(), name_it: row.nameIt.trim(),
+    })),
+  });
+  if (error) throw new Error(error.message);
+  if (!data || !Number.isInteger(data.imported) || !Number.isInteger(data.unmatched) ||
+    data.imported < 0 || data.unmatched < 0 || data.imported + data.unmatched !== rows.length ||
+    !Array.isArray(data.errors) || !data.errors.every((message: unknown) => typeof message === "string")) {
+    throw new Error("The database returned an invalid stop-point import result.");
+  }
+  revalidatePath("/");
+  return data as StopPointBatchResult;
 }

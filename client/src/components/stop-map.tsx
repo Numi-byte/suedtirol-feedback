@@ -6,6 +6,7 @@ import "leaflet/dist/leaflet.css";
 import busIcon from "@/components/Bus.png";
 import { stopName as nameFor } from "@/lib/stops";
 import type { BusStop } from "@/lib/stops";
+import { useStopPoints } from "@/lib/stop-points";
 
 export type MapLabels = {
   eyebrow: string;
@@ -24,6 +25,10 @@ export type MapLabels = {
   searchPlaceholder: string;
   noResults: string;
   popularStops: string;
+  stopPoints: string;
+  pointsLoading: string;
+  pointsError: string;
+  noPoints: string;
 };
 
 /** South Tyrol, used until the published stops define their own extent. */
@@ -45,6 +50,8 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [mapStatus, setMapStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [mapReady, setMapReady] = useState(false);
+  const pointsFittedRef = useRef<string | null>(null);
 
   const stopName = (stop: BusStop) => nameFor(stop, language);
   const filteredStops = useMemo(() => {
@@ -63,6 +70,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredStops, language, query, stops]);
   const selected = filteredStops.find((stop) => stop.id === selectedId) ?? null;
+  const { points, status: pointsStatus } = useStopPoints(selected?.id ?? null);
 
   // Create the map once. Leaflet needs the DOM, so it is imported client-side only.
   useEffect(() => {
@@ -91,7 +99,9 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
       tiles.addTo(map);
       L.control.zoom({ position: "bottomright" }).addTo(map);
       map.attributionControl.setPrefix(false);
+      map.createPane("stopPoints").style.zIndex = "650";
       mapRef.current = map;
+      setMapReady(true);
     };
     const start = () => initialiseMap().catch(() => {
       if (!cancelled) setMapStatus("error");
@@ -142,8 +152,8 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
           keyboard: true,
         });
         marker.bindTooltip(stopName(stop), { direction: "top", offset: [0, -38] });
-        marker.on("click", () => setSelectedId(stop.id));
-        marker.on("keypress", () => setSelectedId(stop.id));
+        marker.on("click", () => focusStop(stop));
+        marker.on("keypress", () => focusStop(stop));
         marker.addTo(map);
         markersRef.current.set(stop.id, marker);
       }
@@ -169,11 +179,55 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredStops, language, selectedId, mapStatus]);
+  }, [filteredStops, language, selectedId, mapReady]);
+
+  // A separate layer is discarded as soon as the selection changes. Names are
+  // DOM text, never HTML, because they originate in uploaded spreadsheets.
+  useEffect(() => {
+    let cancelled = false;
+    let removeLayer: (() => void) | undefined;
+    if (!selected || !points.length) pointsFittedRef.current = null;
+    (async () => {
+      const L = (await import("leaflet")).default;
+      const map = mapRef.current;
+      if (cancelled || !map || !selected || !points.length) return;
+      const layer = L.layerGroup().addTo(map);
+      removeLayer = () => layer.remove();
+      for (const point of points) {
+        const label = `${language === "it" ? point.name_it : point.name_de} · ${point.point_number}`;
+        const text = document.createElement("span");
+        text.textContent = label;
+        const dot = L.circleMarker([point.latitude, point.longitude], {
+          pane: "stopPoints", className: "stop-point-dot", radius: 7,
+          color: "#fff", weight: 2, fillColor: "#007eb5", fillOpacity: 1,
+        });
+        dot.bindTooltip(text, { direction: "top", offset: [0, -8] }).addTo(layer);
+        const element = dot.getElement();
+        element?.setAttribute("role", "img");
+        element?.setAttribute("aria-label", label);
+        element?.setAttribute("tabindex", "0");
+        element?.addEventListener("focus", () => dot.openTooltip());
+        element?.addEventListener("blur", () => dot.closeTooltip());
+      }
+      if (pointsFittedRef.current !== selected.id) {
+        pointsFittedRef.current = selected.id;
+        const wide = map.getSize().x >= 760;
+        map.stop().fitBounds(L.latLngBounds([
+          [selected.latitude, selected.longitude],
+          ...points.map((point): [number, number] => [point.latitude, point.longitude]),
+        ]), {
+          paddingTopLeft: wide ? [410, 80] : [30, 180],
+          paddingBottomRight: wide ? [300, 110] : [30, 280], maxZoom: 17, animate: false,
+        });
+      }
+    })();
+    return () => { cancelled = true; removeLayer?.(); };
+  }, [points, selected, language, mapReady]);
 
   const focusStop = (stop: BusStop) => {
     setSelectedId(stop.id);
-    mapRef.current?.flyTo([stop.latitude, stop.longitude], Math.max(mapRef.current.getZoom(), 15), { duration: 0.6 });
+    const map = mapRef.current;
+    map?.stop().setView([stop.latitude, stop.longitude], Math.max(map.getZoom(), 15), { animate: false });
   };
 
   return (
@@ -219,6 +273,10 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
             <span className="map-panel-label">{selected.municipality}</span>
             <h3>{stopName(selected)}</h3>
             <p>{selected.latitude.toFixed(5)}, {selected.longitude.toFixed(5)}</p>
+            <p className="map-point-status" role="status">
+              {pointsStatus === "loading" ? labels.pointsLoading : pointsStatus === "error" ? labels.pointsError
+                : points.length ? `${points.length} ${labels.stopPoints}` : labels.noPoints}
+            </p>
             <div className="transport-tags">
               <span>{labels.bus}</span>
               {selected.is_accessible ? <span>{labels.accessible}</span> : null}
