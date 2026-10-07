@@ -11,3 +11,4 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   if (error) return NextResponse.json({ error: "Stop points could not be loaded." }, { status: 500 });
   return NextResponse.json(data ?? []);
 }
+
