@@ -7,7 +7,8 @@ import { readStopPlaceCsv } from "@/lib/stop-place-csv";
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
 const BATCH_SIZE = 250;
 
-export function StopImportForm({ labels, onPendingChange }: {
+export function StopImportForm({ labels, disabled = false, onPendingChange }: {
+  disabled?: boolean;
   labels: { file: string; active: string; submit: string; hint: string };
   onPendingChange?: (pending: boolean) => void;
 }) {
@@ -67,12 +68,12 @@ export function StopImportForm({ labels, onPendingChange }: {
   }
 
   return <form onSubmit={submit} className="import-form">
-    <label>{labels.file}<input ref={inputRef} name="stop_place" type="file" accept=".csv,text/csv" required /></label>
+    <label>{labels.file}<input ref={inputRef} name="stop_place" type="file" accept=".csv,text/csv" required disabled={disabled} /></label>
     <label className="import-check"><input name="is_published" type="checkbox" /> {labels.active}</label>
     <p>{labels.hint}</p>
     {result.error ? <p className="import-result error" role="alert">{result.error}</p> : null}
     {result.success ? <p className="import-result success" role="status">{result.success}</p> : null}
     {invalidRows.length > 0 && <button type="button" onClick={downloadInvalidRows}>Download all {invalidRows.length} invalid-row details</button>}
-    <button disabled={pending} type="submit">{pending ? "…" : labels.submit}</button>
+    <button disabled={pending || disabled} type="submit">{pending ? "…" : labels.submit}</button>
   </form>;
 }

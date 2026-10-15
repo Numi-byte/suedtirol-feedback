@@ -86,6 +86,31 @@ Parser regression tests (Node.js 22.18+ or 24) run with:
 node --test protected/scripts/stop-place-csv.test.mjs
 ```
 
+## EFA stop-place import
+
+Apply `supabase/migrations/20261015120000_import_efa_stop_places.sql` after the
+existing migrations. In the protected portal's **Stop places** import section,
+use **Fetch and import EFA stop places**. The protected server needs HTTPS access
+to `efa.sta.bz.it` as well as the configured Supabase project. No EFA key is needed.
+
+The importer fetches the complete rapidJSON stop list and includes only `stop`
+entries with full IDs matching `it:22021:<digits>`. For example, `it:22021:2139`
+becomes `(it:apb:StopPlace:it:22021:2139,any)` in `bus_stops.id_version`.
+`properties.stopId` is stored separately in `stop_id`; `coord[0]` is latitude
+and `coord[1]` longitude. Only the main Italian name is imported. New records
+have empty German/English names and municipality; parent names are not imported.
+
+Every imported stop is set to **unpublished**, including existing matches.
+Existing German/English translations, UUIDs, feedback, stop points, private stop
+codes, CSV timestamps, municipality and archive settings are retained. Matching
+uses the complete source reference (ignoring version), `stop_id`, or a matching
+existing private stop code. Ambiguous/conflicting identities fail the batch rather
+than inserting another stop. Identical feed duplicates are removed before batching;
+invalid records are counted, with a sample of errors shown. Each batch is atomic,
+and completed batches are reported if a later batch fails. Retrying is safe.
+
+Run `node --test protected/scripts/efa-stop-places.test.mjs` for mapping tests.
+
 ## Stop-point CSV imports and map dots
 
 Apply `supabase/migrations/20261007130000_link_stop_points_to_places.sql` after

@@ -31,6 +31,8 @@ export const translations = {
       kicker: "CSV-Import", title: "Haltestellendatei importieren",
       subtitle: "Lade stop_place.csv hoch. Namen, Haltestellencode und Koordinaten werden direkt übernommen.",
       file: "stop_place.csv", active: "Auf der öffentlichen Karte anzeigen", submit: "CSV importieren",
+      efaButton: "EFA-Haltestellen abrufen und importieren",
+      efaHint: "Alle Südtiroler Haltestellen von EFA abrufen. Importiert werden der italienische Name, die stopId und die Koordinaten. Importierte Haltestellen werden unveröffentlicht; vorhandene deutsche und englische Übersetzungen bleiben erhalten.",
       hint: "Bis 50 MB. Die Datei bleibt im Browser und wird nach dem Import aus dem Speicher freigegeben. Benötigt werden name_it, name_de, centroid_location und private_code; als englischer Name wird der deutsche verwendet.",
     },
     pointImporter: {
@@ -106,6 +108,8 @@ export const translations = {
       kicker: "Importazione CSV", title: "Importa il file delle fermate",
       subtitle: "Carica stop_place.csv. Nomi, codice fermata e coordinate vengono importati direttamente.",
       file: "stop_place.csv", active: "Mostra sulla mappa pubblica", submit: "Importa CSV",
+      efaButton: "Scarica e importa le fermate EFA",
+      efaHint: "Scarica tutte le fermate altoatesine da EFA: nome italiano, stopId e coordinate. Le fermate importate non saranno pubblicate; le traduzioni tedesche e inglesi esistenti vengono conservate.",
       hint: "Fino a 50 MB. Il file resta nel browser e viene rimosso dalla memoria dopo l'importazione. Sono necessari name_it, name_de, centroid_location e private_code; come nome inglese viene usato quello tedesco.",
     },
     pointImporter: {
@@ -181,6 +185,8 @@ export const translations = {
       kicker: "CSV import", title: "Import stop file",
       subtitle: "Upload stop_place.csv. Names, stop code, and coordinates are imported directly.",
       file: "stop_place.csv", active: "Publish on client map", submit: "Import CSV",
+      efaButton: "Fetch and import EFA stop places",
+      efaHint: "Fetch all South Tyrol stop places from EFA. Imports the Italian name, stop ID and coordinates. Imported stops are unpublished; existing German and English translations are preserved.",
       hint: "Up to 50 MB. The file stays in the browser and is released from memory after import. It needs name_it, name_de, centroid_location and private_code; the German name is used for English.",
     },
     pointImporter: {

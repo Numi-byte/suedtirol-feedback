@@ -210,8 +210,8 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
           {/* key remounts the form so the fields reset when the selection changes */}
           <form action={editing ? updateBusStop : createBusStop} key={editing?.id ?? "new"}>
             {editing ? <input type="hidden" name="id" value={editing.id} /> : null}
-            <div className="field-grid three"><label>{t.editor.nameDe}<input name="name_de" defaultValue={editing?.name_de ?? ""} required /></label><label>{t.editor.nameIt}<input name="name_it" defaultValue={editing?.name_it ?? ""} required /></label><label>{t.editor.nameEn}<input name="name_en" defaultValue={editing?.name_en ?? ""} required /></label></div>
-            <div className="field-grid"><label>{t.editor.municipality}<input name="municipality" defaultValue={editing?.municipality ?? ""} required /></label><label>{t.editor.stopCode}<input name="stop_code" defaultValue={editing?.stop_code ?? ""} placeholder={t.editor.optional} /></label></div>
+            <div className="field-grid three"><label>{t.editor.nameDe}<input name="name_de" defaultValue={editing?.name_de ?? ""} /></label><label>{t.editor.nameIt}<input name="name_it" defaultValue={editing?.name_it ?? ""} required /></label><label>{t.editor.nameEn}<input name="name_en" defaultValue={editing?.name_en ?? ""} /></label></div>
+            <div className="field-grid"><label>{t.editor.municipality}<input name="municipality" defaultValue={editing?.municipality ?? ""} /></label><label>{t.editor.stopCode}<input name="stop_code" defaultValue={editing?.stop_code ?? ""} placeholder={t.editor.optional} /></label></div>
             <div className="field-grid"><label>{t.editor.latitude}<input name="latitude" type="number" min="-90" max="90" step="any" defaultValue={editing?.latitude ?? ""} placeholder="46.4983" required /></label><label>{t.editor.longitude}<input name="longitude" type="number" min="-180" max="180" step="any" defaultValue={editing?.longitude ?? ""} placeholder="11.3548" required /></label></div>
             <div className="checks"><label><input name="is_accessible" type="checkbox" defaultChecked={editing?.is_accessible ?? false} /> {t.editor.accessible}</label><label><input name="is_published" type="checkbox" defaultChecked={editing?.is_published ?? true} /> {t.editor.publish}</label></div>
             <button type="submit">{editing ? t.editorEdit.save : t.editor.save}</button>
@@ -237,7 +237,7 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
               <Link className="stop-row" href={`/?page=${currentPage}&stop=${stop.id}${searchQuery ? `&q=${encodeURIComponent(searchQuery)}` : ""}`} key={stop.id} aria-current={stop.id === editing?.id ? "true" : undefined}>
                 <div className="status-dot" data-published={stop.is_published} />
                 <div>
-                  <strong>{stop.name_de}</strong>
+                  <strong>{stop.name_de || stop.name_it}</strong>
                   <small>{stop.name_it} · {stop.name_en}</small>
                   <small>{stop.municipality} · {stop.latitude.toFixed(5)}, {stop.longitude.toFixed(5)}</small>
                 </div>
@@ -261,7 +261,7 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
             <h3>{t.archived.title} · {archivedStops.length} {t.archived.count}</h3>
             {archivedStops.map((stop) => (
               <div className="archived-row" key={stop.id}>
-                <div><strong>{stop.name_de}</strong><small>{stop.municipality}</small></div>
+                <div><strong>{stop.name_de || stop.name_it}</strong><small>{stop.municipality}</small></div>
                 <form action={restoreBusStop}>
                   <input type="hidden" name="id" value={stop.id} />
                   <button type="submit" className="restore">{t.archived.restore}</button>
