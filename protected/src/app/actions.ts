@@ -11,25 +11,26 @@ import type { StopPlaceImportRow } from "@/lib/stop-place-csv";
 import type { StopPointImportRow } from "@/lib/stop-point-csv";
 import { stopPointIdentity } from "@/lib/stop-point-csv";
 import { EFA_STOP_LIST_URL, readEfaStopPlaces } from "@/lib/efa-stop-places";
+import { importEfaBatches } from "@/lib/efa-import-batches";
 
-export async function importEfaStopPlaces(): Promise<{ message: string; error?: boolean }> {
+export async function importEfaStopPlaces(): Promise<{ message: string; error?: boolean; details: string[] }> {
   let imported = 0;
+  const details: string[] = [];
   try {
     const { supabase } = await requireUser();
     const response = await fetch(EFA_STOP_LIST_URL, { cache: "no-store", signal: AbortSignal.timeout(60000) });
     if (!response.ok) throw new Error(`EFA returned HTTP ${response.status}.`);
-    const { rows, errors, excluded, duplicates } = readEfaStopPlaces(await response.json());
-    if (!rows.length) throw new Error(`EFA returned no valid South Tyrol stop places. ${errors.slice(0, 3).join(" ")}`);
-    for (let offset = 0; offset < rows.length; offset += 250) {
-      const batch = rows.slice(offset, offset + 250);
+    const { rows, errors, excluded, duplicates, received, matching } = readEfaStopPlaces(await response.json());
+    details.push(...errors);
+    if (!rows.length) throw new Error("EFA returned no valid South Tyrol stop places. See the import report for details.");
+    await importEfaBatches(rows, async batch => {
       const { data, error } = await supabase.rpc("import_efa_stop_place_batch", { p_rows: batch });
-      if (error) throw new Error(error.message);
-      if (!Number.isInteger(data) || data !== batch.length) throw new Error("The database returned an invalid EFA import count.");
-      imported += data;
-    }
-    return { message: `${imported} stop places inserted or updated and unpublished; ${duplicates} duplicate records ignored; ${excluded} out-of-scope records excluded; ${errors.length} invalid records. ${errors.slice(0, 5).join(" ")}` };
+      return { data, error };
+    }, count => { imported += count; }, details);
+    return { error: details.length > 0, details,
+      message: `Received ${received} API records; ${matching} IDs start with it:22021:. ${imported} unique stop places inserted or updated and unpublished; ${duplicates} duplicate records ignored; ${excluded} out-of-scope records excluded. ${details.length ? `Import incomplete: ${details.length} issues. Download the report for all affected IDs.` : "All eligible records imported."} The stop list displays 10 stops per page.` };
   } catch (error) {
-    return { error: true, message: `${imported} stop places saved before the import stopped. ${error instanceof Error ? error.message : "The EFA import failed."} Retrying is safe.` };
+    return { error: true, details, message: `${imported} stop places saved before the import stopped. ${error instanceof Error ? error.message : "The EFA import failed."} Retrying is safe.` };
   } finally {
     if (imported) revalidatePath("/");
   }

@@ -12,6 +12,7 @@ import { canReplyToFeedback } from "@/lib/feedback-reply-authorization";
 import { getTranslations } from "@/lib/language";
 import { hasSupabaseConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
+import { loadAllStopRows } from "@/lib/all-stop-rows";
 
 export const dynamic = "force-dynamic";
 
@@ -87,7 +88,9 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: allStops } = user ? await supabase.from("bus_stops").select("id,name_de,name_it,name_en,municipality,stop_code,latitude,longitude,is_accessible,is_published,archived_at").order("created_at", { ascending: false }) : { data: [] };
+  const allStops = user ? await loadAllStopRows<BusStopRow>((from, to) => supabase.from("bus_stops")
+    .select("id,name_de,name_it,name_en,municipality,stop_code,latitude,longitude,is_accessible,is_published,archived_at", { count: "exact" })
+    .order("created_at", { ascending: false }).order("id").range(from, to)) : [];
   const allActiveStops = ((allStops ?? []) as BusStopRow[]).filter((stop) => !stop.archived_at);
   const archivedStops = ((allStops ?? []) as BusStopRow[]).filter((stop) => stop.archived_at);
   const searchQuery = q?.trim() ?? "";

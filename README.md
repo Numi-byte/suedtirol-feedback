@@ -89,27 +89,42 @@ node --test protected/scripts/stop-place-csv.test.mjs
 ## EFA stop-place import
 
 Apply `supabase/migrations/20261015120000_import_efa_stop_places.sql` after the
-existing migrations. In the protected portal's **Stop places** import section,
+existing migrations, then apply
+`supabase/migrations/20261016120000_complete_efa_stop_place_import.sql`
+(the follow-up is required even if the initial EFA migration was already applied).
+In the protected portal's **Stop places** import section,
 use **Fetch and import EFA stop places**. The protected server needs HTTPS access
 to `efa.sta.bz.it` as well as the configured Supabase project. No EFA key is needed.
 
-The importer fetches the complete rapidJSON stop list and includes only `stop`
-entries with full IDs matching `it:22021:<digits>`. For example, `it:22021:2139`
+The importer fetches the complete rapidJSON stop list and processes every entry whose full ID starts with `it:22021:`.
+It does not restrict the ID suffix to digits or impose an additional type filter. For example, `it:22021:2139`
 becomes `(it:apb:StopPlace:it:22021:2139,any)` in `bus_stops.id_version`.
 `properties.stopId` is stored separately in `stop_id`; `coord[0]` is latitude
-and `coord[1]` longitude. Only the main Italian name is imported. New records
+and `coord[1]` longitude. Additional coordinate dimensions are ignored.
+A numeric `stopId` is stored as text; a missing `stopId` is left null instead of
+discarding an otherwise valid place. Different complete IDs are not discarded
+just because they share this additional metadata. New records leave the CSV
+private `stop_code` blank. Only the main Italian name is imported. New records
 have empty German/English names and municipality; parent names are not imported.
 
 Every imported stop is set to **unpublished**, including existing matches.
 Existing German/English translations, UUIDs, feedback, stop points, private stop
 codes, CSV timestamps, municipality and archive settings are retained. Matching
-uses the complete source reference (ignoring version), `stop_id`, or a matching
-existing private stop code. Ambiguous/conflicting identities fail the batch rather
-than inserting another stop. Identical feed duplicates are removed before batching;
-invalid records are counted, with a sample of errors shown. Each batch is atomic,
-and completed batches are reported if a later batch fails. Retrying is safe.
+uses the complete source reference (ignoring version). Matching by `stop_id`
+or private code is only used for legacy rows without a source ID; distinct full
+source IDs are never merged based on stopId. Identical feed duplicates are removed.
+Conflicting duplicate feed IDs are reported without blocking unrelated places.
+Each database batch is atomic. A row conflict triggers individual retries of that
+batch so the rest of the API list still imports. Network, authentication and
+schema errors stop the run and report completed work. Retrying is safe.
 
-Run `node --test protected/scripts/efa-stop-places.test.mjs` for mapping tests.
+The result shows API records received, matching IDs, saved places and duplicate
+counts. Any invalid/conflicting records are flagged as an incomplete import, with
+a downloadable report containing all affected IDs. The portal loads the entire
+database across Supabase response limits and displays ten stops per UI page.
+
+Run `node --test protected/scripts/efa-stop-places.test.mjs protected/scripts/efa-import-batches.test.mjs`
+for mapping, multi-batch and listing regression tests.
 
 ## Stop-point CSV imports and map dots
 
