@@ -15,23 +15,40 @@ test("maps the complete source ID, main Italian name, stopId and lat/lon without
     name_it: "Via Lancia SEAB", latitude: 46.484588, longitude: 11.336849,
   }]);
 });
-test("filters other regions, partial prefixes, child points and non-stop entries", () => {
-  const result = read(stop(), ...["it:22022:2139", "it:220210:2139", "it:22021:2139:1", "xit:22021:1"].map(id => stop({ id })), stop({ type: "locality" }));
+test("filters only IDs outside the exact regional prefix", () => {
+  const result = read(stop(), ...["it:22022:2139", "it:220210:2139", "xit:22021:1"].map(id => stop({ id })));
   assert.equal(result.rows.length, 1);
-  assert.equal(result.excluded, 5);
+  assert.equal(result.excluded, 3);
+  assert.equal(result.received, 4);
+  assert.equal(result.matching, 1);
+});
+test("keeps complete suffixed identifiers and does not impose an extra type filter", () => {
+  for (const type of [undefined, "stop", "platform", "locality"]) {
+    assert.equal(read(stop({ id: "it:22021:2139:1:full", type })).rows[0].id_version,
+      "(it:apb:StopPlace:it:22021:2139:1:full,any)");
+  }
+});
+test("retains places without stopId and normalizes numeric stopId without inventing values", () => {
+  assert.equal(read(stop({ properties: {} })).rows[0].stop_id, null);
+  assert.equal(read(stop({ properties: { stopId: 66002139 } })).rows[0].stop_id, "66002139");
+  assert.equal(read(stop({ coord: [46.484588, 11.336849, 0] })).rows[0].latitude, 46.484588);
 });
 test("retains long full identifiers without numeric conversion or truncation", () => {
   assert.equal(read(stop({ id: "it:22021:000123456789123456789" })).rows[0].id_version,
     "(it:apb:StopPlace:it:22021:000123456789123456789,any)");
 });
-test("deduplicates identical records and rejects conflicting identities before import", () => {
+test("deduplicates identical records and reports conflicts without blocking unrelated places", () => {
   assert.equal(read(stop(), stop()).duplicates, 1);
   assert.equal(read(stop(), stop()).rows.length, 1);
-  assert.throws(() => read(stop(), stop({ name: "Different" })), /Conflicting/);
-  assert.throws(() => read(stop(), stop({ id: "it:22021:311" })), /multiple places/);
+  const valid = stop({ id: "it:22021:999", properties: { stopId: "999" } });
+  for (const conflict of [stop({ name: "Different" })]) {
+    const result = read(stop(), conflict, valid);
+    assert.deepEqual(result.rows.map(r => r.stop_id), ["999"]);
+    assert.equal(result.errors.length, 1);
+  }
 });
 test("reports invalid eligible rows instead of fabricating names, IDs or coordinates", () => {
-  for (const overrides of [{ name: " " }, { name: null }, { properties: {} }, { coord: null },
+  for (const overrides of [{ name: " " }, { name: null }, { id: "it:22021:bad,id" }, { coord: null },
     { coord: [null, 11] }, { coord: ["46", 11] }, { coord: [NaN, 11] }, { coord: [91, 11] }, { coord: [46, 181] }]) {
     const result = read(stop(overrides));
     assert.equal(result.rows.length, 0);
@@ -41,4 +58,10 @@ test("reports invalid eligible rows instead of fabricating names, IDs or coordin
 test("rejects malformed feeds and accepts empty lists explicitly", () => {
   for (const input of [null, [], {}, { locations: {} }]) assert.throws(() => readEfaStopPlaces(input), /locations/);
   assert.deepEqual(read().rows, []);
+});
+
+test("does not discard different complete place IDs just because their stopId matches", () => {
+  const result = read(stop(), stop({ id: "it:22021:2139:1" }));
+  assert.equal(result.rows.length, 2);
+  assert.equal(result.errors.length, 0);
 });
