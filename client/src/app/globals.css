@@ -276,6 +276,7 @@ nav a:hover { background: var(--blue-50); }
 }
 .map-panel-label { color: var(--blue); font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
 .map-panel h3 { margin: 8px 0 6px; font-size: 21px; }
+.map-deselect { margin: 4px 0 10px; padding: 6px 10px; border: 1px solid var(--blue); border-radius: 4px; color: var(--blue); background: #fff; cursor: pointer; }
 .map-point-status { margin-top: 8px; font-size: 13px; color: var(--blue-deep); }
 .stop-point-dot:focus { outline: none; stroke: var(--navy); stroke-width: 3px; }
 .map-panel p { margin: 0; font-size: 14px; line-height: 1.55; }

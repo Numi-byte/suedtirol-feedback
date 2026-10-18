@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { Map as LeafletMap, Marker } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import busIcon from "@/components/Bus.png";
@@ -30,6 +31,7 @@ export type MapLabels = {
   pointsLoading: string;
   pointsError: string;
   noPoints: string;
+  deselect: string;
 };
 
 /** South Tyrol, used until the published stops define their own extent. */
@@ -50,29 +52,38 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
   const renderStopsRef = useRef<(() => void) | null>(null);
   const selectedIdRef = useRef<string | null>(null);
   const fittedRef = useRef(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedId = searchParams.get("stop");
   const [query, setQuery] = useState("");
   const [mapStatus, setMapStatus] = useState<"loading" | "ready" | "error">("loading");
   const [mapReady, setMapReady] = useState(false);
   const pointsFittedRef = useRef<string | null>(null);
+  const updateSelection = useCallback((id: string | null) => {
+    const url = new URL(window.location.href);
+    if (id) url.searchParams.set("stop", id);
+    else { url.searchParams.delete("stop"); setQuery(""); }
+    router.replace(`${url.pathname}${url.search}${url.hash}`, { scroll: false });
+  }, [router]);
 
   const stopName = (stop: BusStop) => nameFor(stop, language);
   const filteredStops = useMemo(() => {
+    if (selectedId) return stops.filter(stop => stop.id === selectedId);
     const terms = query.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
     if (!terms.length) return stops;
     return stops.filter((stop) => {
       const searchable = [stop.name_de, stop.name_it, stop.name_en, stop.municipality].join(" ").toLocaleLowerCase();
       return terms.every((term) => searchable.includes(term));
     });
-  }, [query, stops]);
+  }, [query, stops, selectedId]);
   const clusterIndex = useMemo(() => createStopClusterIndex(filteredStops), [filteredStops]);
   const listedStops = useMemo(() => {
-    if (query.trim()) return filteredStops;
+    if (selectedId || query.trim()) return filteredStops;
     return [...stops]
       .sort((a, b) => b.feedback_count - a.feedback_count || stopName(a).localeCompare(stopName(b)))
       .slice(0, 5);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredStops, language, query, stops]);
+  }, [filteredStops, language, query, stops, selectedId]);
   const selected = filteredStops.find((stop) => stop.id === selectedId) ?? null;
   const { points, status: pointsStatus } = useStopPoints(selected?.id ?? null);
 
@@ -105,6 +116,11 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
       map.attributionControl.setPrefix(false);
       map.createPane("stopPoints").style.zIndex = "650";
       mapRef.current = map;
+      map.on("click", event => {
+        const target = event.originalEvent.target;
+        if (target instanceof Element && target.closest(".leaflet-marker-icon, .stop-point-dot, .leaflet-control")) return;
+        updateSelection(null);
+      });
       setMapReady(true);
     };
     const start = () => initialiseMap().catch(() => {
@@ -129,7 +145,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
     };
     // labels.attribution is static copy; the map is intentionally built once.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [updateSelection]);
 
   // Build the spatial index only when stops/search change. Render just the
   // visible clusters and reuse existing markers while panning or selecting.
@@ -235,14 +251,14 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
       };
 
       // Frame the real stops the first time they arrive, then leave the view alone.
-      if (!fittedRef.current && stops.length > 0) {
+      if (!fittedRef.current && filteredStops.length > 0) {
         fittedRef.current = true;
-        if (stops.length === 1) {
-          map.setView([stops[0].latitude, stops[0].longitude], 15);
+        if (filteredStops.length === 1) {
+          map.setView([filteredStops[0].latitude, filteredStops[0].longitude], 15);
         } else {
           // Pad around the floating panels so no marker hides behind them.
           const wide = map.getSize().x >= 760;
-          map.fitBounds(L.latLngBounds(stops.map((stop) => [stop.latitude, stop.longitude])), {
+          map.fitBounds(L.latLngBounds(filteredStops.map((stop) => [stop.latitude, stop.longitude])), {
             paddingTopLeft: wide ? [410, 200] : [40, 180],
             paddingBottomRight: wide ? [300, 110] : [40, 240],
             maxZoom: 15,
@@ -263,6 +279,13 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
     selectedIdRef.current = selectedId;
     renderStopsRef.current?.();
   }, [selectedId]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (selected && mapReady && map) {
+      map.stop().setView([selected.latitude, selected.longitude], Math.max(map.getZoom(), 15), { animate: false });
+    }
+  }, [selected, mapReady]);
 
   // A separate layer is discarded as soon as the selection changes. Names are
   // DOM text, never HTML, because they originate in uploaded spreadsheets.
@@ -308,7 +331,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
   }, [points, selected, language, mapReady]);
 
   const focusStop = (stop: BusStop) => {
-    setSelectedId(stop.id);
+    updateSelection(stop.id);
     const map = mapRef.current;
     map?.stop().setView([stop.latitude, stop.longitude], Math.max(map.getZoom(), 15), { animate: false });
   };
@@ -355,6 +378,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
           <>
             <span className="map-panel-label">{selected.municipality}</span>
             <h3>{stopName(selected)}</h3>
+            <button type="button" className="map-deselect" onClick={() => updateSelection(null)}>{labels.deselect}</button>
             <p>{selected.latitude.toFixed(5)}, {selected.longitude.toFixed(5)}</p>
             <p className="map-point-status" role="status">
               {pointsStatus === "loading" ? labels.pointsLoading : pointsStatus === "error" ? labels.pointsError
