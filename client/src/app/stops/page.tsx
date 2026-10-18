@@ -84,10 +84,7 @@ export default function StopsPage() {
                 <div>
                   <span className="stop-card-place">{stop.municipality}</span>
                   <h2>{stopName(stop, language)}</h2>
-                  <div className="transport-tags">
-                    <span>{t.stops.bus}</span>
-                    {stop.is_accessible ? <span>{t.stops.accessible}</span> : null}
-                  </div>
+                  {stop.is_accessible ? <div className="transport-tags"><span>{t.stops.accessible}</span></div> : null}
                 </div>
                 <div className="stop-card-actions">
                   <Link
