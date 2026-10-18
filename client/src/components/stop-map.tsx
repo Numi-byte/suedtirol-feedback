@@ -7,6 +7,7 @@ import busIcon from "@/components/Bus.png";
 import { stopName as nameFor } from "@/lib/stops";
 import type { BusStop } from "@/lib/stops";
 import { useStopPoints } from "@/lib/stop-points";
+import { createStopClusterIndex, stopClusterDiameter } from "@/lib/stop-clusters";
 
 export type MapLabels = {
   eyebrow: string;
@@ -46,6 +47,8 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const markersRef = useRef<Map<string, Marker>>(new Map());
+  const renderStopsRef = useRef<(() => void) | null>(null);
+  const selectedIdRef = useRef<string | null>(null);
   const fittedRef = useRef(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -62,6 +65,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
       return terms.every((term) => searchable.includes(term));
     });
   }, [query, stops]);
+  const clusterIndex = useMemo(() => createStopClusterIndex(filteredStops), [filteredStops]);
   const listedStops = useMemo(() => {
     if (query.trim()) return filteredStops;
     return [...stops]
@@ -127,9 +131,11 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Rebuild the markers whenever the published stops or the language change.
+  // Build the spatial index only when stops/search change. Render just the
+  // visible clusters and reuse existing markers while panning or selecting.
   useEffect(() => {
     let cancelled = false;
+    let dispose: (() => void) | undefined;
 
     (async () => {
       const L = (await import("leaflet")).default;
@@ -139,24 +145,94 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
       for (const marker of markersRef.current.values()) marker.remove();
       markersRef.current.clear();
 
-      for (const stop of filteredStops) {
+      const stopsById = new Map(filteredStops.map(stop => [stop.id, stop]));
+      const singleIcon = (selected: boolean) => L.divIcon({
+        className: "stop-marker", html: markerImage(selected),
+        iconSize: [44, 44], iconAnchor: [22, 22],
+      });
+      const normalIcon = singleIcon(false);
+      const selectedIcon = singleIcon(true);
+      const addStop = (stop: BusStop) => {
+        const key = `stop:${stop.id}`;
+        if (markersRef.current.has(key)) return;
+        const name = nameFor(stop, language) || stop.name_it || stop.name_de;
         const marker = L.marker([stop.latitude, stop.longitude], {
-          icon: L.divIcon({
-            className: "stop-marker",
-            html: markerImage(stop.id === selectedId),
-            iconSize: [44, 44],
-            iconAnchor: [22, 22],
-          }),
-          title: stopName(stop),
-          alt: `${stopName(stop)} – ${stop.municipality}`,
+          icon: stop.id === selectedIdRef.current ? selectedIcon : normalIcon,
+          title: name,
+          alt: `${name} – ${stop.municipality}`,
           keyboard: true,
         });
-        marker.bindTooltip(stopName(stop), { direction: "top", offset: [0, -38] });
+        const text = document.createElement("span");
+        text.textContent = name;
+        marker.bindTooltip(text, { direction: "top", offset: [0, -38] });
         marker.on("click", () => focusStop(stop));
-        marker.on("keypress", () => focusStop(stop));
         marker.addTo(map);
-        markersRef.current.set(stop.id, marker);
-      }
+        markersRef.current.set(key, marker);
+      };
+      let previousSelected: string | null = null;
+      const render = () => {
+        if (cancelled) return;
+        const bounds = map.getBounds().pad(0.15);
+        const features = clusterIndex.getClusters([
+          bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth(),
+        ], Math.floor(map.getZoom()));
+        const visibleKeys = new Set<string>();
+        for (const feature of features) {
+          const props = feature.properties;
+          if (!("cluster" in props)) {
+            visibleKeys.add(`stop:${props.stop.id}`);
+            addStop(props.stop);
+            continue;
+          }
+          const key = `cluster:${props.cluster_id}`;
+          visibleKeys.add(key);
+          if (markersRef.current.has(key)) continue;
+          const count = props.point_count;
+          const diameter = stopClusterDiameter(count);
+          const label = `${count.toLocaleString(language)} ${labels.stopsAvailable}`;
+          const [longitude, latitude] = feature.geometry.coordinates;
+          const marker = L.marker([latitude, longitude], {
+            icon: L.divIcon({ className: "stop-cluster", html: `<span>${count.toLocaleString(language)}</span>`,
+              iconSize: [diameter, diameter], iconAnchor: [diameter / 2, diameter / 2] }),
+            title: label, alt: label, keyboard: true,
+          });
+          marker.on("click", () => {
+            const zoom = Math.min(map.getMaxZoom(), clusterIndex.getClusterExpansionZoom(props.cluster_id));
+            map.stop().setView([latitude, longitude], zoom, { animate: false });
+          });
+          marker.addTo(map);
+          marker.getElement()?.setAttribute("aria-label", label);
+          markersRef.current.set(key, marker);
+        }
+        // Keep a selected place visible even if its neighbours remain clustered.
+        const selectedStop = selectedIdRef.current ? stopsById.get(selectedIdRef.current) : undefined;
+        if (selectedStop && bounds.contains([selectedStop.latitude, selectedStop.longitude])) {
+          visibleKeys.add(`stop:${selectedStop.id}`);
+          addStop(selectedStop);
+        }
+        for (const [key, marker] of markersRef.current) {
+          if (!visibleKeys.has(key)) { marker.remove(); markersRef.current.delete(key); }
+        }
+        if (previousSelected !== selectedIdRef.current) {
+          if (previousSelected) markersRef.current.get(`stop:${previousSelected}`)?.setIcon(normalIcon);
+          if (selectedIdRef.current) markersRef.current.get(`stop:${selectedIdRef.current}`)?.setIcon(selectedIcon);
+          previousSelected = selectedIdRef.current;
+        }
+      };
+      let frame: number | undefined;
+      const scheduleRender = () => {
+        if (frame !== undefined) cancelAnimationFrame(frame);
+        frame = requestAnimationFrame(() => { frame = undefined; render(); });
+      };
+      map.on("moveend zoomend resize", scheduleRender);
+      renderStopsRef.current = render;
+      dispose = () => {
+        map.off("moveend zoomend resize", scheduleRender);
+        if (frame !== undefined) cancelAnimationFrame(frame);
+        renderStopsRef.current = null;
+        for (const marker of markersRef.current.values()) marker.remove();
+        markersRef.current.clear();
+      };
 
       // Frame the real stops the first time they arrive, then leave the view alone.
       if (!fittedRef.current && stops.length > 0) {
@@ -173,13 +249,20 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
           });
         }
       }
+      render();
     })();
 
     return () => {
       cancelled = true;
+      dispose?.();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredStops, language, selectedId, mapReady]);
+  }, [clusterIndex, language, mapReady]);
+
+  useEffect(() => {
+    selectedIdRef.current = selectedId;
+    renderStopsRef.current?.();
+  }, [selectedId]);
 
   // A separate layer is discarded as soon as the selection changes. Names are
   // DOM text, never HTML, because they originate in uploaded spreadsheets.

@@ -67,6 +67,16 @@ popular-stops sidebar is limited to five suggestions. Pagination regression test
 node --test client/scripts/published-stop-pages.test.mjs
 ```
 
+The map groups nearby stop places into blue count circles; larger groups use
+larger circles. Click a group or zoom in to reveal its stops (individual places
+are shown from zoom 18). Stop-point/platform dots remain a separate layer for the
+selected place and never contribute to group counts. A spatial index is reused
+across pans and selections; only markers near the viewport are rendered.
+
+```bash
+node --test client/scripts/stop-clusters.test.mjs
+```
+
 ## Stop-place CSV imports
 
 Apply `supabase/migrations/20261007120000_import_latest_stop_place_versions.sql`
