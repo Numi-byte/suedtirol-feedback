@@ -17,7 +17,7 @@ export default async function FeedbackPage({
         stopLocation={params.location ?? ""}
         language={language}
       />
-      <FeedbackThreads stopId={params.stop ?? ""} language={language ?? "de"} />
+      <FeedbackThreads stopId={params.stop ?? ""} language={language} />
     </main>
   );
 }
