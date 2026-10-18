@@ -13,7 +13,7 @@ export default function HowItWorksPage() {
   const { t } = useLanguage();
 
   return (
-    <main className="content-page">
+    <main className="content-page how-page">
       <div className="page-title"><h1>{t.how.title}</h1></div>
 
       <section className="help-section">
@@ -21,7 +21,7 @@ export default function HowItWorksPage() {
         <p className="help-lead">{t.how.lead}</p>
       </section>
 
-      <section className="help-section">
+      <section className="help-section how-steps-section">
         <h2>{t.how.stepsTitle}</h2>
         <p className="help-copy">{t.how.copy}</p>
         <div className="steps-grid">
