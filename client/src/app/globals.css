@@ -312,6 +312,15 @@ nav a:hover { background: var(--blue-50); }
 .stop-marker img.is-selected { transform: scale(1.2); }
 .stop-marker:hover { transform: translateY(-3px); }
 .stop-marker:focus-visible { outline: 3px solid var(--blue-deep); outline-offset: 3px; border-radius: 4px; }
+.leaflet-marker-icon.stop-cluster {
+  display: flex; align-items: center; justify-content: center;
+  border: 3px solid #fff; border-radius: 50%;
+  background: #087fa9; color: #fff; box-shadow: 0 2px 8px rgba(0, 43, 77, .25);
+  font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums;
+  cursor: pointer; box-sizing: border-box;
+}
+.stop-cluster:hover { background: #006a91; }
+.stop-cluster:focus-visible { outline: 3px solid var(--blue-deep); outline-offset: 3px; }
 .leaflet-container { font: inherit; background: #dce6ee; }
 .leaflet-container a { color: var(--blue); }
 .leaflet-bar { border: 0; box-shadow: 0 6px 18px rgba(0, 43, 77, .2); }
