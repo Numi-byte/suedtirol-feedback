@@ -59,6 +59,14 @@ Or start them independently with `npm run dev:client` and `npm run dev:protected
 
 Run `npm run lint`, `npm run typecheck`, and `npm run build` from the repository root.
 
+The public map API pages through all published, unarchived stops using a stable
+ID order, so Supabase's response row limit cannot truncate the map. Only the
+popular-stops sidebar is limited to five suggestions. Pagination regression tests:
+
+```bash
+node --test client/scripts/published-stop-pages.test.mjs
+```
+
 ## Stop-place CSV imports
 
 Apply `supabase/migrations/20261007120000_import_latest_stop_place_versions.sql`
