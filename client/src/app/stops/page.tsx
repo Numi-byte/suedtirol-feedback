@@ -45,7 +45,6 @@ export default function StopsPage() {
       <div className="page-title"><h1>{t.stops.title}</h1></div>
 
       <section className="stops-section">
-        <span className="mini-label">{t.stops.eyebrow}</span>
 
         <div className="stops-search">
           <label htmlFor="stop-search">{t.stops.searchLabel}</label>
@@ -96,7 +95,7 @@ export default function StopsPage() {
                   <Link className="stop-card-comments" href={`${feedbackHref(stop)}#feedback-threads`}>
                     {t.stops.comments}
                   </Link>
-                  <Link className="stop-card-map" href="/">{t.stops.onMap}</Link>
+                  <Link className="stop-card-map" href={`/?stop=${encodeURIComponent(stop.id)}`}>{t.stops.onMap}</Link>
                 </div>
               </article>
             </li>
