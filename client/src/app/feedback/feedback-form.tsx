@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import worldIcon from "@/components/vector.png";
 import { useRouter } from "next/navigation";
 import { TransportIcon, type TransportType } from "@/components/transport-icon";
 import { useLanguage } from "@/components/language-provider";
@@ -87,6 +88,16 @@ export function FeedbackForm({ pointId, stopName, stopLocation, transportType, l
   const categories = categoryDefinitions.map(item => ({ ...item, label: copy[item.slug] }));
   const severity = severityDefinitions.map(item => ({ ...item, label: copy[item.value] }));
   const [step, setStep] = useState(1);
+  const wizardRef = useRef<HTMLFormElement>(null);
+  const previousStep = useRef(step);
+  useEffect(() => {
+    if (previousStep.current === step) return;
+    previousStep.current = step;
+    if (!window.matchMedia("(max-width: 1279px)").matches) return;
+    const panel = wizardRef.current?.querySelector<HTMLElement>(".wizard-panel.current");
+    panel?.focus({ preventScroll: true });
+    panel?.scrollIntoView({ block: "start", behavior: "instant" });
+  }, [step]);
   const [selected, setSelected] = useState<string[]>([]);
   const [level, setLevel] = useState("medium");
   const [description, setDescription] = useState("");
@@ -220,17 +231,24 @@ export function FeedbackForm({ pointId, stopName, stopLocation, transportType, l
   return (
     <section className="feedback-dialog" aria-labelledby="feedback-title">
       <header className="feedback-heading">
-        <span className="stop-symbol"><TransportIcon type={transportType} language={language} size={56} priority /></span>
-        <div className="feedback-heading-copy"><h1 id="feedback-title">{copy.title}</h1><p>●&nbsp; {stopName || copy.defaultStop} · {stopLocation || copy.defaultLocation}</p></div>
-        <label className="feedback-language"><span className="sr-only">{copy.language}</span><select aria-label={copy.language} value={language} onChange={event => {
-          const next = event.target.value as Language;
-          setLanguage(next);
-          const url = new URL(window.location.href);
-          url.searchParams.set("lang", next);
-          router.replace(`${url.pathname}${url.search}${url.hash}`, { scroll: false });
-        }}><option value="de">Deutsch</option><option value="it">Italiano</option><option value="en">English</option></select></label>
+        <div className="feedback-heading-main">
+          <h1 id="feedback-title">{copy.title}</h1>
+          <div className="feedback-point-context">
+            <span className="stop-symbol"><TransportIcon type={transportType} language={language} size={56} priority /></span>
+            <p>{stopName || copy.defaultStop}<span>{stopLocation || copy.defaultLocation}</span></p>
+          </div>
+        </div>
+        <div className="feedback-heading-tools">
+          <label className="feedback-language"><span className="sr-only">{copy.language}</span><Image src={worldIcon} width={16} height={16} alt="" aria-hidden="true" /><select aria-label={copy.language} value={language} onChange={event => {
+            const next = event.target.value as Language;
+            setLanguage(next);
+            const url = new URL(window.location.href);
+            url.searchParams.set("lang", next);
+            router.replace(`${url.pathname}${url.search}${url.hash}`, { scroll: false });
+          }}><option value="de">Deutsch</option><option value="it">Italiano</option><option value="en">English</option></select></label>
+          <Link className="feedback-close" href="/" aria-label={copy.close}><Image src="/icons/close.svg" width={12} height={12} alt="" aria-hidden="true" /></Link>
+        </div>
         <p className="heading-required"><span>*</span> {copy.required}</p>
-        <Link href="/" aria-label={copy.close}>×</Link>
       </header>
 
       <ol className="feedback-progress" aria-label={copy.progress}>
@@ -241,13 +259,13 @@ export function FeedbackForm({ pointId, stopName, stopLocation, transportType, l
         ))}
       </ol>
 
-      <form className="feedback-wizard" onSubmit={handleSubmit} noValidate>
+      <form ref={wizardRef} className="feedback-wizard" onSubmit={handleSubmit} noValidate>
         <input type="hidden" name="point_id" value={pointId} />
         <input type="hidden" name="stop_name" value={stopName} />
         <input type="hidden" name="language" value={language} />
         <input type="hidden" name="severity" value={level} />
 
-        <fieldset className={`wizard-panel ${step === 1 ? "current" : ""} ${showCategoryError ? "panel-invalid" : ""}`} aria-describedby={showCategoryError ? "category-error" : undefined}>
+        <fieldset tabIndex={-1} className={`wizard-panel ${step === 1 ? "current" : ""} ${showCategoryError ? "panel-invalid" : ""}`} aria-describedby={showCategoryError ? "category-error" : undefined}>
           <legend><span>1</span> {copy.categoryStep} <b className="required-mark" aria-label={copy.required}>*</b></legend>
           <p>{copy.categoryIntro}</p>
           <div className="category-list">
@@ -261,7 +279,7 @@ export function FeedbackForm({ pointId, stopName, stopLocation, transportType, l
           <button type="button" className="mobile-next" onClick={goToDetails}>{copy.next}</button>
         </fieldset>
 
-        <fieldset className={`wizard-panel ${step === 2 ? "current" : ""}`}>
+        <fieldset tabIndex={-1} className={`wizard-panel ${step === 2 ? "current" : ""}`}>
           <legend><span>2</span> {copy.detailsStep}</legend>
           <label className="field-label">{copy.severityQuestion} <em>{copy.optional}</em></label>
           <div className="severity-options">
@@ -281,12 +299,12 @@ export function FeedbackForm({ pointId, stopName, stopLocation, transportType, l
           {photoError && <p className="form-error" role="alert">{copy[photoError]}</p>}
           <label className="contact-toggle"><span>{copy.contactToggle} <em>{copy.optional}</em></span><input type="checkbox" name="consent_to_contact" checked={contact} onChange={(event) => { setContact(event.target.checked); setShowEmailError(false); }} /></label>
           {contact && <div className={`email-field ${showEmailError ? "field-invalid" : ""}`}><label className="field-label" htmlFor="email">{copy.email} <b className="required-mark" aria-label={copy.required}>*</b></label><input id="email" name="email" type="email" maxLength={320} required aria-invalid={showEmailError} aria-describedby={showEmailError ? "email-error" : undefined} value={email} onChange={(event) => { setEmail(event.target.value); setShowEmailError(false); }} />{showEmailError && <p id="email-error" className="field-error" role="alert">{copy.emailError}</p>}</div>}
-          <p className="privacy-note"><span>▣</span> {copy.privacy} <Link href="/about">{copy.privacyLink}</Link></p>
+          <p className="privacy-note"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 3 4 6v5c0 5 3.3 8.5 8 10 4.7-1.5 8-5 8-10V6Z" /></svg><span>{copy.privacy} <Link href="/about">{copy.privacyLink}</Link></span></p>
           <p className="required-note"><span>*</span> {copy.required}</p>
           <div className="mobile-actions"><button type="button" onClick={() => setStep(1)}>{copy.back}</button><button type="button" onClick={goToReview}>{copy.next}</button></div>
         </fieldset>
 
-        <fieldset className={`wizard-panel review-panel ${step === 3 ? "current" : ""}`}>
+        <fieldset tabIndex={-1} className={`wizard-panel review-panel ${step === 3 ? "current" : ""}`}>
           <legend><span>3</span> {copy.reviewStep}</legend>
           <p>{copy.reviewIntro}</p>
           <div className="review-card">
