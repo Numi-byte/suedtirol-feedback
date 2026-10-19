@@ -133,6 +133,20 @@ export async function updateBusStop(formData: FormData) {
   redirect("/");
 }
 
+export async function updateStopPointType(formData: FormData) {
+  const { supabase } = await requireUser();
+  const id = String(formData.get("point_id") ?? "");
+  const placeId = String(formData.get("place_id") ?? "");
+  const transportType = String(formData.get("transport_type") ?? "");
+  if (!id || !placeId || !["bus", "train", "cable_car"].includes(transportType)) throw new Error("Invalid stop point or transport type.");
+  const { error } = await supabase.from("stop_points")
+    .update({ transport_type: transportType, updated_at: new Date().toISOString() })
+    .eq("id", id).eq("stop_place_id", placeId).select("id").single();
+  if (error) throw new Error(error.message);
+  revalidatePath("/");
+  redirect(`/?stop=${encodeURIComponent(placeId)}#stop-points-editor`);
+}
+
 /**
  * Retiring a stop is a soft delete. stop_feedback references bus_stops with
  * "on delete restrict", so removing the row outright would either be refused by

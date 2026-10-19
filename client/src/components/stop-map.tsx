@@ -3,14 +3,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
-import type { Map as LeafletMap, Marker } from "leaflet";
+import type { Map as LeafletMap, Marker, CircleMarker } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import busIcon from "@/components/Bus.png";
 import { stopName as nameFor } from "@/lib/stops";
 import type { BusStop } from "@/lib/stops";
 import { useStopPoints } from "@/lib/stop-points";
 import { createStopClusterIndex, stopClusterDiameter } from "@/lib/stop-clusters";
-import { CommentsIcon } from "@/components/comments-icon";
+import { StopPointList } from "@/components/stop-point-list";
+import { stopPointName } from "@/lib/stop-point-links";
 
 export type MapLabels = {
   eyebrow: string;
@@ -36,6 +37,9 @@ export type MapLabels = {
   deselect: string;
   expandSearch: string;
   collapseSearch: string;
+  pointLabel: string;
+  selectPoints: string;
+  showPointOnMap: string;
 };
 
 /** South Tyrol, used until the published stops define their own extent. */
@@ -65,11 +69,21 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
   const sheetGestureRef = useRef<{ startY: number; swiped: boolean } | null>(null);
   const [mapStatus, setMapStatus] = useState<"loading" | "ready" | "error">("loading");
   const [mapReady, setMapReady] = useState(false);
+  const pointMarkersRef = useRef<Map<string, CircleMarker>>(new Map());
+  const selectedPointId = searchParams.get("point");
+  const pointSelectionRef = useRef(selectedPointId);
   const pointsFittedRef = useRef<string | null>(null);
   const updateSelection = useCallback((id: string | null) => {
     const url = new URL(window.location.href);
+    url.searchParams.delete("point");
     if (id) { url.searchParams.set("stop", id); setSearchExpanded(false); }
     else { url.searchParams.delete("stop"); setQuery(""); }
+    router.replace(`${url.pathname}${url.search}${url.hash}`, { scroll: false });
+  }, [router]);
+
+  const updatePointSelection = useCallback((id: string) => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("point", id);
     router.replace(`${url.pathname}${url.search}${url.hash}`, { scroll: false });
   }, [router]);
 
@@ -92,7 +106,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredStops, language, query, stops, selectedId]);
   const selected = filteredStops.find((stop) => stop.id === selectedId) ?? null;
-  const { points } = useStopPoints(selected?.id ?? null);
+  const { points, status: pointsStatus } = useStopPoints(selected?.id ?? null);
 
   // Keep the search and its results above the phone's software keyboard.
   useEffect(() => {
@@ -290,7 +304,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
           map.setView([filteredStops[0].latitude, filteredStops[0].longitude], 15);
         } else {
           // Pad around the floating panels so no marker hides behind them.
-          const wide = map.getSize().x >= 760;
+          const wide = map.getSize().x >= 768;
           map.fitBounds(L.latLngBounds(filteredStops.map((stop) => [stop.latitude, stop.longitude])), {
             paddingTopLeft: wide ? [410, 200] : [40, 180],
             paddingBottomRight: wide ? [300, 110] : [40, 240],
@@ -320,6 +334,22 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
     }
   }, [selected, mapReady]);
 
+  useEffect(() => {
+    pointSelectionRef.current = selectedPointId;
+    for (const [id, marker] of pointMarkersRef.current) {
+      const active = id === selectedPointId;
+      marker.setRadius(active ? 11 : 8);
+      const element = marker.getElement();
+      const focused = element === document.activeElement;
+      element?.setAttribute("aria-pressed", String(active));
+      if (active) {
+        marker.bringToFront(); marker.openTooltip();
+        if (focused && element instanceof SVGElement) element.focus({ preventScroll: true });
+      }
+      else marker.closeTooltip();
+    }
+  }, [selectedPointId]);
+
   // A separate layer is discarded as soon as the selection changes. Names are
   // DOM text, never HTML, because they originate in uploaded spreadsheets.
   useEffect(() => {
@@ -331,37 +361,48 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
       const map = mapRef.current;
       if (cancelled || !map || !selected || !points.length) return;
       const layer = L.layerGroup().addTo(map);
-      removeLayer = () => layer.remove();
+      removeLayer = () => { layer.remove(); pointMarkersRef.current.clear(); };
       for (const point of points) {
-        const label = `${language === "it" ? point.name_it : point.name_de} · ${point.point_number}`;
+        const label = `${stopPointName(point, language)} · ${labels.pointLabel} ${point.point_number}`;
         const text = document.createElement("span");
         text.textContent = label;
         const dot = L.circleMarker([point.latitude, point.longitude], {
-          pane: "stopPoints", className: "stop-point-dot", radius: 7,
+          pane: "stopPoints", className: "stop-point-dot", radius: point.id === pointSelectionRef.current ? 11 : 8,
           color: "#fff", weight: 2, fillColor: "#007eb5", fillOpacity: 1,
         });
+        pointMarkersRef.current.set(point.id, dot);
+        dot.on("click", () => updatePointSelection(point.id));
         dot.bindTooltip(text, { direction: "top", offset: [0, -8] }).addTo(layer);
         const element = dot.getElement();
-        element?.setAttribute("role", "img");
+        element?.setAttribute("role", "button");
+        element?.setAttribute("aria-pressed", String(point.id === pointSelectionRef.current));
         element?.setAttribute("aria-label", label);
         element?.setAttribute("tabindex", "0");
+        element?.addEventListener("keydown", event => {
+          if (!(event instanceof KeyboardEvent)) return;
+          if (event.key === "Enter" || event.key === " ") { event.preventDefault(); updatePointSelection(point.id); }
+        });
+        if (point.id === pointSelectionRef.current) { dot.bringToFront(); dot.openTooltip(); }
         element?.addEventListener("focus", () => dot.openTooltip());
         element?.addEventListener("blur", () => dot.closeTooltip());
       }
       if (pointsFittedRef.current !== selected.id) {
         pointsFittedRef.current = selected.id;
-        const wide = map.getSize().x >= 760;
+        const wide = map.getSize().x >= 1100;
+        const tablet = map.getSize().x >= 768;
+        const pointPanelHeight = canvasRef.current?.querySelector<HTMLElement>(".map-panel")?.offsetHeight ?? 280;
+        const searchHeight = canvasRef.current?.querySelector<HTMLElement>(".map-intro")?.offsetHeight ?? 400;
         map.stop().fitBounds(L.latLngBounds([
           [selected.latitude, selected.longitude],
           ...points.map((point): [number, number] => [point.latitude, point.longitude]),
         ]), {
-          paddingTopLeft: wide ? [410, 80] : [30, 180],
-          paddingBottomRight: wide ? [300, 110] : [30, 280], maxZoom: 17, animate: false,
+          paddingTopLeft: wide ? [410, 80] : tablet ? [30, Math.max(pointPanelHeight, searchHeight) + 50] : [30, 80],
+          paddingBottomRight: wide ? [390, 110] : tablet ? [30, 80] : [30, pointPanelHeight + 40], maxZoom: 17, animate: false,
         });
       }
     })();
     return () => { cancelled = true; removeLayer?.(); };
-  }, [points, selected, language, mapReady]);
+  }, [points, selected, language, mapReady, updatePointSelection, labels.pointLabel]);
 
   const focusStop = (stop: BusStop) => {
     updateSelection(stop.id);
@@ -455,18 +496,14 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
               </button>
             </div>
             {selected.is_accessible ? <div className="transport-tags"><span>{labels.accessible}</span></div> : null}
-            <div className="map-panel-actions">
-              <a className="map-panel-feedback" href={`/feedback?stop=${encodeURIComponent(selected.id)}&lang=${language}&name=${encodeURIComponent(stopName(selected))}`}>
-                {labels.feedback}
-                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 12h14m-5-5 5 5-5 5" />
-                </svg>
-              </a>
-              <a className="map-panel-comments" href={`/feedback?stop=${encodeURIComponent(selected.id)}&lang=${language}&name=${encodeURIComponent(stopName(selected))}#feedback-threads`}
-                aria-label={labels.comments} title={labels.comments}>
-                <CommentsIcon />
-              </a>
-            </div>
+            <StopPointList points={points} status={pointsStatus} placeId={selected.id} language={language} labels={labels}
+              selectedPointId={selectedPointId} onSelect={point => updatePointSelection(point.id)}
+              onHighlight={id => {
+                for (const [pointId, marker] of pointMarkersRef.current) {
+                  if (pointId === id || pointId === selectedPointId) marker.openTooltip();
+                  else marker.closeTooltip();
+                }
+              }} />
           </>
         ) : (
           <p className="map-panel-empty">{stops.length === 0 ? labels.noStops : filteredStops.length === 0 ? labels.noResults : labels.choose}</p>

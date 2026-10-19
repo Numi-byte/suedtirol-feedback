@@ -16,9 +16,9 @@ const labels: Record<string, Record<string, string>> = {
 };
 
 const copy = {
-  de: { eyebrow: "Rückmeldungen", title: "Öffentliche Beiträge", intro: "Die Auswahl anderer Fahrgäste – anonym und ohne persönliche Angaben.", anonymous: "Anonymer Beitrag", reply: "Antwort des Teams", waiting: "Noch keine Antwort", empty: "Für diese Haltestelle gibt es noch keine Beiträge." },
-  it: { eyebrow: "Riscontri", title: "Contributi pubblici", intro: "Le selezioni di altri passeggeri, anonime e senza dati personali.", anonymous: "Contributo anonimo", reply: "Risposta del team", waiting: "Nessuna risposta per ora", empty: "Non ci sono ancora contributi per questa fermata." },
-  en: { eyebrow: "Feedback", title: "Public posts", intro: "Selections from other passengers, anonymous and without personal details.", anonymous: "Anonymous post", reply: "Team reply", waiting: "No reply yet", empty: "There are no posts for this stop yet." },
+  de: { eyebrow: "Rückmeldungen", title: "Öffentliche Beiträge", intro: "Die Auswahl anderer Fahrgäste – anonym und ohne persönliche Angaben.", anonymous: "Anonymer Beitrag", reply: "Antwort des Teams", waiting: "Noch keine Antwort", empty: "Für diesen Haltepunkt gibt es noch keine Beiträge." },
+  it: { eyebrow: "Riscontri", title: "Contributi pubblici", intro: "Le selezioni di altri passeggeri, anonime e senza dati personali.", anonymous: "Contributo anonimo", reply: "Risposta del team", waiting: "Nessuna risposta per ora", empty: "Non ci sono ancora contributi per questo punto di fermata." },
+  en: { eyebrow: "Feedback", title: "Public posts", intro: "Selections from other passengers, anonymous and without personal details.", anonymous: "Anonymous post", reply: "Team reply", waiting: "No reply yet", empty: "There are no posts for this stop point yet." },
 } as const;
 
 type Language = keyof typeof copy;

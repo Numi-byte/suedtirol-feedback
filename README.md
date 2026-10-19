@@ -192,3 +192,37 @@ published stops, category and severity values, upload type and size, and the
 report-owned storage path. The browser additionally prevents duplicate clicks,
 checks the photo before making any request, and shows a recoverable error instead
 of replacing the page with a server error.
+
+### Feedback and comments for individual stop points
+
+Apply `supabase/migrations/20261019120000_stop_point_feedback_and_transport.sql`
+**before deploying both updated apps**. It requires all previous migrations.
+The migration adds a point reference to feedback, enforces the matching parent
+place, and exposes point-specific submission, lookup, and discussion RPCs.
+The old place-only submission/discussion RPCs are disabled. Visitors with an
+old feedback URL are returned to the map to choose a point; cached older
+clients must refresh after rollout.
+
+Existing reports keep their original place reference and an empty point
+reference. They remain reviewable and replyable in the protected inbox, marked
+as historic place feedback. They are not assigned to any point's public thread.
+Reports and their replies are retained when points/places are retired.
+
+Every existing and newly imported point defaults to `bus`. In the protected
+portal, select a place, then use **Edit stop points** to choose Bus, Train, or
+Cable car for each point. Re-importing points preserves these choices. Public
+point lists show the transport icon; map point tooltips identify the point by
+name and number. Each point has its own feedback and comment links. A place
+without imported points offers no point-feedback submission.
+
+Run the database checks against a disposable PostgreSQL container with Docker:
+
+```sh
+supabase/tests/run-stop-point-feedback.sh
+```
+
+This applies all migrations and checks point isolation, public/private reads,
+publication and archive rules, transport defaults and re-imports, atomic report
+creation, reply scoping, report retention, and the historic feedback workflow.
+It never connects to the hosted Supabase project. `supabase/tests/bootstrap.sql`
+provides minimal Auth/Storage stubs for the isolated tests only.

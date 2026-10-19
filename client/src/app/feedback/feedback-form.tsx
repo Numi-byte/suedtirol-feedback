@@ -76,7 +76,7 @@ function SubmitButton({ disabled, pending, copy }: { disabled: boolean; pending:
   );
 }
 
-export function FeedbackForm({ stopId, stopName, stopLocation, language: requestedLanguage }: { stopId: string; stopName: string; stopLocation: string; language?: string }) {
+export function FeedbackForm({ pointId, stopName, stopLocation, language: requestedLanguage }: { pointId: string; stopName: string; stopLocation: string; language?: string }) {
   const router = useRouter();
   const { language: siteLanguage, setLanguage } = useLanguage();
   const language: Language = requestedLanguage === "de" || requestedLanguage === "it" || requestedLanguage === "en" ? requestedLanguage : siteLanguage;
@@ -140,7 +140,7 @@ export function FeedbackForm({ stopId, stopName, stopLocation, language: request
     event.preventDefault();
     if (submissionStarted.current || pending) return;
 
-    if (!stopId || selected.length === 0) {
+    if (!pointId || selected.length === 0) {
       setShowCategoryError(true);
       setStep(1);
       setSubmitError("categoryError");
@@ -163,11 +163,11 @@ export function FeedbackForm({ stopId, stopName, stopLocation, language: request
 
     try {
       const { url, publishableKey } = getSupabaseConfig();
-      const reportResponse = await publicRequest(`${url}/rest/v1/rpc/create_feedback_report`, publishableKey, {
+      const reportResponse = await publicRequest(`${url}/rest/v1/rpc/create_stop_point_feedback`, publishableKey, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          p_bus_stop_id: stopId,
+          p_stop_point_id: pointId,
           p_categories: selected,
           p_severity: level,
           p_description: description.trim() || null,
@@ -203,7 +203,7 @@ export function FeedbackForm({ stopId, stopName, stopLocation, language: request
         }
       }
 
-      const handoff = new URLSearchParams({ lang: language, stop_id: stopId });
+      const handoff = new URLSearchParams({ lang: language, point_id: pointId });
       if (stopName.trim()) handoff.set("stop", stopName.trim());
       if (selected.length) handoff.set("cats", selected.join(","));
       handoff.set("sev", level);
@@ -242,7 +242,7 @@ export function FeedbackForm({ stopId, stopName, stopLocation, language: request
       </ol>
 
       <form className="feedback-wizard" onSubmit={handleSubmit} noValidate>
-        <input type="hidden" name="stop_id" value={stopId} />
+        <input type="hidden" name="point_id" value={pointId} />
         <input type="hidden" name="stop_name" value={stopName} />
         <input type="hidden" name="language" value={language} />
         <input type="hidden" name="severity" value={level} />
@@ -299,7 +299,7 @@ export function FeedbackForm({ stopId, stopName, stopLocation, language: request
           </div>
           <aside><span>i</span><p>{copy.thanksHint}</p></aside>
           {submitError && <p className="form-error" role="alert">{copy[submitError]}</p>}
-          <div className="submit-actions"><button type="button" disabled={pending} onClick={() => setStep(2)}>{copy.back}</button><SubmitButton disabled={!stopId} pending={pending} copy={copy} /></div>
+          <div className="submit-actions"><button type="button" disabled={pending} onClick={() => setStep(2)}>{copy.back}</button><SubmitButton disabled={!pointId} pending={pending} copy={copy} /></div>
         </fieldset>
       </form>
       <footer className="feedback-dialog-footer">

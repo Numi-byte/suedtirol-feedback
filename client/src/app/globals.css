@@ -311,6 +311,29 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
 .map-panel-feedback:hover { background: var(--blue-dark); }
 .map-panel-feedback svg { width: 16px; height: 16px; }
 .map-panel-comments { justify-self: end; }
+.stop-point-list { flex: 1; min-height: 0; margin: 12px 0 0; padding: 0; list-style: none; overflow-y: auto; overscroll-behavior: contain; }
+.stop-point-list > li { padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+.stop-point-list > li + li { margin-top: 10px; }
+.stop-point-list > li.is-selected { border-color: var(--blue); background: var(--blue-50); }
+.stop-point-name { display: flex; align-items: center; gap: 10px; }
+.stop-point-name > button { flex: 1; min-width: 0; padding: 0; border: 0; color: inherit; background: transparent; text-align: left; cursor: pointer; }
+.stop-point-name strong { display: block; font-size: 14px; overflow-wrap: anywhere; }
+.stop-point-name span:not(.transport-icon) { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; }
+.transport-icon { display: inline-flex; justify-content: center; align-items: center; flex: none; width: 28px; height: 28px; color: var(--blue); }
+.transport-icon img, .transport-icon svg { width: 28px; height: 28px; }
+.stop-point-actions { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.stop-point-actions .map-panel-feedback { flex: 1; justify-content: center; border-radius: 6px; font-size: 13px; font-weight: 700; }
+.point-list-status { padding-top: 16px; }
+.has-selected-stop .map-panel { display: flex; flex-direction: column; max-height: min(488px, calc(100% - 100px)); }
+.has-selected-stop .map-panel-label, .has-selected-stop .map-panel-heading { flex: none; }
+.stop-card-cta { border: 0; cursor: pointer; }
+.stop-card-points .stop-point-list { max-height: 420px; }
+@media (min-width: 768px) {
+  .map-panel { top: 26px; right: 26px; bottom: auto; left: auto; width: 360px; }
+}
+@media (min-width: 768px) and (max-width: 980px) {
+  .map-intro, .map-panel { width: calc(50% - 39px); }
+}
 
 .map-quick-heading { margin-top: 16px; padding: 10px 0 8px; border-top: 1px solid #aaa; color: #6d6d6d; font-size: 13px; }
 .map-stop-list { max-height: min(42vh, 330px); margin: 0; padding: 0; overflow-y: auto; list-style: none; }

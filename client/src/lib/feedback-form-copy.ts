@@ -1,14 +1,14 @@
 import type { Language } from "./i18n";
 
 const de = {
-  "title": "Feedback zur Haltestelle",
+  "title": "Feedback zum Haltepunkt",
   "required": "Pflichtfeld",
   "close": "Feedback schließen",
   "progress": "Fortschritt",
   "categoryStep": "Kategorie auswählen",
   "detailsStep": "Details angeben",
   "reviewStep": "Prüfen & senden",
-  "categoryIntro": "Wählen Sie eine oder mehrere Kategorien aus, die zu den fehlenden Elementen an dieser Haltestelle passen.",
+  "categoryIntro": "Wählen Sie eine oder mehrere Kategorien aus, die zu den fehlenden Elementen an diesem Haltepunkt passen.",
   "categoryError": "Bitte wählen Sie mindestens eine Kategorie aus.",
   "categoryHint": "Sie können mehrere Kategorien auswählen.",
   "next": "Weiter",
@@ -67,14 +67,14 @@ export type FeedbackFormCopy = typeof de;
 export const feedbackFormCopy: Record<Language, FeedbackFormCopy> = {
   de,
   it: {
-  "title": "Segnala un problema alla fermata",
+  "title": "Segnala un problema al punto di fermata",
   "required": "Campo obbligatorio",
   "close": "Chiudi il modulo",
   "progress": "Avanzamento",
   "categoryStep": "Scegli le categorie",
   "detailsStep": "Aggiungi i dettagli",
   "reviewStep": "Controlla e invia",
-  "categoryIntro": "Seleziona una o più categorie relative agli elementi mancanti in questa fermata.",
+  "categoryIntro": "Seleziona una o più categorie relative agli elementi mancanti in questo punto di fermata.",
   "categoryError": "Seleziona almeno una categoria.",
   "categoryHint": "Puoi selezionare più categorie.",
   "next": "Avanti",
@@ -128,14 +128,14 @@ export const feedbackFormCopy: Record<Language, FeedbackFormCopy> = {
   "defaultLocation": "Alto Adige"
 },
   en: {
-  "title": "Stop feedback",
+  "title": "Stop point feedback",
   "required": "Required field",
   "close": "Close feedback",
   "progress": "Progress",
   "categoryStep": "Choose categories",
   "detailsStep": "Add details",
   "reviewStep": "Review & send",
-  "categoryIntro": "Select one or more categories for what is missing at this stop.",
+  "categoryIntro": "Select one or more categories for what is missing at this stop point.",
   "categoryError": "Please select at least one category.",
   "categoryHint": "You can select more than one category.",
   "next": "Next",
