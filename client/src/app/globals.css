@@ -51,6 +51,7 @@
   --blue-50: #ecf6fa;
   --gray-50: #f5f8fa;
   --gray-600: #4b6673;
+  --gray-500: #64818f;
   --gray-800: #2a424d;
   --gray-950: #0f2733;
   --blue-800: #055a81;
@@ -119,27 +120,35 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
 /* ---------- header ---------- */
 .site-header {
   position: sticky; top: 0; z-index: 1200; background: #fff;
-  border-bottom: 1px solid var(--line); box-shadow: 0 2px 12px rgba(0, 43, 77, .06);
+  box-shadow: inset 0 -1px 0 var(--line), 0 2px 12px rgba(0, 43, 77, .06);
 }
 .header-inner {
   max-width: var(--shell); height: 96px; margin: auto; padding: 20px var(--shell-pad);
   display: flex; align-items: center; justify-content: space-between; gap: 32px;
 }
-nav { display: flex; gap: 8px; margin-left: auto; }
+.site-header nav { display: flex; gap: 8px; margin-left: auto; }
 /* Pill width follows its label; height, padding, radius and type are fixed.
    16px over a 24px line box is exactly the 56px pill less its 16px padding. */
-nav a {
+.site-header nav a {
   display: flex; align-items: center; height: 56px; padding: 16px; border-radius: 32px;
   font-family: var(--font-brand); font-size: 16px; font-weight: 500; line-height: 24px; letter-spacing: 0;
   color: var(--gray-800); white-space: nowrap; transition: background .15s;
 }
-nav a:hover { background: var(--blue-50); }
+.site-header nav a:hover { background: var(--blue-50); }
 .header-cta {
   display: flex; align-items: center; height: 56px; padding: 16px 24px; border-radius: 32px;
   font-family: var(--font-brand); font-size: 16px; font-weight: 700; line-height: 24px; letter-spacing: 0;
   color: #fff; background: var(--blue); white-space: nowrap; transition: background .15s;
 }
 .header-cta:hover { background: var(--blue-dark); }
+.mobile-menu-toggle, .site-header .mobile-navigation { display: none; }
+.mobile-menu-toggle {
+  position: relative; align-items: center; justify-content: center; gap: 8px;
+  height: 32px; padding: 0; border: 0; background: transparent; color: var(--gray-800);
+  font-size: 16px; line-height: 24px; cursor: pointer;
+}
+.mobile-menu-toggle::before { content: ""; position: absolute; inset: -6px 0; }
+.mobile-menu-toggle svg { width: 24px; height: 24px; color: var(--gray-500); }
 
 /* ---------- content pages ---------- */
 .content-page { padding-bottom: 72px; }
@@ -804,8 +813,21 @@ nav a:hover { background: var(--blue-50); }
 }
 
 /* ---------- responsive ---------- */
-@media (max-width: 1100px) {
-  nav { display: none; }
+@media (max-width: 1200px) {
+  :root { --header-h: 80px; }
+  .header-inner { height: 80px; padding: 24px 16px; gap: 16px; }
+  .site-header .brand-logo { height: 32px; }
+  .site-header .desktop-nav, .site-header .header-cta { display: none; }
+  .mobile-menu-toggle { display: flex; }
+  .site-header .mobile-navigation:not([hidden]) {
+    position: absolute; top: 100%; left: 0; right: 0; display: flex;
+    flex-direction: column; gap: 4px; margin: 0; padding: 16px;
+    max-height: calc(100dvh - 80px); overflow-y: auto;
+    background: #fff; box-shadow: 0 8px 16px rgba(0, 43, 77, .12);
+  }
+  .site-header .mobile-navigation a { flex: none; }
+  .site-header .mobile-navigation a[aria-current="page"] { background: var(--blue-50); }
+  .site-header .mobile-navigation .mobile-nav-cta { color: #fff; background: var(--blue); }
 }
 @media (max-width: 980px) {
   .feedback-wizard { grid-template-columns: 1fr; }
@@ -823,8 +845,7 @@ nav a:hover { background: var(--blue-50); }
   .map-stop-list { display: none; }
 }
 @media (max-width: 560px) {
-  :root { --header-h: 72px; --shell-pad: 18px; }
-  .header-inner { height: 72px; gap: 12px; padding: 8px var(--shell-pad); }
+  :root { --shell-pad: 18px; }
   .brand-logo { height: 34px; }
   .header-cta { display: none; }
   .brand-sub { display: none; }
