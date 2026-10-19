@@ -320,7 +320,7 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
 .stop-point-name strong { display: block; font-size: 14px; overflow-wrap: anywhere; }
 .stop-point-name span:not(.transport-icon) { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; }
 .transport-icon { display: inline-flex; justify-content: center; align-items: center; flex: none; width: 28px; height: 28px; color: var(--blue); }
-.transport-icon img, .transport-icon svg { width: 28px; height: 28px; }
+.transport-icon img { width: 100%; height: 100%; object-fit: contain; }
 .stop-point-actions { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
 .stop-point-actions .map-panel-feedback { flex: 1; justify-content: center; border-radius: 6px; font-size: 13px; font-weight: 700; }
 .point-list-status { padding-top: 16px; }
