@@ -49,7 +49,7 @@ export function SiteHeader() {
           <Link href="/about" aria-current={current("/about")}>{t.nav.about}</Link>
         </nav>
 
-        <Link className="header-cta" href="/stops">{t.nav.cta}</Link>
+        <Link className="header-cta" href="/">{t.nav.cta}</Link>
         <button ref={toggleRef} type="button" className="mobile-menu-toggle" aria-expanded={menuOpen}
           aria-controls="mobile-menu-dialog" aria-haspopup="dialog" onClick={() => setMenuOpen(open => !open)}>
           <span>{t.nav.menu}</span>
@@ -82,7 +82,7 @@ export function SiteHeader() {
               { href: "/stops", label: t.nav.find },
               { href: "/how-it-works", label: t.nav.how },
               { href: "/about", label: t.nav.about },
-              { href: "/stops", label: t.nav.cta, cta: true },
+              { href: "/", label: t.nav.cta, cta: true },
             ].map(item => <Link key={item.label} className={item.cta ? "mobile-nav-cta" : undefined}
               href={item.href} aria-current={!item.cta ? current(item.href) : undefined} onClick={() => setMenuOpen(false)}>
               <span>{item.label}</span>
