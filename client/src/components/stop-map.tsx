@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import type { Map as LeafletMap, Marker } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import busIcon from "@/components/Bus.png";
@@ -379,7 +380,10 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
           <>
             <span className="map-panel-label">{selected.municipality}</span>
             <h3>{stopName(selected)}</h3>
-            <button type="button" className="map-deselect" onClick={() => updateSelection(null)}>{labels.deselect}</button>
+            <button type="button" className="map-deselect" aria-label={labels.deselect} title={labels.deselect}
+              onClick={() => updateSelection(null)}>
+              <Image src="/icons/close.svg" width={12} height={12} alt="" aria-hidden="true" />
+            </button>
             {selected.is_accessible ? <div className="transport-tags"><span>{labels.accessible}</span></div> : null}
             <div className="map-panel-actions">
               <a className="map-panel-feedback" href={`/feedback?stop=${encodeURIComponent(selected.id)}&lang=${language}&name=${encodeURIComponent(stopName(selected))}`}>
