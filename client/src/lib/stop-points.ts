@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { TransportType } from "@/components/transport-icon";
 
-export type StopPoint = { id: string; point_number: string; latitude: number; longitude: number; name_de: string; name_it: string };
+export type StopPoint = { id: string; point_number: string; latitude: number; longitude: number; name_de: string; name_it: string; transport_type: TransportType };
 type PointState = { placeId: string | null; points: StopPoint[]; status: "loading" | "ready" | "error" };
 
 /** Abort stale selections, and never render one place's points under another. */

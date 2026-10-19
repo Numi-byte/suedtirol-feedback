@@ -20,7 +20,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>("de");
 
   useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
+    const requested = new URLSearchParams(window.location.search).get("lang");
+    const stored = requested === "de" || requested === "it" || requested === "en"
+      ? requested : window.localStorage.getItem(STORAGE_KEY);
     if (stored === "de" || stored === "it" || stored === "en") setLanguage(stored);
   }, []);
 

@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { StopImportForm } from "./stop-import-form";
+import { EfaStopImport } from "./efa-stop-import";
 import { StopPointImportForm } from "./stop-point-import-form";
 import type { StopPointImportLabels } from "./stop-point-import-form";
 
-type ImportLabels = { kicker: string; title: string; subtitle: string; file: string; active: string; submit: string; hint: string };
+type ImportLabels = { efaButton: string; efaHint: string; kicker: string; title: string; subtitle: string; file: string; active: string; submit: string; hint: string };
 type PointLabels = StopPointImportLabels & { kicker: string; title: string; subtitle: string; toggleLabel: string; places: string; points: string };
 
 export function StopDataImport({ places, points }: { places: ImportLabels; points: PointLabels }) {
@@ -19,7 +20,7 @@ export function StopDataImport({ places, points }: { places: ImportLabels; point
     </div>
     <div className="card-heading"><span>{current.kicker}</span><h2>{current.title}</h2><p>{current.subtitle}</p></div>
     {mode === "places"
-      ? <StopImportForm labels={places} onPendingChange={setPending} />
+      ? <><EfaStopImport labels={places} pending={pending} onPendingChange={setPending} /><StopImportForm labels={places} disabled={pending} onPendingChange={setPending} /></>
       : <StopPointImportForm labels={points} onPendingChange={setPending} />}
   </>;
 }

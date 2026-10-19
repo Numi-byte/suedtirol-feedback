@@ -363,3 +363,9 @@ form:not(.language-switch form) button:not(.editor-archive, .restore, .reply-can
   .feedback-heading-row, .feedback-entry > header { align-items: flex-start; flex-direction: column; }
   .feedback-meta { align-items: flex-start; flex-direction: column; gap: 7px; }
 }
+
+.point-editor { grid-column: 1 / -1; scroll-margin-top: 24px; }
+.point-editor form { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(160px, 240px) auto; align-items: end; gap: 16px; padding: 16px 0; border-bottom: 1px solid #d7e2ea; }
+.point-editor h3 { margin: 0; align-self: center; font-size: 15px; }
+.point-editor label { display: grid; gap: 8px; }
+@media (max-width: 680px) { .point-editor form { grid-template-columns: 1fr; } }

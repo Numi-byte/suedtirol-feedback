@@ -5,6 +5,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import busIcon from "@/components/Bus.png";
+import { useLanguage } from "@/components/language-provider";
+import { feedbackFormCopy } from "@/lib/feedback-form-copy";
+import type { FeedbackFormCopy } from "@/lib/feedback-form-copy";
+import type { Language } from "@/lib/i18n";
 import { getSupabaseConfig } from "@/lib/supabase/config";
 
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
@@ -26,26 +30,26 @@ async function publicRequest(url: string, publishableKey: string, init: RequestI
   });
 }
 
-const categories = [
-  { slug: "weather_protection", icon: "shelter", label: "Witterungsschutz fehlt" },
-  { slug: "seating", icon: "seat", label: "Sitzplatz fehlt" },
-  { slug: "safe_sidewalk", icon: "walk", label: "Sicherer Gehweg zur Haltestelle fehlt" },
-  { slug: "safe_crossing", icon: "crossing", label: "Keine sichere Querung der Straße zur Haltestelle" },
-  { slug: "passenger_information", icon: "information", label: "Fahrgastinformation fehlt oder ist mangelhaft" },
-  { slug: "lighting", icon: "light", label: "Beleuchtung fehlt" },
-  { slug: "accessibility", icon: "accessible", label: "Barrierefreiheit nicht gegeben" },
-  { slug: "shading", icon: "sun", label: "Beschattung fehlt" },
-  { slug: "bicycle_parking", icon: "bike", label: "Fahrradabstellplatz fehlt" },
-  { slug: "waste_bin", icon: "bin", label: "Mülleimer fehlt" },
+const categoryDefinitions = [
+  { slug: "weather_protection", icon: "shelter" },
+  { slug: "seating", icon: "seat" },
+  { slug: "safe_sidewalk", icon: "walk" },
+  { slug: "safe_crossing", icon: "crossing" },
+  { slug: "passenger_information", icon: "information" },
+  { slug: "lighting", icon: "light" },
+  { slug: "accessibility", icon: "accessible" },
+  { slug: "shading", icon: "sun" },
+  { slug: "bicycle_parking", icon: "bike" },
+  { slug: "waste_bin", icon: "bin" },
 ] as const;
 
-const severity = [
-  { value: "low", label: "gering", color: "#37a85a" },
-  { value: "medium", label: "mittel", color: "#efa51b" },
-  { value: "high", label: "hoch", color: "#e64a46" },
+const severityDefinitions = [
+  { value: "low", color: "#37a85a" },
+  { value: "medium", color: "#efa51b" },
+  { value: "high", color: "#e64a46" },
 ] as const;
 
-type IconName = typeof categories[number]["icon"];
+type IconName = typeof categoryDefinitions[number]["icon"];
 
 function CategoryIcon({ name }: { name: IconName }) {
   const paths: Record<IconName, ReactNode> = {
@@ -63,17 +67,25 @@ function CategoryIcon({ name }: { name: IconName }) {
   return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>;
 }
 
-function SubmitButton({ disabled, pending }: { disabled: boolean; pending: boolean }) {
+function SubmitButton({ disabled, pending, copy }: { disabled: boolean; pending: boolean; copy: FeedbackFormCopy }) {
   return (
     <button type="submit" disabled={disabled || pending} aria-disabled={disabled || pending}>
       {pending ? <span className="button-spinner" aria-hidden="true" /> : <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="m21 3-7.5 18-3.8-7.7L2 9.5Z" /><path d="m9.7 13.3 5-4.5" /></svg>}
-      {pending ? "Feedback wird gesendet …" : "Feedback senden"}
+      {pending ? copy.sending : copy.send}
     </button>
   );
 }
 
-export function FeedbackForm({ stopId, stopName, stopLocation, language }: { stopId: string; stopName: string; stopLocation: string; language: string }) {
+export function FeedbackForm({ pointId, stopName, stopLocation, language: requestedLanguage }: { pointId: string; stopName: string; stopLocation: string; language?: string }) {
   const router = useRouter();
+  const { language: siteLanguage, setLanguage } = useLanguage();
+  const language: Language = requestedLanguage === "de" || requestedLanguage === "it" || requestedLanguage === "en" ? requestedLanguage : siteLanguage;
+  useEffect(() => {
+    if (requestedLanguage === "de" || requestedLanguage === "it" || requestedLanguage === "en") setLanguage(requestedLanguage);
+  }, [requestedLanguage, setLanguage]);
+  const copy = feedbackFormCopy[language];
+  const categories = categoryDefinitions.map(item => ({ ...item, label: copy[item.slug] }));
+  const severity = severityDefinitions.map(item => ({ ...item, label: copy[item.value] }));
   const [step, setStep] = useState(1);
   const [selected, setSelected] = useState<string[]>([]);
   const [level, setLevel] = useState("medium");
@@ -81,8 +93,8 @@ export function FeedbackForm({ stopId, stopName, stopLocation, language }: { sto
   const [contact, setContact] = useState(false);
   const [email, setEmail] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
-  const [photoError, setPhotoError] = useState("");
-  const [submitError, setSubmitError] = useState("");
+  const [photoError, setPhotoError] = useState<"photoError" | null>(null);
+  const [submitError, setSubmitError] = useState<"categoryError" | "emailError" | "photoError" | "sendError" | null>(null);
   const [showCategoryError, setShowCategoryError] = useState(false);
   const [showEmailError, setShowEmailError] = useState(false);
   const [pending, setPending] = useState(false);
@@ -117,45 +129,45 @@ export function FeedbackForm({ stopId, stopName, stopLocation, language }: { sto
   function selectPhoto(file: File | null) {
     if (file && (!photoExtensions.has(file.type) || file.size > MAX_PHOTO_BYTES)) {
       setPhoto(null);
-      setPhotoError("Das Foto muss JPG, PNG oder WebP und höchstens 10 MB groß sein.");
+      setPhotoError("photoError");
       return;
     }
     setPhoto(file);
-    setPhotoError("");
+    setPhotoError(null);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (submissionStarted.current || pending) return;
 
-    if (!stopId || selected.length === 0) {
+    if (!pointId || selected.length === 0) {
       setShowCategoryError(true);
       setStep(1);
-      setSubmitError("Bitte wählen Sie mindestens eine Kategorie aus.");
+      setSubmitError("categoryError");
       return;
     }
     if (!emailIsValid) {
       setShowEmailError(true);
       setStep(2);
-      setSubmitError("Bitte geben Sie eine gültige E-Mail-Adresse ein.");
+      setSubmitError("emailError");
       return;
     }
     if (photo && (!photoExtensions.has(photo.type) || photo.size > MAX_PHOTO_BYTES)) {
-      setSubmitError("Das Foto muss JPG, PNG oder WebP und höchstens 10 MB groß sein.");
+      setSubmitError("photoError");
       return;
     }
 
     submissionStarted.current = true;
     setPending(true);
-    setSubmitError("");
+    setSubmitError(null);
 
     try {
       const { url, publishableKey } = getSupabaseConfig();
-      const reportResponse = await publicRequest(`${url}/rest/v1/rpc/create_feedback_report`, publishableKey, {
+      const reportResponse = await publicRequest(`${url}/rest/v1/rpc/create_stop_point_feedback`, publishableKey, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          p_bus_stop_id: stopId,
+          p_stop_point_id: pointId,
           p_categories: selected,
           p_severity: level,
           p_description: description.trim() || null,
@@ -191,7 +203,7 @@ export function FeedbackForm({ stopId, stopName, stopLocation, language }: { sto
         }
       }
 
-      const handoff = new URLSearchParams({ lang: language, stop_id: stopId });
+      const handoff = new URLSearchParams({ lang: language, point_id: pointId });
       if (stopName.trim()) handoff.set("stop", stopName.trim());
       if (selected.length) handoff.set("cats", selected.join(","));
       handoff.set("sev", level);
@@ -201,7 +213,7 @@ export function FeedbackForm({ stopId, stopName, stopLocation, language }: { sto
     } catch {
       submissionStarted.current = false;
       setPending(false);
-      setSubmitError("Das Feedback konnte gerade nicht gesendet werden. Bitte versuchen Sie es erneut.");
+      setSubmitError("sendError");
     }
   }
 
@@ -209,13 +221,20 @@ export function FeedbackForm({ stopId, stopName, stopLocation, language }: { sto
     <section className="feedback-dialog" aria-labelledby="feedback-title">
       <header className="feedback-heading">
         <span className="stop-symbol"><Image src={busIcon} width={54} height={54} alt="" priority /></span>
-        <div className="feedback-heading-copy"><h1 id="feedback-title">Feedback zur Haltestelle</h1><p>●&nbsp; {stopName} · {stopLocation}</p></div>
-        <p className="heading-required"><span>*</span> Pflichtfeld</p>
-        <Link href="/" aria-label="Feedback schließen">×</Link>
+        <div className="feedback-heading-copy"><h1 id="feedback-title">{copy.title}</h1><p>●&nbsp; {stopName || copy.defaultStop} · {stopLocation || copy.defaultLocation}</p></div>
+        <label className="feedback-language"><span className="sr-only">{copy.language}</span><select aria-label={copy.language} value={language} onChange={event => {
+          const next = event.target.value as Language;
+          setLanguage(next);
+          const url = new URL(window.location.href);
+          url.searchParams.set("lang", next);
+          router.replace(`${url.pathname}${url.search}${url.hash}`, { scroll: false });
+        }}><option value="de">Deutsch</option><option value="it">Italiano</option><option value="en">English</option></select></label>
+        <p className="heading-required"><span>*</span> {copy.required}</p>
+        <Link href="/" aria-label={copy.close}>×</Link>
       </header>
 
-      <ol className="feedback-progress" aria-label="Fortschritt">
-        {["Kategorie auswählen", "Details angeben", "Prüfen & senden"].map((label, index) => (
+      <ol className="feedback-progress" aria-label={copy.progress}>
+        {[copy.categoryStep, copy.detailsStep, copy.reviewStep].map((label, index) => (
           <li key={label} className={step >= index + 1 ? "active" : ""} aria-current={step === index + 1 ? "step" : undefined}>
             <span>{index + 1}</span><b>{label}</b>
           </li>
@@ -223,69 +242,69 @@ export function FeedbackForm({ stopId, stopName, stopLocation, language }: { sto
       </ol>
 
       <form className="feedback-wizard" onSubmit={handleSubmit} noValidate>
-        <input type="hidden" name="stop_id" value={stopId} />
+        <input type="hidden" name="point_id" value={pointId} />
         <input type="hidden" name="stop_name" value={stopName} />
         <input type="hidden" name="language" value={language} />
         <input type="hidden" name="severity" value={level} />
 
         <fieldset className={`wizard-panel ${step === 1 ? "current" : ""} ${showCategoryError ? "panel-invalid" : ""}`} aria-describedby={showCategoryError ? "category-error" : undefined}>
-          <legend><span>1</span> Kategorie auswählen <b className="required-mark" aria-label="Pflichtfeld">*</b></legend>
-          <p>Wählen Sie eine oder mehrere Kategorien aus, die zu den fehlenden Elementen an dieser Haltestelle passen.</p>
+          <legend><span>1</span> {copy.categoryStep} <b className="required-mark" aria-label={copy.required}>*</b></legend>
+          <p>{copy.categoryIntro}</p>
           <div className="category-list">
             {categories.map((item) => <label key={item.slug} className={selected.includes(item.slug) ? "checked" : ""}>
               <input type="checkbox" name="categories" value={item.slug} checked={selected.includes(item.slug)} onChange={() => toggleCategory(item.slug)} />
               <i><CategoryIcon name={item.icon} /></i><span>{item.label}</span>
             </label>)}
           </div>
-          {showCategoryError && <p id="category-error" className="field-error" role="alert">Bitte wählen Sie mindestens eine Kategorie aus.</p>}
-          <small className="panel-hint"><span>i</span> Sie können mehrere Kategorien auswählen.</small>
-          <button type="button" className="mobile-next" onClick={goToDetails}>Weiter</button>
+          {showCategoryError && <p id="category-error" className="field-error" role="alert">{copy.categoryError}</p>}
+          <small className="panel-hint"><span>i</span> {copy.categoryHint}</small>
+          <button type="button" className="mobile-next" onClick={goToDetails}>{copy.next}</button>
         </fieldset>
 
         <fieldset className={`wizard-panel ${step === 2 ? "current" : ""}`}>
-          <legend><span>2</span> Details angeben</legend>
-          <label className="field-label">Wie stark beeinträchtigt das Problem? <em>(optional)</em></label>
+          <legend><span>2</span> {copy.detailsStep}</legend>
+          <label className="field-label">{copy.severityQuestion} <em>{copy.optional}</em></label>
           <div className="severity-options">
             {severity.map((item) => <label key={item.value} className={level === item.value ? "checked" : ""}>
               <input type="radio" name="severity_ui" value={item.value} checked={level === item.value} onChange={() => setLevel(item.value)} />
               <i style={{ background: item.color }} />{item.label}
             </label>)}
           </div>
-          <label className="field-label" htmlFor="description">Beschreiben Sie kurz, was fehlt oder verbessert werden sollte.</label>
+          <label className="field-label" htmlFor="description">{copy.description}</label>
           <textarea id="description" name="description" maxLength={500} rows={5} value={description} onChange={(event) => setDescription(event.target.value)} />
           <span className="character-count">{description.length} / 500</span>
-          <label className="field-label" htmlFor="photo">Foto hinzufügen <em>(optional)</em></label>
+          <label className="field-label" htmlFor="photo">{copy.addPhoto} <em>{copy.optional}</em></label>
           <label className="photo-upload" htmlFor="photo">
             <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => selectPhoto(event.target.files?.[0] ?? null)} />
-            {preview ? <Image src={preview} width={240} height={135} unoptimized alt="Vorschau des ausgewählten Fotos" /> : <><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M7 18H5a4 4 0 0 1-.4-8A7 7 0 0 1 18 8a5 5 0 0 1 1 9.9H17" /><path d="m9 13 3-3 3 3M12 10v10" /></svg><span><b>Foto hierher ziehen oder klicken, um Dateien auszuwählen</b><small>JPG, PNG oder WebP, max. 10 MB</small></span></>}
+            {preview ? <Image src={preview} width={240} height={135} unoptimized alt={copy.photoPreview} /> : <><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M7 18H5a4 4 0 0 1-.4-8A7 7 0 0 1 18 8a5 5 0 0 1 1 9.9H17" /><path d="m9 13 3-3 3 3M12 10v10" /></svg><span><b>{copy.photoDrop}</b><small>{copy.photoTypes}</small></span></>}
           </label>
-          {photoError && <p className="form-error" role="alert">{photoError}</p>}
-          <label className="contact-toggle"><span>Ich möchte bei Rückfragen kontaktiert werden <em>(optional)</em></span><input type="checkbox" name="consent_to_contact" checked={contact} onChange={(event) => { setContact(event.target.checked); setShowEmailError(false); }} /></label>
-          {contact && <div className={`email-field ${showEmailError ? "field-invalid" : ""}`}><label className="field-label" htmlFor="email">E-Mail-Adresse <b className="required-mark" aria-label="Pflichtfeld">*</b></label><input id="email" name="email" type="email" maxLength={320} required aria-invalid={showEmailError} aria-describedby={showEmailError ? "email-error" : undefined} value={email} onChange={(event) => { setEmail(event.target.value); setShowEmailError(false); }} />{showEmailError && <p id="email-error" className="field-error" role="alert">Bitte geben Sie eine gültige E-Mail-Adresse ein.</p>}</div>}
-          <p className="privacy-note"><span>▣</span> Ihre Daten werden ausschließlich zur Bearbeitung dieses Feedbacks verwendet und nicht veröffentlicht. <Link href="/about">Datenschutz</Link></p>
-          <p className="required-note"><span>*</span> Pflichtfeld</p>
-          <div className="mobile-actions"><button type="button" onClick={() => setStep(1)}>Zurück</button><button type="button" onClick={goToReview}>Weiter</button></div>
+          {photoError && <p className="form-error" role="alert">{copy[photoError]}</p>}
+          <label className="contact-toggle"><span>{copy.contactToggle} <em>{copy.optional}</em></span><input type="checkbox" name="consent_to_contact" checked={contact} onChange={(event) => { setContact(event.target.checked); setShowEmailError(false); }} /></label>
+          {contact && <div className={`email-field ${showEmailError ? "field-invalid" : ""}`}><label className="field-label" htmlFor="email">{copy.email} <b className="required-mark" aria-label={copy.required}>*</b></label><input id="email" name="email" type="email" maxLength={320} required aria-invalid={showEmailError} aria-describedby={showEmailError ? "email-error" : undefined} value={email} onChange={(event) => { setEmail(event.target.value); setShowEmailError(false); }} />{showEmailError && <p id="email-error" className="field-error" role="alert">{copy.emailError}</p>}</div>}
+          <p className="privacy-note"><span>▣</span> {copy.privacy} <Link href="/about">{copy.privacyLink}</Link></p>
+          <p className="required-note"><span>*</span> {copy.required}</p>
+          <div className="mobile-actions"><button type="button" onClick={() => setStep(1)}>{copy.back}</button><button type="button" onClick={goToReview}>{copy.next}</button></div>
         </fieldset>
 
         <fieldset className={`wizard-panel review-panel ${step === 3 ? "current" : ""}`}>
-          <legend><span>3</span> Prüfen & senden</legend>
-          <p>Bitte prüfen Sie Ihre Angaben, bevor Sie das Feedback senden.</p>
+          <legend><span>3</span> {copy.reviewStep}</legend>
+          <p>{copy.reviewIntro}</p>
           <div className="review-card">
-            <h3>Gewählte Kategorien</h3>
-            {activeCategories.length ? activeCategories.map((item) => <div className="review-category" key={item.slug}><i><CategoryIcon name={item.icon} /></i>{item.label}</div>) : <p className="review-empty">Noch keine Kategorie gewählt.</p>}
-            <h3>Problemstärke</h3><p><b className={`severity-dot ${level}`} />{severity.find((item) => item.value === level)?.label}</p>
-            <h3>Ihre Beschreibung</h3><p>{description || "Keine Beschreibung angegeben."}</p>
-            {preview && <><h3>Foto</h3><Image className="review-photo" src={preview} width={88} height={60} unoptimized alt="Ausgewähltes Foto" /></>}
-            <h3>Kontakt</h3><p>{contact ? <>Ich möchte kontaktiert werden<br />{email}</> : "Keine Kontaktaufnahme gewünscht"}</p>
+            <h3>{copy.selectedCategories}</h3>
+            {activeCategories.length ? activeCategories.map((item) => <div className="review-category" key={item.slug}><i><CategoryIcon name={item.icon} /></i>{item.label}</div>) : <p className="review-empty">{copy.noCategory}</p>}
+            <h3>{copy.severity}</h3><p><b className={`severity-dot ${level}`} />{severity.find((item) => item.value === level)?.label}</p>
+            <h3>{copy.yourDescription}</h3><p>{description || copy.noDescription}</p>
+            {preview && <><h3>{copy.photo}</h3><Image className="review-photo" src={preview} width={88} height={60} unoptimized alt={copy.selectedPhoto} /></>}
+            <h3>{copy.contact}</h3><p>{contact ? <>{copy.contactYes}<br />{email}</> : copy.contactNo}</p>
           </div>
-          <aside><span>i</span><p>Ihr Feedback hilft uns, Haltestellen sicherer und komfortabler zu machen. Vielen Dank!</p></aside>
-          {submitError && <p className="form-error" role="alert">{submitError}</p>}
-          <div className="submit-actions"><button type="button" disabled={pending} onClick={() => setStep(2)}>Zurück</button><SubmitButton disabled={!stopId} pending={pending} /></div>
+          <aside><span>i</span><p>{copy.thanksHint}</p></aside>
+          {submitError && <p className="form-error" role="alert">{copy[submitError]}</p>}
+          <div className="submit-actions"><button type="button" disabled={pending} onClick={() => setStep(2)}>{copy.back}</button><SubmitButton disabled={!pointId} pending={pending} copy={copy} /></div>
         </fieldset>
       </form>
       <footer className="feedback-dialog-footer">
-        <span><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M12 3 4 6v5c0 5 3.3 8.5 8 10 4.7-1.5 8-5 8-10V6Z" /><path d="m9 12 2 2 4-4" /></svg> Gemeinsam für bessere Mobilität.</span>
-        <span>Haben Sie Fragen? <Link href="/about">Kundenservice kontaktieren ↗</Link></span>
+        <span><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M12 3 4 6v5c0 5 3.3 8.5 8 10 4.7-1.5 8-5 8-10V6Z" /><path d="m9 12 2 2 4-4" /></svg> {copy.tagline}</span>
+        <span>{copy.questions} <Link href="/about">{copy.customerService}</Link></span>
       </footer>
     </section>
   );

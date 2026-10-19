@@ -43,9 +43,9 @@ const SEVERITY_LABELS: Record<string, Record<Language, string>> = {
 };
 
 const SUMMARY_LABELS: Record<Language, { stop: string; categories: string; severity: string; description: string; subject: string }> = {
-  de: { stop: "Haltestelle", categories: "Kategorien", severity: "Problemstärke", description: "Beschreibung", subject: "Rückmeldung zur Haltestelle" },
-  it: { stop: "Fermata", categories: "Categorie", severity: "Urgenza", description: "Descrizione", subject: "Riscontro sulla fermata" },
-  en: { stop: "Stop", categories: "Categories", severity: "Severity", description: "Description", subject: "Feedback on the stop" },
+  de: { stop: "Haltepunkt", categories: "Kategorien", severity: "Problemstärke", description: "Beschreibung", subject: "Rückmeldung zum Haltepunkt" },
+  it: { stop: "Punto di fermata", categories: "Categorie", severity: "Urgenza", description: "Descrizione", subject: "Riscontro sul punto di fermata" },
+  en: { stop: "Stop point", categories: "Categories", severity: "Severity", description: "Description", subject: "Feedback on the stop point" },
 };
 
 export type Handoff = { stop: string; categories: string[]; severity: string; description: string };

@@ -5,9 +5,9 @@ const OSM_ATTRIBUTION = '© <a href="https://www.openstreetmap.org/copyright">Op
 
 export const translations = {
   de: {
-    nav: { find: "Haltestellen", how: "So funktioniert's", about: "Über das Projekt", language: "Sprache ändern", service: "Service Desk", cta: "Feedback geben", home: "Startseite" },
+    nav: { menu: "Menu", closeMenu: "Menü schließen", navigation: "Hauptnavigation", find: "Haltestellen", how: "So funktioniert's", about: "Über das Projekt", language: "Sprache ändern", service: "Service Desk", cta: "Feedback geben", home: "Startseite" },
     map: {
-      stopPoints: "Haltepunkte", pointsLoading: "Haltepunkte werden geladen …", pointsError: "Haltepunkte konnten nicht geladen werden.", noPoints: "Noch keine Haltepunkte importiert.",
+      deselect: "Auswahl aufheben", expandSearch: "Haltestellensuche öffnen", pointLabel: "Haltepunkt", selectPoints: "Haltepunkte anzeigen", showPointOnMap: "Haltepunkt auf der Karte ansehen", collapseSearch: "Suche minimieren", stopPoints: "Haltepunkte", pointsLoading: "Haltepunkte werden geladen …", pointsError: "Haltepunkte konnten nicht geladen werden.", noPoints: "Noch keine Haltepunkte importiert.",
       eyebrow: "Haltestellenkarte", title: "Finde deine Haltestelle", stopsAvailable: "Haltestellen verfügbar",
       loading: "Karte wird geladen …", loadError: "Die Karte konnte nicht geladen werden.",
       choose: "Wähle eine Haltestelle auf der Karte, um Feedback zu geben.",
@@ -32,12 +32,12 @@ export const translations = {
       stepsTitle: "In vier Schritten zur Rückmeldung",
       steps: [
         { title: "Haltestelle auswählen", copy: "Öffne die Karte auf der Startseite und klicke auf eine Haltestelle. Oder suche sie unter „Haltestellen“ nach Name, Bahnhof oder Gemeinde." },
-        { title: "Bewertung abgeben", copy: "Vergib eine Gesamtnote von 1 bis 5 und bewerte anschließend die einzelnen Bereiche von der Sauberkeit bis zur Barrierefreiheit." },
-        { title: "Ausstattung angeben", copy: "Halte fest, ob Wetterschutz, Sitzgelegenheit und Beleuchtung vorhanden sind, und beschreibe im Textfeld, was konkret verbessert werden soll." },
+        { title: "Problem einstufen", copy: "Wähle die passenden Kategorien und stufe die Beeinträchtigung als gering, mittel oder hoch ein." },
+        { title: "Details ergänzen", copy: "Beschreibe, was verbessert werden soll. Du kannst auch ein Foto hinzufügen und freiwillig eine E-Mail-Adresse angeben." },
         { title: "Absenden", copy: "Ohne Anmeldung, in rund zwei Minuten. Eine E-Mail-Adresse kannst du freiwillig angeben, wenn wir zu deiner Rückmeldung nachfragen dürfen." },
       ],
       criteriaTitle: "Was du bewerten kannst",
-      criteriaCopy: "Jede Haltestelle wird in fünf Bereichen mit einer Note von 1 bis 5 bewertet. Dazu hältst du fest, was tatsächlich vorhanden ist.",
+      criteriaCopy: "Wähle aus, was an der Haltestelle fehlt, und gib die Problemstärke mit gering, mittel oder hoch an. Eine Beschreibung und ein Foto sind optional.",
       criteria: [
         { title: "Sauberkeit", copy: "Zustand von Wartehäuschen, Sitzbank und Umfeld: Abfall, Verschmutzung und Beschädigungen." },
         { title: "Sicherheitsgefühl", copy: "Wie sicher fühlst du dich beim Warten – besonders am Abend und in der dunklen Jahreszeit?" },
@@ -49,7 +49,7 @@ export const translations = {
       afterTitle: "Was mit deiner Rückmeldung passiert",
       after: [
         { title: "Gesammelt", copy: "Jede Bewertung wird gespeichert und genau der Haltestelle zugeordnet, die du ausgewählt hast." },
-        { title: "Ausgewertet", copy: "Im internen Portal sehen die zuständigen Stellen alle Einzelnoten, die Ausstattung und deinen Kommentar." },
+        { title: "Ausgewertet", copy: "Im internen Portal sehen die zuständigen Stellen die gewählten Kategorien, die Problemstärke und deine Beschreibung." },
         { title: "Verbessert", copy: "So wird sichtbar, an welchen Haltestellen Wetterschutz, Beleuchtung oder Barrierefreiheit am dringendsten fehlen." },
       ],
       faqTitle: "Häufige Fragen",
@@ -106,9 +106,9 @@ export const translations = {
     footer: { note: "Ein Projekt für den öffentlichen Nahverkehr in Südtirol.", links: ["Impressum", "Datenschutz", "Kontakt"] },
   },
   it: {
-    nav: { find: "Fermate", how: "Come funziona", about: "Il progetto", language: "Cambia lingua", service: "Service Desk", cta: "Lascia un feedback", home: "Home" },
+    nav: { menu: "Menu", closeMenu: "Chiudi menu", navigation: "Navigazione principale", find: "Fermate", how: "Come funziona", about: "Il progetto", language: "Cambia lingua", service: "Service Desk", cta: "Lascia un feedback", home: "Home" },
     map: {
-      stopPoints: "punti di fermata", pointsLoading: "Caricamento dei punti di fermata …", pointsError: "Impossibile caricare i punti di fermata.", noPoints: "Nessun punto di fermata importato.",
+      deselect: "Deseleziona fermata", expandSearch: "Apri ricerca fermate", pointLabel: "Punto di fermata", selectPoints: "Mostra punti di fermata", showPointOnMap: "Vedi punto sulla mappa", collapseSearch: "Riduci ricerca", stopPoints: "punti di fermata", pointsLoading: "Caricamento dei punti di fermata …", pointsError: "Impossibile caricare i punti di fermata.", noPoints: "Nessun punto di fermata importato.",
       eyebrow: "Mappa delle fermate", title: "Trova la tua fermata", stopsAvailable: "fermate disponibili",
       loading: "Caricamento della mappa …", loadError: "Non è stato possibile caricare la mappa.",
       choose: "Scegli una fermata sulla mappa per lasciare un feedback.",
@@ -133,12 +133,12 @@ export const translations = {
       stepsTitle: "In quattro passi",
       steps: [
         { title: "Scegli la fermata", copy: "Apri la mappa in home page e clicca su una fermata. Oppure cercala in «Fermate» per nome, stazione o comune." },
-        { title: "Dai la tua valutazione", copy: "Assegna un voto complessivo da 1 a 5 e valuta poi i singoli aspetti, dalla pulizia all'accessibilità." },
-        { title: "Indica la dotazione", copy: "Segnala se ci sono pensilina, posti a sedere e illuminazione e descrivi nel campo di testo che cosa andrebbe migliorato." },
+        { title: "Indica la gravità", copy: "Seleziona le categorie pertinenti e indica se la gravità del problema è bassa, media o alta." },
+        { title: "Aggiungi dettagli", copy: "Descrivi che cosa dovrebbe essere migliorato. Puoi aggiungere una foto e, se desideri, un indirizzo e-mail." },
         { title: "Invia", copy: "Senza registrazione, in circa due minuti. Puoi lasciare un indirizzo e-mail se acconsenti a essere ricontattato." },
       ],
       criteriaTitle: "Che cosa puoi valutare",
-      criteriaCopy: "Ogni fermata viene valutata in cinque ambiti con un voto da 1 a 5. In più indichi che cosa è davvero presente.",
+      criteriaCopy: "Seleziona che cosa manca alla fermata e indica la gravità del problema: bassa, media o alta. Descrizione e foto sono facoltative.",
       criteria: [
         { title: "Pulizia", copy: "Stato della pensilina, della panchina e dell'area circostante: rifiuti, sporcizia e danneggiamenti." },
         { title: "Senso di sicurezza", copy: "Quanto ti senti sicuro mentre aspetti, soprattutto la sera e nei mesi bui." },
@@ -150,7 +150,7 @@ export const translations = {
       afterTitle: "Che cosa succede al tuo riscontro",
       after: [
         { title: "Raccolto", copy: "Ogni valutazione viene salvata e collegata esattamente alla fermata che hai scelto." },
-        { title: "Analizzato", copy: "Nel portale interno gli uffici competenti vedono tutti i voti, la dotazione e il tuo commento." },
+        { title: "Analizzato", copy: "Nel portale interno gli uffici competenti vedono le categorie selezionate, la gravità del problema e la tua descrizione." },
         { title: "Migliorato", copy: "Così emerge dove mancano con più urgenza pensiline, illuminazione o accessibilità." },
       ],
       faqTitle: "Domande frequenti",
@@ -207,9 +207,9 @@ export const translations = {
     footer: { note: "Un progetto per il trasporto pubblico locale in Alto Adige.", links: ["Note legali", "Privacy", "Contatti"] },
   },
   en: {
-    nav: { find: "Stops", how: "How it works", about: "About the project", language: "Change language", service: "Service desk", cta: "Give feedback", home: "Home" },
+    nav: { menu: "Menu", closeMenu: "Close menu", navigation: "Primary navigation", find: "Stops", how: "How it works", about: "About the project", language: "Change language", service: "Service desk", cta: "Give feedback", home: "Home" },
     map: {
-      stopPoints: "stop points", pointsLoading: "Loading stop points …", pointsError: "Stop points could not be loaded.", noPoints: "No stop points imported yet.",
+      deselect: "Deselect stop", expandSearch: "Open stop search", pointLabel: "Stop point", selectPoints: "Show stop points", showPointOnMap: "View stop point on the map", collapseSearch: "Minimize search", stopPoints: "stop points", pointsLoading: "Loading stop points …", pointsError: "Stop points could not be loaded.", noPoints: "No stop points imported yet.",
       eyebrow: "Stop map", title: "Find your stop", stopsAvailable: "stops available",
       loading: "Loading map …", loadError: "The map could not be loaded.",
       choose: "Pick a stop on the map to give feedback.",
@@ -234,12 +234,12 @@ export const translations = {
       stepsTitle: "Four steps to your feedback",
       steps: [
         { title: "Pick a stop", copy: "Open the map on the home page and click a stop. Or find it under “Stops” by name, station or municipality." },
-        { title: "Rate it", copy: "Give an overall mark from 1 to 5, then rate each area in turn, from cleanliness to accessibility." },
-        { title: "Record the facilities", copy: "Note whether there is shelter, seating and lighting, and describe in the text field what should be improved." },
+        { title: "Set the severity", copy: "Choose the relevant categories and set the problem severity to low, medium or high." },
+        { title: "Add details", copy: "Describe what should be improved. You can add a photo and optionally leave an email address." },
         { title: "Submit", copy: "No account, about two minutes. You can leave an email address if you are happy for us to follow up." },
       ],
       criteriaTitle: "What you can rate",
-      criteriaCopy: "Every stop is rated in five areas on a scale of 1 to 5. On top of that you record what is actually there.",
+      criteriaCopy: "Choose what is missing at the stop and set the problem severity to low, medium or high. A description and photo are optional.",
       criteria: [
         { title: "Cleanliness", copy: "The state of the shelter, the bench and the surroundings: litter, dirt and damage." },
         { title: "Feeling of safety", copy: "How safe you feel while waiting, especially in the evening and through the dark months." },
@@ -251,7 +251,7 @@ export const translations = {
       afterTitle: "What happens to your feedback",
       after: [
         { title: "Collected", copy: "Every rating is stored and tied to exactly the stop you selected." },
-        { title: "Reviewed", copy: "In the internal portal the responsible teams see every individual mark, the facilities and your comment." },
+        { title: "Reviewed", copy: "In the internal portal the responsible teams see the selected categories, problem severity and your description." },
         { title: "Improved", copy: "That shows which stops most urgently lack shelter, lighting or step-free access." },
       ],
       faqTitle: "Frequently asked questions",

@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import { useLanguage } from "@/components/language-provider";
 import { stopName, useStops } from "@/lib/stops";
 import type { BusStop } from "@/lib/stops";
+import { StopPointList } from "@/components/stop-point-list";
+import { useStopPoints } from "@/lib/stop-points";
 
 const SearchIcon = () => (
   <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -13,11 +16,11 @@ const SearchIcon = () => (
   </svg>
 );
 
-const ArrowIcon = () => (
-  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M5 12h14m-5-5 5 5-5 5" />
-  </svg>
-);
+function StopPoints({ placeId }: { placeId: string }) {
+  const { language, t } = useLanguage();
+  const { points, status } = useStopPoints(placeId);
+  return <StopPointList placeId={placeId} points={points} status={status} language={language} labels={t.map} showMapLinks />;
+}
 
 /** Matches on all three stop names plus the municipality, so a search works
  *  whichever language the stop is known by. */
@@ -30,6 +33,7 @@ export default function StopsPage() {
   const { language, t } = useLanguage();
   const { stops, loading } = useStops();
   const [query, setQuery] = useState("");
+  const [expandedPlaceId, setExpandedPlaceId] = useState<string | null>(null);
 
   const results = useMemo(() => {
     const trimmed = query.trim().toLowerCase();
@@ -37,15 +41,11 @@ export default function StopsPage() {
     return [...found].sort((a, b) => stopName(a, language).localeCompare(stopName(b, language)));
   }, [stops, query, language]);
 
-  const feedbackHref = (stop: BusStop) =>
-    `/feedback?stop=${encodeURIComponent(stop.id)}&lang=${language}&name=${encodeURIComponent(stopName(stop, language))}`;
-
   return (
     <main className="content-page">
       <div className="page-title"><h1>{t.stops.title}</h1></div>
 
       <section className="stops-section">
-        <span className="mini-label">{t.stops.eyebrow}</span>
 
         <div className="stops-search">
           <label htmlFor="stop-search">{t.stops.searchLabel}</label>
@@ -84,22 +84,20 @@ export default function StopsPage() {
                 <div>
                   <span className="stop-card-place">{stop.municipality}</span>
                   <h2>{stopName(stop, language)}</h2>
-                  <div className="transport-tags">
-                    <span>{t.stops.bus}</span>
-                    {stop.is_accessible ? <span>{t.stops.accessible}</span> : null}
-                  </div>
+                  {stop.is_accessible ? <div className="transport-tags"><span>{t.stops.accessible}</span></div> : null}
                 </div>
                 <div className="stop-card-actions">
-                  <Link
-                    className="stop-card-cta"
-                    href={feedbackHref(stop)}
-                  >
-                    {t.stops.feedback} <ArrowIcon />
+                  <button type="button" className="stop-card-cta" aria-expanded={expandedPlaceId === stop.id}
+                    aria-controls={`stop-points-${stop.id}`} onClick={() => setExpandedPlaceId(current => current === stop.id ? null : stop.id)}>
+                    {t.map.selectPoints}
+                  </button>
+                  <Link className="stop-card-map" href={`/?stop=${encodeURIComponent(stop.id)}`}
+                    aria-label={t.stops.onMap} title={t.stops.onMap}>
+                    <Image src="/icons/map-pin.svg" width={24} height={24} alt="" aria-hidden="true" />
                   </Link>
-                  <Link className="stop-card-comments" href={`${feedbackHref(stop)}#feedback-threads`}>
-                    {t.stops.comments}
-                  </Link>
-                  <Link className="stop-card-map" href="/">{t.stops.onMap}</Link>
+                </div>
+                <div id={`stop-points-${stop.id}`} className="stop-card-points" hidden={expandedPlaceId !== stop.id}>
+                  {expandedPlaceId === stop.id ? <StopPoints placeId={stop.id} /> : null}
                 </div>
               </article>
             </li>

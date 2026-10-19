@@ -10,6 +10,31 @@ import { createClient } from "@/lib/supabase/server";
 import type { StopPlaceImportRow } from "@/lib/stop-place-csv";
 import type { StopPointImportRow } from "@/lib/stop-point-csv";
 import { stopPointIdentity } from "@/lib/stop-point-csv";
+import { EFA_STOP_LIST_URL, readEfaStopPlaces } from "@/lib/efa-stop-places";
+import { importEfaBatches } from "@/lib/efa-import-batches";
+
+export async function importEfaStopPlaces(): Promise<{ message: string; error?: boolean; details: string[] }> {
+  let imported = 0;
+  const details: string[] = [];
+  try {
+    const { supabase } = await requireUser();
+    const response = await fetch(EFA_STOP_LIST_URL, { cache: "no-store", signal: AbortSignal.timeout(60000) });
+    if (!response.ok) throw new Error(`EFA returned HTTP ${response.status}.`);
+    const { rows, errors, excluded, duplicates, received, matching } = readEfaStopPlaces(await response.json());
+    details.push(...errors);
+    if (!rows.length) throw new Error("EFA returned no valid South Tyrol stop places. See the import report for details.");
+    await importEfaBatches(rows, async batch => {
+      const { data, error } = await supabase.rpc("import_efa_stop_place_batch", { p_rows: batch });
+      return { data, error };
+    }, count => { imported += count; }, details);
+    return { error: details.length > 0, details,
+      message: `Received ${received} API records; ${matching} IDs start with it:22021:. ${imported} unique stop places inserted or updated and unpublished; ${duplicates} duplicate records ignored; ${excluded} out-of-scope records excluded. ${details.length ? `Import incomplete: ${details.length} issues. Download the report for all affected IDs.` : "All eligible records imported."} The stop list displays 10 stops per page.` };
+  } catch (error) {
+    return { error: true, details, message: `${imported} stop places saved before the import stopped. ${error instanceof Error ? error.message : "The EFA import failed."} Retrying is safe.` };
+  } finally {
+    if (imported) revalidatePath("/");
+  }
+}
 
 export async function setLanguage(formData: FormData) {
   const requested = String(formData.get("language") ?? "");
@@ -106,6 +131,20 @@ export async function updateBusStop(formData: FormData) {
   if (error) throw new Error(error.message);
   revalidatePath("/");
   redirect("/");
+}
+
+export async function updateStopPointType(formData: FormData) {
+  const { supabase } = await requireUser();
+  const id = String(formData.get("point_id") ?? "");
+  const placeId = String(formData.get("place_id") ?? "");
+  const transportType = String(formData.get("transport_type") ?? "");
+  if (!id || !placeId || !["bus", "train", "cable_car"].includes(transportType)) throw new Error("Invalid stop point or transport type.");
+  const { error } = await supabase.from("stop_points")
+    .update({ transport_type: transportType, updated_at: new Date().toISOString() })
+    .eq("id", id).eq("stop_place_id", placeId).select("id").single();
+  if (error) throw new Error(error.message);
+  revalidatePath("/");
+  redirect(`/?stop=${encodeURIComponent(placeId)}#stop-points-editor`);
 }
 
 /**

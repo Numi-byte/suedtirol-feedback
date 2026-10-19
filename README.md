@@ -59,6 +59,24 @@ Or start them independently with `npm run dev:client` and `npm run dev:protected
 
 Run `npm run lint`, `npm run typecheck`, and `npm run build` from the repository root.
 
+The public map API pages through all published, unarchived stops using a stable
+ID order, so Supabase's response row limit cannot truncate the map. Only the
+popular-stops sidebar is limited to five suggestions. Pagination regression tests:
+
+```bash
+node --test client/scripts/published-stop-pages.test.mjs
+```
+
+The map groups nearby stop places into blue count circles; larger groups use
+larger circles. Click a group or zoom in to reveal its stops (individual places
+are shown from zoom 18). Stop-point/platform dots remain a separate layer for the
+selected place and never contribute to group counts. A spatial index is reused
+across pans and selections; only markers near the viewport are rendered.
+
+```bash
+node --test client/scripts/stop-clusters.test.mjs
+```
+
 ## Stop-place CSV imports
 
 Apply `supabase/migrations/20261007120000_import_latest_stop_place_versions.sql`
@@ -85,6 +103,46 @@ Parser regression tests (Node.js 22.18+ or 24) run with:
 ```bash
 node --test protected/scripts/stop-place-csv.test.mjs
 ```
+
+## EFA stop-place import
+
+Apply `supabase/migrations/20261015120000_import_efa_stop_places.sql` after the
+existing migrations, then apply
+`supabase/migrations/20261016120000_complete_efa_stop_place_import.sql`
+(the follow-up is required even if the initial EFA migration was already applied).
+In the protected portal's **Stop places** import section,
+use **Fetch and import EFA stop places**. The protected server needs HTTPS access
+to `efa.sta.bz.it` as well as the configured Supabase project. No EFA key is needed.
+
+The importer fetches the complete rapidJSON stop list and processes every entry whose full ID starts with `it:22021:`.
+It does not restrict the ID suffix to digits or impose an additional type filter. For example, `it:22021:2139`
+becomes `(it:apb:StopPlace:it:22021:2139,any)` in `bus_stops.id_version`.
+`properties.stopId` is stored separately in `stop_id`; `coord[0]` is latitude
+and `coord[1]` longitude. Additional coordinate dimensions are ignored.
+A numeric `stopId` is stored as text; a missing `stopId` is left null instead of
+discarding an otherwise valid place. Different complete IDs are not discarded
+just because they share this additional metadata. New records leave the CSV
+private `stop_code` blank. Only the main Italian name is imported. New records
+have empty German/English names and municipality; parent names are not imported.
+
+Every imported stop is set to **unpublished**, including existing matches.
+Existing German/English translations, UUIDs, feedback, stop points, private stop
+codes, CSV timestamps, municipality and archive settings are retained. Matching
+uses the complete source reference (ignoring version). Matching by `stop_id`
+or private code is only used for legacy rows without a source ID; distinct full
+source IDs are never merged based on stopId. Identical feed duplicates are removed.
+Conflicting duplicate feed IDs are reported without blocking unrelated places.
+Each database batch is atomic. A row conflict triggers individual retries of that
+batch so the rest of the API list still imports. Network, authentication and
+schema errors stop the run and report completed work. Retrying is safe.
+
+The result shows API records received, matching IDs, saved places and duplicate
+counts. Any invalid/conflicting records are flagged as an incomplete import, with
+a downloadable report containing all affected IDs. The portal loads the entire
+database across Supabase response limits and displays ten stops per UI page.
+
+Run `node --test protected/scripts/efa-stop-places.test.mjs protected/scripts/efa-import-batches.test.mjs`
+for mapping, multi-batch and listing regression tests.
 
 ## Stop-point CSV imports and map dots
 
@@ -134,3 +192,37 @@ published stops, category and severity values, upload type and size, and the
 report-owned storage path. The browser additionally prevents duplicate clicks,
 checks the photo before making any request, and shows a recoverable error instead
 of replacing the page with a server error.
+
+### Feedback and comments for individual stop points
+
+Apply `supabase/migrations/20261019120000_stop_point_feedback_and_transport.sql`
+**before deploying both updated apps**. It requires all previous migrations.
+The migration adds a point reference to feedback, enforces the matching parent
+place, and exposes point-specific submission, lookup, and discussion RPCs.
+The old place-only submission/discussion RPCs are disabled. Visitors with an
+old feedback URL are returned to the map to choose a point; cached older
+clients must refresh after rollout.
+
+Existing reports keep their original place reference and an empty point
+reference. They remain reviewable and replyable in the protected inbox, marked
+as historic place feedback. They are not assigned to any point's public thread.
+Reports and their replies are retained when points/places are retired.
+
+Every existing and newly imported point defaults to `bus`. In the protected
+portal, select a place, then use **Edit stop points** to choose Bus, Train, or
+Cable car for each point. Re-importing points preserves these choices. Public
+point lists show the transport icon; map point tooltips identify the point by
+name and number. Each point has its own feedback and comment links. A place
+without imported points offers no point-feedback submission.
+
+Run the database checks against a disposable PostgreSQL container with Docker:
+
+```sh
+supabase/tests/run-stop-point-feedback.sh
+```
+
+This applies all migrations and checks point isolation, public/private reads,
+publication and archive rules, transport defaults and re-imports, atomic report
+creation, reply scoping, report retention, and the historic feedback workflow.
+It never connects to the hosted Supabase project. `supabase/tests/bootstrap.sql`
+provides minimal Auth/Storage stubs for the isolated tests only.

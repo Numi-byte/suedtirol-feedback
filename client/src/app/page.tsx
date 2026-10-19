@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useLanguage } from "@/components/language-provider";
 import { StopMap } from "@/components/stop-map";
 import { useStops } from "@/lib/stops";
@@ -11,7 +12,9 @@ export default function HomePage() {
 
   return (
     <main className="map-section" aria-labelledby="map-heading">
-      <StopMap stops={stops} language={language} labels={t.map} />
+      <Suspense fallback={<p role="status">{t.map.loading}</p>}>
+        <StopMap stops={stops} language={language} labels={t.map} />
+      </Suspense>
     </main>
   );
 }
