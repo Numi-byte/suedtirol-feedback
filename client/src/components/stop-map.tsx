@@ -73,19 +73,49 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
   const selectedPointId = searchParams.get("point");
   const pointSelectionRef = useRef(selectedPointId);
   const pointsFittedRef = useRef<string | null>(null);
+  const focusPointOnMap = useCallback((point: { latitude: number; longitude: number }) => {
+    const map = mapRef.current;
+    const canvas = canvasRef.current;
+    if (!map || !canvas) return;
+    const size = map.getSize();
+    const bounds = canvas.getBoundingClientRect();
+    let left = 24, right = size.x - 24, top = 24, bottom = size.y - 24;
+    if (window.matchMedia("(max-width: 767px)").matches) {
+      const sheet = canvas.querySelector<HTMLElement>(".map-sheet")?.getBoundingClientRect();
+      if (sheet) bottom = sheet.top - bounds.top - 24;
+    } else {
+      const search = canvas.querySelector<HTMLElement>(".map-intro")?.getBoundingClientRect();
+      const panel = canvas.querySelector<HTMLElement>(".map-panel")?.getBoundingClientRect();
+      if (size.x >= 1100) {
+        if (search) left = search.right - bounds.left + 24;
+        if (panel) right = panel.left - bounds.left - 24;
+      } else {
+        top = Math.max(search?.bottom ?? bounds.top, panel?.bottom ?? bounds.top) - bounds.top + 24;
+      }
+    }
+    // Centre the point in the unobstructed map, rather than behind a panel.
+    const targetX = Math.max(24, Math.min(size.x - 24, (left + right) / 2));
+    const targetY = Math.max(24, Math.min(size.y - 24, (top + bottom) / 2));
+    const zoom = Math.min(map.getMaxZoom(), Math.max(map.getZoom(), 18));
+    const centre = map.unproject(map.project([point.latitude, point.longitude], zoom)
+      .subtract([targetX - size.x / 2, targetY - size.y / 2]), zoom);
+    map.stop().setView(centre, zoom, { animate: false });
+  }, []);
   const updateSelection = useCallback((id: string | null) => {
     const url = new URL(window.location.href);
     url.searchParams.delete("point");
-    if (id) { url.searchParams.set("stop", id); setSearchExpanded(false); }
+    if (id) { url.searchParams.set("stop", id); setSearchExpanded(true); }
     else { url.searchParams.delete("stop"); setQuery(""); }
     router.replace(`${url.pathname}${url.search}${url.hash}`, { scroll: false });
   }, [router]);
 
   const updatePointSelection = useCallback((id: string) => {
+    const position = pointMarkersRef.current.get(id)?.getLatLng();
+    if (position) focusPointOnMap({ latitude: position.lat, longitude: position.lng });
     const url = new URL(window.location.href);
     url.searchParams.set("point", id);
     router.replace(`${url.pathname}${url.search}${url.hash}`, { scroll: false });
-  }, [router]);
+  }, [router, focusPointOnMap]);
 
   const stopName = (stop: BusStop) => nameFor(stop, language);
   const filteredStops = useMemo(() => {
@@ -298,7 +328,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
       };
 
       // Frame the real stops the first time they arrive, then leave the view alone.
-      if (!fittedRef.current && filteredStops.length > 0) {
+      if (!fittedRef.current && filteredStops.length > 0 && !pointSelectionRef.current) {
         fittedRef.current = true;
         if (filteredStops.length === 1) {
           map.setView([filteredStops[0].latitude, filteredStops[0].longitude], 15);
@@ -350,6 +380,24 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
     }
   }, [selectedPointId]);
 
+  // Also focus deep-linked points after loading, and keep them clear of a
+  // resizing bottom sheet or a changed screen orientation.
+  useEffect(() => {
+    const point = points.find(item => item.id === selectedPointId);
+    if (!point || !mapReady) return;
+    const focus = () => focusPointOnMap(point);
+    focus();
+    const map = mapRef.current;
+    map?.on("resize", focus);
+    const observer = new ResizeObserver(focus);
+    const canvas = canvasRef.current;
+    if (canvas) {
+      observer.observe(canvas);
+      canvas.querySelectorAll(".map-sheet, .map-intro, .map-panel").forEach(element => observer.observe(element));
+    }
+    return () => { observer.disconnect(); map?.off("resize", focus); };
+  }, [selectedPointId, points, mapReady, focusPointOnMap]);
+
   // A separate layer is discarded as soon as the selection changes. Names are
   // DOM text, never HTML, because they originate in uploaded spreadsheets.
   useEffect(() => {
@@ -388,9 +436,10 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
       }
       if (pointsFittedRef.current !== selected.id) {
         pointsFittedRef.current = selected.id;
+        if (points.some(point => point.id === pointSelectionRef.current)) return;
         const wide = map.getSize().x >= 1100;
         const tablet = map.getSize().x >= 768;
-        const pointPanelHeight = canvasRef.current?.querySelector<HTMLElement>(".map-panel")?.offsetHeight ?? 280;
+        const pointPanelHeight = canvasRef.current?.querySelector<HTMLElement>(tablet ? ".map-panel" : ".map-sheet")?.offsetHeight ?? 488;
         const searchHeight = canvasRef.current?.querySelector<HTMLElement>(".map-intro")?.offsetHeight ?? 400;
         map.stop().fitBounds(L.latLngBounds([
           [selected.latitude, selected.longitude],
@@ -429,10 +478,10 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
         }}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m14 7-5 5 5 5" /></svg>
       </button>
-      <section id="map-search-sheet" className="map-intro" aria-labelledby="map-heading">
+      <div id="map-search-sheet" className="map-sheet">
         <button type="button" className="map-sheet-handle"
           aria-label={searchExpanded ? labels.collapseSearch : labels.expandSearch}
-          aria-expanded={searchExpanded} aria-controls="map-search-content"
+          aria-expanded={searchExpanded} aria-controls={selected ? "map-stop-points" : "map-search-content"}
           onPointerDown={event => {
             sheetGestureRef.current = { startY: event.clientY, swiped: false };
             event.currentTarget.setPointerCapture(event.pointerId);
@@ -449,65 +498,67 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
             if (!sheetGestureRef.current?.swiped) setSearchExpanded(expanded => !expanded);
             sheetGestureRef.current = null;
           }}><span aria-hidden="true" /></button>
-        <button type="button" className="map-search-peek" aria-expanded={searchExpanded}
-          aria-controls="map-search-content" onClick={() => setSearchExpanded(true)}>
-          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="7" /><path d="m16 16 4.5 4.5" /></svg>
-          {labels.title}
-        </button>
-        <div id="map-search-content" className="map-search-content">
-          <h2 id="map-heading">{labels.title}</h2>
-          <label className="map-search" htmlFor="map-stop-search">
-            <span className="sr-only">{labels.searchLabel}</span>
-            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="7" /><path d="m16 16 4.5 4.5" />
-            </svg>
-            <input id="map-stop-search" type="search" value={query} placeholder={labels.searchPlaceholder} autoComplete="off" onFocus={() => setSearchExpanded(true)} onChange={(event) => setQuery(event.target.value)} />
-          </label>
-          <div className="map-search-results">
-            <div className="map-quick-heading">
-              {query.trim() ? `${filteredStops.length} ${labels.stopsAvailable}` : labels.popularStops}
+        <section className="map-intro" aria-labelledby="map-heading">
+          <button type="button" className="map-search-peek" aria-expanded={searchExpanded}
+            aria-controls="map-search-content" onClick={() => setSearchExpanded(true)}>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="7" /><path d="m16 16 4.5 4.5" /></svg>
+            {labels.title}
+          </button>
+          <div id="map-search-content" className="map-search-content">
+            <h2 id="map-heading">{labels.title}</h2>
+            <label className="map-search" htmlFor="map-stop-search">
+              <span className="sr-only">{labels.searchLabel}</span>
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="7" /><path d="m16 16 4.5 4.5" />
+              </svg>
+              <input id="map-stop-search" type="search" value={query} placeholder={labels.searchPlaceholder} autoComplete="off" onFocus={() => setSearchExpanded(true)} onChange={(event) => setQuery(event.target.value)} />
+            </label>
+            <div className="map-search-results">
+              <div className="map-quick-heading">
+                {query.trim() ? `${filteredStops.length} ${labels.stopsAvailable}` : labels.popularStops}
+              </div>
+              {listedStops.length > 0 ? (
+                <ul className="map-stop-list">
+                  {listedStops.map((stop) => (
+                    <li key={stop.id}>
+                      <button type="button" aria-current={stop.id === selectedId} onClick={() => focusStop(stop)}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={busIcon.src} alt="" aria-hidden="true" />
+                        <span><strong>{stopName(stop)}</strong><small>{stop.municipality}</small></span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : <p className="map-search-empty">{labels.noResults}</p>}
             </div>
-            {listedStops.length > 0 ? (
-              <ul className="map-stop-list">
-                {listedStops.map((stop) => (
-                  <li key={stop.id}>
-                    <button type="button" aria-current={stop.id === selectedId} onClick={() => focusStop(stop)}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={busIcon.src} alt="" aria-hidden="true" />
-                      <span><strong>{stopName(stop)}</strong><small>{stop.municipality}</small></span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : <p className="map-search-empty">{labels.noResults}</p>}
           </div>
-        </div>
-      </section>
+        </section>
 
-      <div className="map-panel" aria-live="polite">
-        {selected ? (
-          <>
-            <span className="map-panel-label">{selected.municipality}</span>
-            <div className="map-panel-heading">
-              <h3>{stopName(selected)}</h3>
-              <button type="button" className="map-deselect" aria-label={labels.deselect} title={labels.deselect}
-                onClick={() => updateSelection(null)}>
-                <Image src="/icons/close.svg" width={12} height={12} alt="" aria-hidden="true" />
-              </button>
-            </div>
-            {selected.is_accessible ? <div className="transport-tags"><span>{labels.accessible}</span></div> : null}
-            <StopPointList points={points} status={pointsStatus} placeId={selected.id} language={language} labels={labels}
-              selectedPointId={selectedPointId} onSelect={point => updatePointSelection(point.id)}
-              onHighlight={id => {
-                for (const [pointId, marker] of pointMarkersRef.current) {
-                  if (pointId === id || pointId === selectedPointId) marker.openTooltip();
-                  else marker.closeTooltip();
-                }
-              }} />
-          </>
-        ) : (
-          <p className="map-panel-empty">{stops.length === 0 ? labels.noStops : filteredStops.length === 0 ? labels.noResults : labels.choose}</p>
-        )}
+        <div id="map-stop-points" className="map-panel" aria-live="polite">
+          {selected ? (
+            <>
+              <span className="map-panel-label">{selected.municipality}</span>
+              <div className="map-panel-heading">
+                <h3>{stopName(selected)}</h3>
+                <button type="button" className="map-deselect" aria-label={labels.deselect} title={labels.deselect}
+                  onClick={() => updateSelection(null)}>
+                  <Image src="/icons/close.svg" width={12} height={12} alt="" aria-hidden="true" />
+                </button>
+              </div>
+              {selected.is_accessible ? <div className="transport-tags"><span>{labels.accessible}</span></div> : null}
+              <StopPointList points={points} status={pointsStatus} placeId={selected.id} language={language} labels={labels}
+                selectedPointId={selectedPointId} onSelect={point => updatePointSelection(point.id)}
+                onHighlight={id => {
+                  for (const [pointId, marker] of pointMarkersRef.current) {
+                    if (pointId === id || pointId === selectedPointId) marker.openTooltip();
+                    else marker.closeTooltip();
+                  }
+                }} />
+            </>
+          ) : (
+            <p className="map-panel-empty">{stops.length === 0 ? labels.noStops : filteredStops.length === 0 ? labels.noResults : labels.choose}</p>
+          )}
+        </div>
       </div>
 
     </div>
