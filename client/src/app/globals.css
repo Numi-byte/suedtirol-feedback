@@ -285,9 +285,10 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
   border-radius: 6px; background: #fff; box-shadow: 0 12px 32px rgba(0, 43, 77, .2);
 }
 .map-panel-label { display: block; padding-right: 32px; color: var(--blue); font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
-.map-panel h3 { margin: 8px 0 6px; padding-right: 32px; font-size: 21px; }
+.map-panel-heading { display: flex; align-items: center; gap: 12px; margin: 8px 0 6px; }
+.map-panel-heading h3 { flex: 1; min-width: 0; margin: 0; font-size: 21px; overflow-wrap: anywhere; }
 .map-deselect {
-  position: absolute; top: 12px; right: 12px; display: grid; place-items: center;
+  position: relative; flex: none; display: grid; place-items: center;
   width: 24px; height: 24px; padding: 6px; border: 0; border-radius: 50%;
   color: var(--gray-500); background: #fff; cursor: pointer;
 }
