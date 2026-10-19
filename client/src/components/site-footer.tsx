@@ -1,17 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/components/language-provider";
-import worldIcon from "@/components/vector.png";
-import { languages, type Language } from "@/lib/i18n";
+import { LanguageSelector } from "@/components/language-selector";
 
 const companyName = "Südtiroler Transportstrukturen AG";
-const languageNames: Record<Language, string> = {
-  de: "Deutsch",
-  it: "Italiano",
-  en: "English",
-};
 const footerHrefs = [
   "https://www.sta.bz.it/de/impressum/",
   "https://www.suedtirolmobil.info/de/service-und-kontakt/privacy",
@@ -24,27 +17,11 @@ const footerHrefs = [
  * route scrolls, and gets the full footer at the end of the document.
  */
 export function SiteFooter() {
-  const { language, setLanguage, t } = useLanguage();
+  const { t } = useLanguage();
   const pathname = usePathname();
   const pinned = pathname === "/";
 
   if (pathname.startsWith("/feedback")) return null;
-
-  const languagePicker = (
-    <label className="footer-language">
-      <span>Language</span>
-      <span className="footer-language-select">
-        <Image src={worldIcon} alt="" aria-hidden="true" width={16} height={16} />
-        <select
-          aria-label={t.nav.language}
-          value={language}
-          onChange={(event) => setLanguage(event.target.value as Language)}
-        >
-          {languages.map((code) => <option key={code} value={code}>{languageNames[code]}</option>)}
-        </select>
-      </span>
-    </label>
-  );
 
   return (
     <footer className={`site-footer${pinned ? " site-footer-pinned" : ""}`}>
@@ -70,7 +47,7 @@ export function SiteFooter() {
           <div className="footer-links">
             {t.footer.links.slice(0, 2).map((link, index) => <a key={link} href={footerHrefs[index]}>{link}</a>)}
           </div>
-          {languagePicker}
+          <LanguageSelector className="footer-language" />
         </div>
       </div>
     </footer>

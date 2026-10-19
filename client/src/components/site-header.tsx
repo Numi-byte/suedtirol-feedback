@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { LanguageSelector } from "@/components/language-selector";
 import { BrandLogo } from "@/components/brand-logo";
 import { useLanguage } from "@/components/language-provider";
 
@@ -60,7 +61,7 @@ export function SiteHeader() {
       <dialog id="mobile-menu-dialog" ref={dialogRef} className="mobile-menu-dialog" aria-label={t.nav.menu} aria-modal="true"
         onKeyDown={event => {
           if (event.key !== "Tab") return;
-          const controls = [...event.currentTarget.querySelectorAll<HTMLElement>("button:not([disabled]), a[href]")];
+          const controls = [...event.currentTarget.querySelectorAll<HTMLElement>("select:not([disabled]), button:not([disabled]), a[href]")];
           const first = controls[0];
           const last = controls[controls.length - 1];
           if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
@@ -70,9 +71,12 @@ export function SiteHeader() {
         onClose={() => setMenuOpen(false)}
         onClick={event => { if (event.target === event.currentTarget) setMenuOpen(false); }}>
         <div className="mobile-menu-sheet">
-          <button type="button" className="mobile-menu-close" aria-label={t.nav.closeMenu} onClick={() => setMenuOpen(false)}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
-          </button>
+          <div className="mobile-menu-tools">
+            <LanguageSelector />
+            <button type="button" className="mobile-menu-close" aria-label={t.nav.closeMenu} onClick={() => setMenuOpen(false)}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
+            </button>
+          </div>
           <nav id="mobile-navigation" className="mobile-navigation" aria-label={t.nav.navigation}>
             {[
               { href: "/stops", label: t.nav.find },
