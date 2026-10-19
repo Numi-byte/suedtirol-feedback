@@ -34,6 +34,8 @@ export type MapLabels = {
   pointsError: string;
   noPoints: string;
   deselect: string;
+  expandSearch: string;
+  collapseSearch: string;
 };
 
 /** South Tyrol, used until the published stops define their own extent. */
@@ -48,6 +50,7 @@ function markerImage(selected: boolean) {
 type StopMapProps = { stops: BusStop[]; language: "de" | "it" | "en"; labels: MapLabels };
 
 export function StopMap({ stops, language, labels }: StopMapProps) {
+  const canvasRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const markersRef = useRef<Map<string, Marker>>(new Map());
@@ -58,12 +61,14 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
   const searchParams = useSearchParams();
   const selectedId = searchParams.get("stop");
   const [query, setQuery] = useState("");
+  const [searchExpanded, setSearchExpanded] = useState(true);
+  const sheetGestureRef = useRef<{ startY: number; swiped: boolean } | null>(null);
   const [mapStatus, setMapStatus] = useState<"loading" | "ready" | "error">("loading");
   const [mapReady, setMapReady] = useState(false);
   const pointsFittedRef = useRef<string | null>(null);
   const updateSelection = useCallback((id: string | null) => {
     const url = new URL(window.location.href);
-    if (id) url.searchParams.set("stop", id);
+    if (id) { url.searchParams.set("stop", id); setSearchExpanded(false); }
     else { url.searchParams.delete("stop"); setQuery(""); }
     router.replace(`${url.pathname}${url.search}${url.hash}`, { scroll: false });
   }, [router]);
@@ -88,6 +93,32 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
   }, [filteredStops, language, query, stops, selectedId]);
   const selected = filteredStops.find((stop) => stop.id === selectedId) ?? null;
   const { points } = useStopPoints(selected?.id ?? null);
+
+  // Keep the search and its results above the phone's software keyboard.
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    let frame = 0;
+    const update = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const searching = document.activeElement?.id === "map-stop-search";
+        const inset = searching ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop) : 0;
+        canvasRef.current?.style.setProperty("--map-keyboard-inset", `${inset}px`);
+      });
+    };
+    viewport.addEventListener("resize", update);
+    viewport.addEventListener("scroll", update);
+    document.addEventListener("focusin", update);
+    document.addEventListener("focusout", update);
+    return () => {
+      cancelAnimationFrame(frame);
+      viewport.removeEventListener("resize", update);
+      viewport.removeEventListener("scroll", update);
+      document.removeEventListener("focusin", update);
+      document.removeEventListener("focusout", update);
+    };
+  }, []);
 
   // Create the map once. Leaflet needs the DOM, so it is imported client-side only.
   useEffect(() => {
@@ -339,7 +370,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
   };
 
   return (
-    <div className="map-canvas">
+    <div ref={canvasRef} className={`map-canvas${selected ? " has-selected-stop" : ""}${searchExpanded ? " search-expanded" : " search-collapsed"}`}>
       <div className="map-surface" ref={containerRef} role="application" aria-label={labels.title} aria-busy={mapStatus === "loading"} />
       {mapStatus !== "ready" ? (
         <div className={`map-loading ${mapStatus === "error" ? "error" : ""}`} role="status" aria-live="polite">
@@ -348,32 +379,69 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
         </div>
       ) : null}
 
-      <div className="map-intro">
-        <h2 id="map-heading">{labels.title}</h2>
-        <label className="map-search" htmlFor="map-stop-search">
-          <span className="sr-only">{labels.searchLabel}</span>
-          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="7" /><path d="m16 16 4.5 4.5" />
-          </svg>
-          <input id="map-stop-search" type="search" value={query} placeholder={labels.searchPlaceholder} autoComplete="off" onChange={(event) => setQuery(event.target.value)} />
-        </label>
-        <div className="map-quick-heading">
-          {query.trim() ? `${filteredStops.length} ${labels.stopsAvailable}` : labels.popularStops}
+      <button type="button" className="map-search-back"
+        aria-label={searchExpanded && !selected ? labels.collapseSearch : labels.expandSearch}
+        aria-expanded={searchExpanded && !selected} aria-controls="map-search-sheet"
+        onClick={() => {
+          if (selected) { updateSelection(null); setSearchExpanded(true); }
+          else { setSearchExpanded(expanded => !expanded); document.getElementById("map-stop-search")?.blur(); }
+        }}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m14 7-5 5 5 5" /></svg>
+      </button>
+      <section id="map-search-sheet" className="map-intro" aria-labelledby="map-heading">
+        <button type="button" className="map-sheet-handle"
+          aria-label={searchExpanded ? labels.collapseSearch : labels.expandSearch}
+          aria-expanded={searchExpanded} aria-controls="map-search-content"
+          onPointerDown={event => {
+            sheetGestureRef.current = { startY: event.clientY, swiped: false };
+            event.currentTarget.setPointerCapture(event.pointerId);
+          }}
+          onPointerUp={event => {
+            const gesture = sheetGestureRef.current;
+            if (!gesture || Math.abs(event.clientY - gesture.startY) < 32) return;
+            gesture.swiped = true;
+            setSearchExpanded(event.clientY < gesture.startY);
+            document.getElementById("map-stop-search")?.blur();
+          }}
+          onPointerCancel={() => { sheetGestureRef.current = null; }}
+          onClick={() => {
+            if (!sheetGestureRef.current?.swiped) setSearchExpanded(expanded => !expanded);
+            sheetGestureRef.current = null;
+          }}><span aria-hidden="true" /></button>
+        <button type="button" className="map-search-peek" aria-expanded={searchExpanded}
+          aria-controls="map-search-content" onClick={() => setSearchExpanded(true)}>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="7" /><path d="m16 16 4.5 4.5" /></svg>
+          {labels.title}
+        </button>
+        <div id="map-search-content" className="map-search-content">
+          <h2 id="map-heading">{labels.title}</h2>
+          <label className="map-search" htmlFor="map-stop-search">
+            <span className="sr-only">{labels.searchLabel}</span>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="7" /><path d="m16 16 4.5 4.5" />
+            </svg>
+            <input id="map-stop-search" type="search" value={query} placeholder={labels.searchPlaceholder} autoComplete="off" onFocus={() => setSearchExpanded(true)} onChange={(event) => setQuery(event.target.value)} />
+          </label>
+          <div className="map-search-results">
+            <div className="map-quick-heading">
+              {query.trim() ? `${filteredStops.length} ${labels.stopsAvailable}` : labels.popularStops}
+            </div>
+            {listedStops.length > 0 ? (
+              <ul className="map-stop-list">
+                {listedStops.map((stop) => (
+                  <li key={stop.id}>
+                    <button type="button" aria-current={stop.id === selectedId} onClick={() => focusStop(stop)}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={busIcon.src} alt="" aria-hidden="true" />
+                      <span><strong>{stopName(stop)}</strong><small>{stop.municipality}</small></span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : <p className="map-search-empty">{labels.noResults}</p>}
+          </div>
         </div>
-        {listedStops.length > 0 ? (
-          <ul className="map-stop-list">
-            {listedStops.map((stop) => (
-              <li key={stop.id}>
-                <button type="button" aria-current={stop.id === selectedId} onClick={() => focusStop(stop)}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={busIcon.src} alt="" aria-hidden="true" />
-                  <span><strong>{stopName(stop)}</strong><small>{stop.municipality}</small></span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : <p className="map-search-empty">{labels.noResults}</p>}
-      </div>
+      </section>
 
       <div className="map-panel" aria-live="polite">
         {selected ? (
