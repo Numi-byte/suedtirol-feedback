@@ -9,6 +9,7 @@ import { stopName as nameFor } from "@/lib/stops";
 import type { BusStop } from "@/lib/stops";
 import { useStopPoints } from "@/lib/stop-points";
 import { createStopClusterIndex, stopClusterDiameter } from "@/lib/stop-clusters";
+import { CommentsIcon } from "@/components/comments-icon";
 
 export type MapLabels = {
   eyebrow: string;
@@ -384,10 +385,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
               {pointsStatus === "loading" ? labels.pointsLoading : pointsStatus === "error" ? labels.pointsError
                 : points.length ? `${points.length} ${labels.stopPoints}` : labels.noPoints}
             </p>
-            <div className="transport-tags">
-              <span>{labels.bus}</span>
-              {selected.is_accessible ? <span>{labels.accessible}</span> : null}
-            </div>
+            {selected.is_accessible ? <div className="transport-tags"><span>{labels.accessible}</span></div> : null}
             <div className="map-panel-actions">
               <a className="map-panel-feedback" href={`/feedback?stop=${encodeURIComponent(selected.id)}&lang=${language}&name=${encodeURIComponent(stopName(selected))}`}>
                 {labels.feedback}
@@ -395,8 +393,9 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
                   <path d="M5 12h14m-5-5 5 5-5 5" />
                 </svg>
               </a>
-              <a className="map-panel-comments" href={`/feedback?stop=${encodeURIComponent(selected.id)}&lang=${language}&name=${encodeURIComponent(stopName(selected))}#feedback-threads`}>
-                {labels.comments}
+              <a className="map-panel-comments" href={`/feedback?stop=${encodeURIComponent(selected.id)}&lang=${language}&name=${encodeURIComponent(stopName(selected))}#feedback-threads`}
+                aria-label={labels.comments} title={labels.comments}>
+                <CommentsIcon />
               </a>
             </div>
           </>

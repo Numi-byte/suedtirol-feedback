@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { useLanguage } from "@/components/language-provider";
 import { stopName, useStops } from "@/lib/stops";
 import type { BusStop } from "@/lib/stops";
+import { CommentsIcon } from "@/components/comments-icon";
 
 const SearchIcon = () => (
   <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -92,8 +93,9 @@ export default function StopsPage() {
                   >
                     {t.stops.feedback} <ArrowIcon />
                   </Link>
-                  <Link className="stop-card-comments" href={`${feedbackHref(stop)}#feedback-threads`}>
-                    {t.stops.comments}
+                  <Link className="stop-card-comments" href={`${feedbackHref(stop)}#feedback-threads`}
+                    aria-label={t.stops.comments} title={t.stops.comments}>
+                    <CommentsIcon />
                   </Link>
                   <Link className="stop-card-map" href={`/?stop=${encodeURIComponent(stop.id)}`}>{t.stops.onMap}</Link>
                 </div>
