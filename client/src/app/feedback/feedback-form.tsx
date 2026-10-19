@@ -251,14 +251,6 @@ export function FeedbackForm({ pointId, stopName, stopLocation, transportType, l
         <p className="heading-required"><span>*</span> {copy.required}</p>
       </header>
 
-      <ol className="feedback-progress" aria-label={copy.progress}>
-        {[copy.categoryStep, copy.detailsStep, copy.reviewStep].map((label, index) => (
-          <li key={label} className={step >= index + 1 ? "active" : ""} aria-current={step === index + 1 ? "step" : undefined}>
-            <span>{index + 1}</span><b>{label}</b>
-          </li>
-        ))}
-      </ol>
-
       <form ref={wizardRef} className="feedback-wizard" onSubmit={handleSubmit} noValidate>
         <input type="hidden" name="point_id" value={pointId} />
         <input type="hidden" name="stop_name" value={stopName} />
