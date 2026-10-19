@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } 
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import busIcon from "@/components/Bus.png";
+import { TransportIcon, type TransportType } from "@/components/transport-icon";
 import { useLanguage } from "@/components/language-provider";
 import { feedbackFormCopy } from "@/lib/feedback-form-copy";
 import type { FeedbackFormCopy } from "@/lib/feedback-form-copy";
@@ -76,7 +76,7 @@ function SubmitButton({ disabled, pending, copy }: { disabled: boolean; pending:
   );
 }
 
-export function FeedbackForm({ pointId, stopName, stopLocation, language: requestedLanguage }: { pointId: string; stopName: string; stopLocation: string; language?: string }) {
+export function FeedbackForm({ pointId, stopName, stopLocation, transportType, language: requestedLanguage }: { pointId: string; transportType: TransportType; stopName: string; stopLocation: string; language?: string }) {
   const router = useRouter();
   const { language: siteLanguage, setLanguage } = useLanguage();
   const language: Language = requestedLanguage === "de" || requestedLanguage === "it" || requestedLanguage === "en" ? requestedLanguage : siteLanguage;
@@ -220,7 +220,7 @@ export function FeedbackForm({ pointId, stopName, stopLocation, language: reques
   return (
     <section className="feedback-dialog" aria-labelledby="feedback-title">
       <header className="feedback-heading">
-        <span className="stop-symbol"><Image src={busIcon} width={54} height={54} alt="" priority /></span>
+        <span className="stop-symbol"><TransportIcon type={transportType} language={language} size={56} priority /></span>
         <div className="feedback-heading-copy"><h1 id="feedback-title">{copy.title}</h1><p>●&nbsp; {stopName || copy.defaultStop} · {stopLocation || copy.defaultLocation}</p></div>
         <label className="feedback-language"><span className="sr-only">{copy.language}</span><select aria-label={copy.language} value={language} onChange={event => {
           const next = event.target.value as Language;
