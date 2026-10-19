@@ -42,6 +42,7 @@ export const translations = {
       file: "Haltepunkte (.csv)", submit: "CSV importieren",
       hint: "Bis 50 MB. Die CSV benötigt in Zeile 1 die Spalten id_version, point_number, latitude, longitude, name_de und name_it. Die Datei bleibt im Browser. Fehlende oder mehrdeutige Haltestellen werden gemeldet.",
     },
+    pointEditor: { title: "Haltepunkte bearbeiten", type: "Verkehrsmittel", bus: "Bus", train: "Zug", cable_car: "Seilbahn", point: "Haltepunkt", legacy: "Bestehende Rückmeldung zur Haltestelle (ohne Haltepunkt)", empty: "Noch keine Haltepunkte importiert." },
     editor: {
       kicker: "Neuer Standort", title: "Haltestelle hinzufügen",
       subtitle: "Trage alle drei öffentlichen Namen und die exakten WGS84-Koordinaten ein.",
@@ -119,6 +120,7 @@ export const translations = {
       file: "Punti di fermata (.csv)", submit: "Importa CSV",
       hint: "Fino a 50 MB. La prima riga del CSV deve contenere id_version, point_number, latitude, longitude, name_de e name_it. Il file resta nel browser. Le fermate mancanti o ambigue vengono segnalate.",
     },
+    pointEditor: { title: "Modifica punti di fermata", type: "Mezzo di trasporto", bus: "Autobus", train: "Treno", cable_car: "Funivia", point: "Punto di fermata", legacy: "Riscontro precedente sulla fermata (senza punto)", empty: "Nessun punto di fermata importato." },
     editor: {
       kicker: "Nuova posizione", title: "Aggiungi una fermata",
       subtitle: "Inserisci tutti e tre i nomi pubblici e le coordinate WGS84 esatte.",
@@ -196,6 +198,7 @@ export const translations = {
       file: "Stop points (.csv)", submit: "Import CSV",
       hint: "Up to 50 MB. The CSV must have row 1 headers: id_version, point_number, latitude, longitude, name_de, name_it. The file stays in your browser. Missing or ambiguous parent places are reported.",
     },
+    pointEditor: { title: "Edit stop points", type: "Transport type", bus: "Bus", train: "Train", cable_car: "Cable car", point: "Stop point", legacy: "Historic place feedback (no stop point)", empty: "No stop points imported yet." },
     editor: {
       kicker: "New location", title: "Add a bus stop",
       subtitle: "Enter all three public names and the exact WGS84 coordinates.",

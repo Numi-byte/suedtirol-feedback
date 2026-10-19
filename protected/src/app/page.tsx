@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { archiveBusStop, createBusStop, restoreBusStop, signOut, updateBusStop } from "./actions";
+import { archiveBusStop, createBusStop, restoreBusStop, signOut, updateBusStop, updateStopPointType } from "./actions";
 import { ConfirmButton } from "./confirm-button";
 import { FeedbackReplyForm } from "./feedback-reply-form";
 import { LanguageSwitch } from "./language-switch";
@@ -104,10 +104,14 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
   const currentPage = Math.min(Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1, pageCount);
   const stops = filteredActiveStops.slice((currentPage - 1) * STOPS_PER_PAGE, currentPage * STOPS_PER_PAGE);
   const editing = selectedId ? allActiveStops.find((stop) => stop.id === selectedId) ?? null : null;
+  const editingPoints = user && editing ? await loadAllStopRows<{
+    id: string; point_number: string; name_de: string; name_it: string; transport_type: string;
+  }>((from, to) => supabase.from("stop_points").select("id,point_number,name_de,name_it,transport_type", { count: "exact" })
+    .eq("stop_place_id", editing.id).order("point_number").order("id").range(from, to)) : [];
   const replyFilter: ReplyFilter = replies === "replied" || replies === "unreplied" ? replies : "all";
   const parsedFeedbackPage = Number.parseInt(requestedFeedbackPage ?? "1", 10);
   const requestedFeedbackPageNumber = Number.isFinite(parsedFeedbackPage) && parsedFeedbackPage > 0 ? parsedFeedbackPage : 1;
-  const feedbackSelect = "id,severity,description,overall_rating,cleanliness_rating,safety_rating,accessibility_rating,information_rating,shelter_rating,has_shelter,has_seating,has_lighting,comment,email,consent_to_contact,language,status,created_at,bus_stops(name_de,name_it,name_en,municipality),stop_feedback_categories(category_slug,feedback_categories(label_de,label_it,label_en)),stop_feedback_photos(id,storage_path),feedback_replies!left(id,body,created_at,updated_at)";
+  const feedbackSelect = "id,severity,description,overall_rating,cleanliness_rating,safety_rating,accessibility_rating,information_rating,shelter_rating,has_shelter,has_seating,has_lighting,comment,email,consent_to_contact,language,status,created_at,bus_stops(name_de,name_it,name_en,municipality),stop_points(point_number,name_de,name_it),stop_feedback_categories(category_slug,feedback_categories(label_de,label_it,label_en)),stop_feedback_photos(id,storage_path),feedback_replies!left(id,body,created_at,updated_at)";
   const buildFeedbackQuery = () => {
     let query = supabase.from("stop_feedback").select(feedbackSelect, { count: "exact" });
     if (replyFilter === "replied") query = query.not("feedback_replies", "is", null);
@@ -228,6 +232,18 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
             <p className="editor-note">{t.editorEdit.archiveNote}</p>
           </div> : null}
         </section>
+        {editing ? <section className="editor-card point-editor" id="stop-points-editor">
+          <div className="card-heading"><h2>{t.pointEditor.title}</h2><p>{editing.name_de || editing.name_it}</p></div>
+          {editingPoints.map(point => <form action={updateStopPointType} key={point.id}>
+            <input type="hidden" name="point_id" value={point.id} /><input type="hidden" name="place_id" value={editing.id} />
+            <h3>{point[`name_${language === "it" ? "it" : "de"}`]} · {t.pointEditor.point} {point.point_number}</h3>
+            <label>{t.pointEditor.type}<select name="transport_type" defaultValue={point.transport_type}>
+              <option value="bus">{t.pointEditor.bus}</option><option value="train">{t.pointEditor.train}</option><option value="cable_car">{t.pointEditor.cable_car}</option>
+            </select></label>
+            <button type="submit">{t.editorEdit.save}</button>
+          </form>)}
+          {!editingPoints.length ? <p>{t.pointEditor.empty}</p> : null}
+        </section> : null}
         <section className="stops-card">
           <div className="card-heading"><span>{t.stops.kicker}</span><h2>{allActiveStops.length} {t.stops.count}</h2></div>
           <form className="database-search" method="get">
@@ -289,6 +305,7 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
         <div className="feedback-list">
           {visibleFeedback.map((entry) => {
             const stop = Array.isArray(entry.bus_stops) ? entry.bus_stops[0] : entry.bus_stops;
+            const point = Array.isArray(entry.stop_points) ? entry.stop_points[0] : entry.stop_points;
             const categories = (entry.stop_feedback_categories as FeedbackCategory[] | null) ?? [];
             const photos = (entry.stop_feedback_photos as FeedbackPhoto[] | null) ?? [];
             const reply = getFeedbackReply(entry.feedback_replies as FeedbackReply | FeedbackReply[] | null);
@@ -297,7 +314,7 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
             const severity = entry.severity as Severity | null;
             return <article className="feedback-entry" key={entry.id}>
               <header>
-                <div><strong>{stop?.name_de ?? t.feedback.unavailableStop}</strong><small>{stop?.municipality} · {stop?.name_it} · {stop?.name_en}</small></div>
+                <div><strong>{stop?.name_de || stop?.name_it || t.feedback.unavailableStop}</strong><small>{point ? `${t.pointEditor.point} ${point.point_number} · ${point.name_de || point.name_it}` : t.pointEditor.legacy}</small><small>{stop?.municipality} · {stop?.name_it} · {stop?.name_en}</small></div>
                 <div className="feedback-meta"><span className="status-badge" data-status={status}>{t.status[status] ?? status}</span><time dateTime={entry.created_at}>{formatSubmittedAt(entry.created_at, language)}</time></div>
               </header>
               <div className="feedback-entry-body">
