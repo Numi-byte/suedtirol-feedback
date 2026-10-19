@@ -10,28 +10,24 @@ export function SiteHeader() {
   const { t } = useLanguage();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
-  const headerRef = useRef<HTMLElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
   const current = (href: string) => (pathname === href ? "page" : undefined);
 
   useEffect(() => { setMenuOpen(false); }, [pathname]);
   useEffect(() => {
-    if (!menuOpen) return;
-    const escape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") { setMenuOpen(false); toggleRef.current?.focus(); }
-    };
-    const outside = (event: PointerEvent) => {
-      if (event.target instanceof Node && !headerRef.current?.contains(event.target)) setMenuOpen(false);
-    };
-    const desktop = window.matchMedia("(min-width: 1201px)");
+    const dialog = dialogRef.current;
+    if (!menuOpen || !dialog) return;
+    dialog.showModal();
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const desktop = window.matchMedia("(min-width: 768px)");
     const resize = (event: MediaQueryListEvent) => { if (event.matches) setMenuOpen(false); };
-    document.addEventListener("keydown", escape);
-    document.addEventListener("pointerdown", outside);
     desktop.addEventListener("change", resize);
     return () => {
-      document.removeEventListener("keydown", escape);
-      document.removeEventListener("pointerdown", outside);
       desktop.removeEventListener("change", resize);
+      document.body.style.overflow = previousOverflow;
+      if (dialog.open) dialog.close();
     };
   }, [menuOpen]);
 
@@ -40,7 +36,7 @@ export function SiteHeader() {
   if (pathname.startsWith("/feedback")) return null;
 
   return (
-    <header className="site-header" ref={headerRef}>
+    <header className="site-header">
       <div className="header-inner">
         <Link className="brand" href="/" aria-label={t.nav.home} onClick={() => setMenuOpen(false)}>
           <BrandLogo sub="" />
@@ -54,19 +50,43 @@ export function SiteHeader() {
 
         <Link className="header-cta" href="/stops">{t.nav.cta}</Link>
         <button ref={toggleRef} type="button" className="mobile-menu-toggle" aria-expanded={menuOpen}
-          aria-controls="mobile-navigation" onClick={() => setMenuOpen(open => !open)}>
+          aria-controls="mobile-menu-dialog" aria-haspopup="dialog" onClick={() => setMenuOpen(open => !open)}>
           <span>{t.nav.menu}</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
             <path d="M4 5.75h16M4 12h16M4 18.25h16" />
           </svg>
         </button>
       </div>
-      <nav id="mobile-navigation" className="mobile-navigation" aria-label={t.nav.navigation} hidden={!menuOpen}>
-        <Link href="/stops" aria-current={current("/stops")} onClick={() => setMenuOpen(false)}>{t.nav.find}</Link>
-        <Link href="/how-it-works" aria-current={current("/how-it-works")} onClick={() => setMenuOpen(false)}>{t.nav.how}</Link>
-        <Link href="/about" aria-current={current("/about")} onClick={() => setMenuOpen(false)}>{t.nav.about}</Link>
-        <Link className="mobile-nav-cta" href="/stops" onClick={() => setMenuOpen(false)}>{t.nav.cta}</Link>
-      </nav>
+      <dialog id="mobile-menu-dialog" ref={dialogRef} className="mobile-menu-dialog" aria-label={t.nav.menu} aria-modal="true"
+        onKeyDown={event => {
+          if (event.key !== "Tab") return;
+          const controls = [...event.currentTarget.querySelectorAll<HTMLElement>("button:not([disabled]), a[href]")];
+          const first = controls[0];
+          const last = controls[controls.length - 1];
+          if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+          else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+        }}
+        onCancel={event => { event.preventDefault(); setMenuOpen(false); }}
+        onClose={() => setMenuOpen(false)}
+        onClick={event => { if (event.target === event.currentTarget) setMenuOpen(false); }}>
+        <div className="mobile-menu-sheet">
+          <button type="button" className="mobile-menu-close" aria-label={t.nav.closeMenu} onClick={() => setMenuOpen(false)}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
+          </button>
+          <nav id="mobile-navigation" className="mobile-navigation" aria-label={t.nav.navigation}>
+            {[
+              { href: "/stops", label: t.nav.find },
+              { href: "/how-it-works", label: t.nav.how },
+              { href: "/about", label: t.nav.about },
+              { href: "/stops", label: t.nav.cta, cta: true },
+            ].map(item => <Link key={item.label} className={item.cta ? "mobile-nav-cta" : undefined}
+              href={item.href} aria-current={!item.cta ? current(item.href) : undefined} onClick={() => setMenuOpen(false)}>
+              <span>{item.label}</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
+            </Link>)}
+          </nav>
+        </div>
+      </dialog>
     </header>
   );
 }
