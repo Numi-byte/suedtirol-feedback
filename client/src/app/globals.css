@@ -827,6 +827,15 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
 }
 @media (max-width: 767px) {
   :root { --header-h: 80px; }
+  /* Keep the top and side insets; only the bottom surface extends under the home indicator. */
+  body.mobile-edge-to-edge {
+    min-height: 100dvh;
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) 0 env(safe-area-inset-left, 0px);
+  }
+  body.mobile-edge-to-edge .map-section {
+    height: calc(100dvh - var(--header-h) - env(safe-area-inset-top, 0px));
+  }
+  body.mobile-edge-to-edge .map-panel { bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
   .header-inner { height: 80px; padding: 24px 16px; gap: 16px; }
   .site-header .brand-logo { height: 32px; }
   .site-header .desktop-nav, .site-header .header-cta { display: none; }
@@ -899,6 +908,7 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
   .map-section { min-height: 520px; }
   .map-intro { top: 14px; left: 14px; width: calc(100% - 28px); padding: 18px 20px; }
   .map-panel { left: 14px; bottom: 14px; width: calc(100% - 28px); padding: 20px; }
+  body.mobile-edge-to-edge .map-panel { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
   /* The full-width panel owns the bottom edge; pinch and double-tap still zoom. */
   .leaflet-control-zoom { display: none; }
   .feedback-page { padding: 10px; }
