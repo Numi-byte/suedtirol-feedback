@@ -17,6 +17,26 @@ export function SiteHeader() {
 
   useEffect(() => { setMenuOpen(false); }, [pathname]);
   useEffect(() => {
+    const viewport = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
+    if (!viewport) return;
+    const original = viewport.content;
+    const mobile = window.matchMedia("(max-width: 767px)");
+    const update = () => {
+      const extend = mobile.matches && (pathname === "/" || menuOpen);
+      viewport.content = extend
+        ? `${original.replace(/,?\s*viewport-fit=[^,]+/g, "")}, viewport-fit=cover`
+        : original;
+      document.body.classList.toggle("mobile-edge-to-edge", extend);
+    };
+    update();
+    mobile.addEventListener("change", update);
+    return () => {
+      mobile.removeEventListener("change", update);
+      viewport.content = original;
+      document.body.classList.remove("mobile-edge-to-edge");
+    };
+  }, [pathname, menuOpen]);
+  useEffect(() => {
     const dialog = dialogRef.current;
     if (!menuOpen || !dialog) return;
     dialog.showModal();
