@@ -73,7 +73,7 @@ export function SiteHeader() {
         <div className="mobile-menu-sheet">
           <div className="mobile-menu-tools">
             <LanguageSelector />
-            <button type="button" className="mobile-menu-close" aria-label={t.nav.closeMenu} onClick={() => setMenuOpen(false)}>
+            <button autoFocus type="button" className="mobile-menu-close" aria-label={t.nav.closeMenu} onClick={() => setMenuOpen(false)}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
             </button>
           </div>
