@@ -51,6 +51,7 @@
   --blue-50: #ecf6fa;
   --gray-50: #f5f8fa;
   --gray-600: #4b6673;
+  --gray-500: #64818f;
   --gray-800: #2a424d;
   --gray-950: #0f2733;
   --blue-800: #055a81;
@@ -119,27 +120,35 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
 /* ---------- header ---------- */
 .site-header {
   position: sticky; top: 0; z-index: 1200; background: #fff;
-  border-bottom: 1px solid var(--line); box-shadow: 0 2px 12px rgba(0, 43, 77, .06);
+  box-shadow: inset 0 -1px 0 var(--line), 0 2px 12px rgba(0, 43, 77, .06);
 }
 .header-inner {
   max-width: var(--shell); height: 96px; margin: auto; padding: 20px var(--shell-pad);
   display: flex; align-items: center; justify-content: space-between; gap: 32px;
 }
-nav { display: flex; gap: 8px; margin-left: auto; }
+.site-header nav { display: flex; gap: 8px; margin-left: auto; }
 /* Pill width follows its label; height, padding, radius and type are fixed.
    16px over a 24px line box is exactly the 56px pill less its 16px padding. */
-nav a {
+.site-header nav a {
   display: flex; align-items: center; height: 56px; padding: 16px; border-radius: 32px;
   font-family: var(--font-brand); font-size: 16px; font-weight: 500; line-height: 24px; letter-spacing: 0;
   color: var(--gray-800); white-space: nowrap; transition: background .15s;
 }
-nav a:hover { background: var(--blue-50); }
+.site-header nav a:hover { background: var(--blue-50); }
 .header-cta {
   display: flex; align-items: center; height: 56px; padding: 16px 24px; border-radius: 32px;
   font-family: var(--font-brand); font-size: 16px; font-weight: 700; line-height: 24px; letter-spacing: 0;
   color: #fff; background: var(--blue); white-space: nowrap; transition: background .15s;
 }
 .header-cta:hover { background: var(--blue-dark); }
+.mobile-menu-toggle, .mobile-menu-dialog { display: none; }
+.mobile-menu-toggle {
+  position: relative; align-items: center; justify-content: center; gap: 8px;
+  height: 32px; padding: 0; border: 0; background: transparent; color: var(--gray-800);
+  font-size: 16px; line-height: 24px; cursor: pointer;
+}
+.mobile-menu-toggle::before { content: ""; position: absolute; inset: -6px 0; }
+.mobile-menu-toggle svg { width: 24px; height: 24px; color: var(--gray-500); }
 
 /* ---------- content pages ---------- */
 .content-page { padding-bottom: 72px; }
@@ -178,13 +187,14 @@ nav a:hover { background: var(--blue-50); }
 }
 .stop-card-cta:hover { background: var(--blue-dark); }
 .stop-card-cta svg { width: 16px; height: 16px; }
-.stop-card-comments {
-  padding: 11px 16px; border: 1px solid var(--blue); border-radius: 4px;
-  color: var(--blue); font-size: 13px; font-weight: 700;
+.stop-card-comments, .map-panel-comments, .stop-card-map {
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  width: 44px; height: 44px; padding: 10px; border: 1px solid var(--line); border-radius: 8px;
+  color: var(--gray-500); background: #fff;
 }
-.stop-card-comments:hover { color: #fff; background: var(--blue); }
-.stop-card-map { color: var(--blue); font-size: 13px; font-weight: 700; }
-.stop-card-map:hover { text-decoration: underline; }
+.stop-card-comments:hover, .map-panel-comments:hover, .stop-card-map:hover { color: var(--blue); background: var(--blue-50); }
+.comments-action-icon { width: 24px; height: 24px; flex: none; }
+.stop-card-map img { width: 24px; height: 24px; max-width: none; flex: none; }
 
 /* ---------- about ---------- */
 .about-page h1,
@@ -283,7 +293,7 @@ nav a:hover { background: var(--blue-50); }
 .map-panel-empty { color: var(--muted); }
 .transport-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 18px; }
 .transport-tags span { padding: 6px 10px; border-radius: 3px; color: var(--blue-deep); background: var(--sky); font-size: 11px; font-weight: 700; }
-.map-panel-actions { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.map-panel-actions { display: grid; grid-template-columns: minmax(0, 1fr) 44px; gap: 8px; }
 .map-panel-actions > a { display: flex; align-items: center; border-radius: 4px; font-size: 13px; font-weight: 700; }
 .map-panel-feedback {
   display: flex; align-items: center; justify-content: space-between; padding: 13px 15px;
@@ -291,8 +301,7 @@ nav a:hover { background: var(--blue-50); }
 }
 .map-panel-feedback:hover { background: var(--blue-dark); }
 .map-panel-feedback svg { width: 16px; height: 16px; }
-.map-panel-comments { justify-content: center; padding: 12px 14px; border: 1px solid var(--blue); color: var(--blue); text-align: center; }
-.map-panel-comments:hover { color: #fff; background: var(--blue); }
+.map-panel-comments { justify-self: end; }
 
 .map-quick-heading { margin-top: 16px; padding: 10px 0 8px; border-top: 1px solid #aaa; color: #6d6d6d; font-size: 13px; }
 .map-stop-list { max-height: min(42vh, 330px); margin: 0; padding: 0; overflow-y: auto; list-style: none; }
@@ -804,8 +813,52 @@ nav a:hover { background: var(--blue-50); }
 }
 
 /* ---------- responsive ---------- */
-@media (max-width: 1100px) {
-  nav { display: none; }
+@media (min-width: 768px) and (max-width: 1200px) {
+  .header-inner { padding-inline: 24px; gap: 16px; }
+  .site-header .brand-logo { height: 36px; }
+  .site-header .desktop-nav a { padding-inline: 12px; font-size: 14px; }
+  .site-header .header-cta { padding-inline: 16px; font-size: 14px; }
+}
+@media (max-width: 767px) {
+  :root { --header-h: 80px; }
+  .header-inner { height: 80px; padding: 24px 16px; gap: 16px; }
+  .site-header .brand-logo { height: 32px; }
+  .site-header .desktop-nav, .site-header .header-cta { display: none; }
+  .mobile-menu-toggle { display: flex; }
+  .mobile-menu-dialog[open] {
+    position: fixed; inset: 0; display: flex; align-items: flex-end;
+    width: 100%; max-width: none; height: 100dvh; max-height: none;
+    margin: 0; padding: 0; border: 0; overflow: hidden; background: transparent;
+    overscroll-behavior: contain;
+  }
+  .mobile-menu-dialog::backdrop { background: rgba(15, 39, 51, .48); animation: mobile-menu-dim 220ms ease-out; }
+  .mobile-menu-sheet {
+    position: relative; width: 100%; height: 464px; max-height: calc(100dvh - 80px);
+    padding: 40px 16px; border-radius: 32px; background: #fff;
+    box-shadow: 0 -8px 32px rgba(0, 43, 77, .12);
+    animation: mobile-menu-rise 260ms cubic-bezier(.2, .8, .2, 1);
+  }
+  .mobile-menu-close {
+    position: absolute; top: -56px; right: 16px; display: grid; place-items: center;
+    width: 44px; height: 44px; padding: 10px; border: 0; border-radius: 50%;
+    background: #fff; color: var(--gray-500); cursor: pointer;
+  }
+  .site-header .mobile-navigation {
+    display: flex; flex-direction: column; gap: 24px; height: 100%; min-height: 0;
+    margin: 0; overflow-y: auto; overscroll-behavior: contain;
+  }
+  .site-header .mobile-navigation a {
+    flex: 1 0 56px; height: auto; padding: 0 8px; border-radius: 8px;
+    justify-content: space-between;
+  }
+  .site-header .mobile-navigation a svg { flex: none; color: var(--gray-500); }
+  .site-header .mobile-navigation a[aria-current="page"] { background: var(--blue-50); }
+  .site-header .mobile-navigation .mobile-nav-cta { color: var(--blue); }
+}
+@keyframes mobile-menu-rise { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes mobile-menu-dim { from { background: transparent; } to { background: rgba(15, 39, 51, .48); } }
+@media (prefers-reduced-motion: reduce) {
+  .mobile-menu-sheet, .mobile-menu-dialog::backdrop { animation: none; }
 }
 @media (max-width: 980px) {
   .feedback-wizard { grid-template-columns: 1fr; }
@@ -823,8 +876,7 @@ nav a:hover { background: var(--blue-50); }
   .map-stop-list { display: none; }
 }
 @media (max-width: 560px) {
-  :root { --header-h: 72px; --shell-pad: 18px; }
-  .header-inner { height: 72px; gap: 12px; padding: 8px var(--shell-pad); }
+  :root { --shell-pad: 18px; }
   .brand-logo { height: 34px; }
   .header-cta { display: none; }
   .brand-sub { display: none; }
@@ -835,7 +887,6 @@ nav a:hover { background: var(--blue-50); }
   .map-section { min-height: 520px; }
   .map-intro { top: 14px; left: 14px; width: calc(100% - 28px); padding: 18px 20px; }
   .map-panel { left: 14px; bottom: 14px; width: calc(100% - 28px); padding: 20px; }
-  .map-panel-actions { grid-template-columns: 1fr; }
   /* The full-width panel owns the bottom edge; pinch and double-tap still zoom. */
   .leaflet-control-zoom { display: none; }
   .feedback-page { padding: 10px; }

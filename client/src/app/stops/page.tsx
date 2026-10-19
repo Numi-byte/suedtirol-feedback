@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import { useLanguage } from "@/components/language-provider";
 import { stopName, useStops } from "@/lib/stops";
 import type { BusStop } from "@/lib/stops";
+import { CommentsIcon } from "@/components/comments-icon";
 
 const SearchIcon = () => (
   <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -92,10 +94,14 @@ export default function StopsPage() {
                   >
                     {t.stops.feedback} <ArrowIcon />
                   </Link>
-                  <Link className="stop-card-comments" href={`${feedbackHref(stop)}#feedback-threads`}>
-                    {t.stops.comments}
+                  <Link className="stop-card-comments" href={`${feedbackHref(stop)}#feedback-threads`}
+                    aria-label={t.stops.comments} title={t.stops.comments}>
+                    <CommentsIcon />
                   </Link>
-                  <Link className="stop-card-map" href={`/?stop=${encodeURIComponent(stop.id)}`}>{t.stops.onMap}</Link>
+                  <Link className="stop-card-map" href={`/?stop=${encodeURIComponent(stop.id)}`}
+                    aria-label={t.stops.onMap} title={t.stops.onMap}>
+                    <Image src="/icons/map-pin.svg" width={24} height={24} alt="" aria-hidden="true" />
+                  </Link>
                 </div>
               </article>
             </li>
