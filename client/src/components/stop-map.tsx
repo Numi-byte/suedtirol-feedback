@@ -86,7 +86,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredStops, language, query, stops, selectedId]);
   const selected = filteredStops.find((stop) => stop.id === selectedId) ?? null;
-  const { points, status: pointsStatus } = useStopPoints(selected?.id ?? null);
+  const { points } = useStopPoints(selected?.id ?? null);
 
   // Create the map once. Leaflet needs the DOM, so it is imported client-side only.
   useEffect(() => {
@@ -380,11 +380,6 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
             <span className="map-panel-label">{selected.municipality}</span>
             <h3>{stopName(selected)}</h3>
             <button type="button" className="map-deselect" onClick={() => updateSelection(null)}>{labels.deselect}</button>
-            <p>{selected.latitude.toFixed(5)}, {selected.longitude.toFixed(5)}</p>
-            <p className="map-point-status" role="status">
-              {pointsStatus === "loading" ? labels.pointsLoading : pointsStatus === "error" ? labels.pointsError
-                : points.length ? `${points.length} ${labels.stopPoints}` : labels.noPoints}
-            </p>
             {selected.is_accessible ? <div className="transport-tags"><span>{labels.accessible}</span></div> : null}
             <div className="map-panel-actions">
               <a className="map-panel-feedback" href={`/feedback?stop=${encodeURIComponent(selected.id)}&lang=${language}&name=${encodeURIComponent(stopName(selected))}`}>
