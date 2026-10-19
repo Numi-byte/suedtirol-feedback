@@ -187,15 +187,14 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
 }
 .stop-card-cta:hover { background: var(--blue-dark); }
 .stop-card-cta svg { width: 16px; height: 16px; }
-.stop-card-comments, .map-panel-comments {
+.stop-card-comments, .map-panel-comments, .stop-card-map {
   display: inline-flex; align-items: center; justify-content: center; flex: none;
   width: 44px; height: 44px; padding: 10px; border: 1px solid var(--line); border-radius: 8px;
   color: var(--gray-500); background: #fff;
 }
-.stop-card-comments:hover, .map-panel-comments:hover { color: var(--blue); background: var(--blue-50); }
+.stop-card-comments:hover, .map-panel-comments:hover, .stop-card-map:hover { color: var(--blue); background: var(--blue-50); }
 .comments-action-icon { width: 24px; height: 24px; flex: none; }
-.stop-card-map { color: var(--blue); font-size: 13px; font-weight: 700; }
-.stop-card-map:hover { text-decoration: underline; }
+.stop-card-map img { width: 24px; height: 24px; max-width: none; flex: none; }
 
 /* ---------- about ---------- */
 .about-page h1,
