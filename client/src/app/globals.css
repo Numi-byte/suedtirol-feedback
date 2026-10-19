@@ -642,10 +642,10 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
 /* ---------- feedback flow: shared site typography, surfaces, and spacing ---------- */
 .feedback-page {
   display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-  min-height: 100dvh; gap: 32px; padding: 64px var(--shell-pad); background: var(--gray-50);
+  min-height: 100dvh; gap: 32px; padding: 32px clamp(16px, 2vw, 32px); background: var(--gray-50);
 }
 .feedback-dialog, .feedback-threads, .thanks {
-  width: min(1264px, 100%); margin: 0 auto; border: 1px solid var(--line); border-radius: 48px;
+  width: 100%; margin: 0 auto; border: 1px solid var(--line); border-radius: 48px;
   background: #fff; box-shadow: none;
 }
 .feedback-dialog { overflow: hidden; }
@@ -669,14 +669,8 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
 .feedback-close img { width: 12px; height: 12px; }
 .feedback-heading .heading-required { grid-column: 1 / -1; margin: 0; color: var(--gray-600); font-size: 14px; line-height: 20px; }
 .heading-required span, .required-mark, .required-note span { color: #b42331; font-style: normal; font-weight: 700; }
-.feedback-progress { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 32px 40px 40px; padding: 0; list-style: none; }
-.feedback-progress li { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 16px; border: 1px solid var(--line); border-radius: 24px; background: var(--gray-50); color: var(--gray-600); font-size: 16px; line-height: 24px; }
-.feedback-progress b { min-width: 0; overflow-wrap: anywhere; }
-.feedback-progress span, .wizard-panel legend > span { display: inline-grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 50%; background: #d6e2e8; color: var(--gray-800); font-family: var(--font-brand); font-size: 16px; line-height: 24px; font-weight: 700; }
-.feedback-progress li.active { color: var(--blue-800); background: var(--blue-50); }
-.feedback-progress li.active span, .wizard-panel legend > span { background: var(--blue-800); color: #fff; }
-.feedback-progress li[aria-current="step"] { border-color: var(--blue-800); }
-.feedback-wizard { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin: 0; padding: 0 40px 40px; }
+.wizard-panel legend > span { display: inline-grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 50%; background: var(--blue-800); color: #fff; font-family: var(--font-brand); font-size: 16px; line-height: 24px; font-weight: 700; }
+.feedback-wizard { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin: 0; padding: 32px 40px 40px; }
 .wizard-panel { min-width: 0; margin: 0; padding: 24px; border: 1px solid var(--line); border-radius: 32px; background: var(--gray-50); scroll-margin-top: 24px; }
 .wizard-panel.panel-invalid { border-color: #b42331; }
 .wizard-panel legend { max-width: 100%; padding: 0 8px; color: var(--blue-800); font-family: var(--font-display); font-size: 24px; line-height: 32px; letter-spacing: -.03em; }
@@ -787,11 +781,10 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
 .thanks-discussion:hover { background: var(--blue-50); }
 
 @media (max-width: 1279px) {
-  .feedback-page { padding: 40px 24px; }
+  .feedback-page { padding: 24px; }
   .feedback-heading { padding: 32px; }
   .feedback-heading h1 { font-size: 40px; line-height: 48px; }
-  .feedback-progress { margin: 24px 32px 32px; }
-  .feedback-wizard { grid-template-columns: minmax(0, 1fr); padding: 0 32px 32px; }
+  .feedback-wizard { grid-template-columns: minmax(0, 1fr); padding: 32px; }
   .wizard-panel { display: none; padding: 24px; }
   .wizard-panel.current { display: block; }
   .wizard-panel button.mobile-next { display: flex; width: 100%; margin-top: 24px; }
@@ -805,10 +798,7 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
   .feedback-heading-tools { grid-row: 1; justify-content: space-between; }
   .feedback-heading h1 { margin-bottom: 24px; font-size: 32px; line-height: 40px; }
   .feedback-heading .heading-required { grid-column: 1; }
-  .feedback-progress { gap: 8px; margin: 24px 16px 32px; }
-  .feedback-progress li { flex-direction: column; padding: 12px 8px; gap: 8px; border-radius: 16px; font-size: 14px; line-height: 20px; text-align: center; }
-  .feedback-progress span { width: 32px; height: 32px; }
-  .feedback-wizard { padding: 0 16px 24px; }
+  .feedback-wizard { padding: 24px 16px; }
   .wizard-panel { padding: 16px; border-radius: 24px; }
   .feedback-dialog-footer, .feedback-threads { padding: 24px; }
   .feedback-threads h2, .thanks h1 { font-size: 32px; line-height: 40px; }
