@@ -110,6 +110,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
   }, [router]);
 
   const updatePointSelection = useCallback((id: string) => {
+    setSearchExpanded(true);
     const position = pointMarkersRef.current.get(id)?.getLatLng();
     if (position) focusPointOnMap({ latitude: position.lat, longitude: position.lng });
     const url = new URL(window.location.href);
@@ -379,6 +380,29 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
       else marker.closeTooltip();
     }
   }, [selectedPointId]);
+
+  // Reveal the matching row without scrolling the page or moving keyboard focus
+  // away from the map. Observe the list while the mobile sheet opens/resizes.
+  useEffect(() => {
+    if (!selectedPointId || !searchExpanded || pointsStatus !== "ready") return;
+    const list = canvasRef.current?.querySelector<HTMLElement>(".stop-point-list");
+    const row = list?.querySelector<HTMLElement>("li.is-selected");
+    if (!list || !row) return;
+    const reveal = () => {
+      if (!list.clientHeight) return;
+      const bounds = list.getBoundingClientRect();
+      const item = row.getBoundingClientRect();
+      if (item.top < bounds.top || item.height > list.clientHeight) {
+        list.scrollTop += item.top - bounds.top;
+      } else if (item.bottom > bounds.bottom) {
+        list.scrollTop += item.bottom - bounds.bottom;
+      }
+    };
+    reveal();
+    const observer = new ResizeObserver(reveal);
+    observer.observe(list);
+    return () => observer.disconnect();
+  }, [selectedPointId, searchExpanded, pointsStatus, points]);
 
   // Also focus deep-linked points after loading, and keep them clear of a
   // resizing bottom sheet or a changed screen orientation.
