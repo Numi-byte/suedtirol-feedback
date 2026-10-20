@@ -132,7 +132,8 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .feedback-summary span { font-size: 14px; }
 .reply-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
 .reply-filters a { display: inline-flex; align-items: center; min-height: 44px; padding: 10px 20px; border: 1px solid var(--line); border-radius: 32px; color: var(--blue-800); font-size: 16px; line-height: 24px; }
-.reply-filters a:hover, .reply-filters a[aria-current="page"] { color: #fff; border-color: var(--blue-800); background: var(--blue-800); }
+.reply-filters a:hover { border-color: var(--blue-800); background: var(--sky); }
+.reply-filters a[aria-current="page"] { color: #fff; border-color: var(--blue-800); background: var(--blue-800); }
 .feedback-list { display: grid; gap: 24px; margin-top: 24px; }
 .feedback-entry { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 24px; }
 .feedback-entry > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; padding: 24px; background: var(--surface); }
@@ -261,3 +262,11 @@ button:disabled { opacity: .5; cursor: not-allowed; }
   .login-card h2 { font-size: 32px; line-height: 40px; }
 }
 @media (prefers-reduced-motion: reduce) { .button-spinner { animation: none; } }
+
+/* Keep the current page visible while filters and pagination load. */
+.portal-loading-indicator { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 1500; display: flex; align-items: center; gap: 12px; max-width: calc(100% - 32px); padding: 12px 20px; border: 1px solid var(--line); border-radius: 32px; color: var(--blue-800); background: #fff; box-shadow: 0 8px 24px rgba(15,39,51,.16); font-size: 16px; line-height: 24px; }
+.portal-loading-indicator .button-spinner, .portal-route-loading .button-spinner { border-color: var(--line); border-top-color: var(--blue); }
+.portal-navigation[aria-busy="true"] :is(.stop-list, .feedback-list, .archived-list) { opacity: .5; }
+.portal-navigation a[aria-disabled="true"] { cursor: progress; }
+.portal-route-loading { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 100dvh; padding: 32px; color: var(--blue-800); }
+#stop-database, #feedback-inbox, #archived-stops { scroll-margin-top: 24px; }

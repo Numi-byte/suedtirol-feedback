@@ -24,7 +24,7 @@ export const translations = {
       errorInvalid: "E-Mail-Adresse oder Passwort ist nicht korrekt.",
     },
     portal: {
-      kicker: "Portal für Verkehrsdaten", title: "Haltestellen verwalten",
+      loading: "Daten werden geladen …", kicker: "Portal für Verkehrsdaten", title: "Haltestellen verwalten",
       signOut: "Abmelden", language: "Sprache ändern",
     },
     importer: {
@@ -102,6 +102,7 @@ export const translations = {
       errorInvalid: "L'indirizzo e-mail o la password non sono corretti.",
     },
     portal: {
+      loading: "Caricamento dei dati …",
       kicker: "Portale dati del trasporto", title: "Gestione delle fermate",
       signOut: "Esci", language: "Cambia lingua",
     },
@@ -180,6 +181,7 @@ export const translations = {
       errorInvalid: "The email address or password is incorrect.",
     },
     portal: {
+      loading: "Loading data …",
       kicker: "Transport data portal", title: "Bus stop management",
       signOut: "Sign out", language: "Change language",
     },
