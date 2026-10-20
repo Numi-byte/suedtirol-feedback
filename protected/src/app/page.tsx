@@ -1,4 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
+import loginPhoto from "@/components/3e665714419485d3f8c4ee7c0026d022bef11c77.jpg";
 import { archiveBusStop, createBusStop, restoreBusStop, signOut, updateBusStop, updateStopPointType } from "./actions";
 import { ConfirmButton } from "./confirm-button";
 import { FeedbackReplyForm } from "./feedback-reply-form";
@@ -42,19 +44,6 @@ function categoryLabel(category: FeedbackCategory, language: Language) {
   const labels = category.feedback_categories[0];
   return labels?.[`label_${language}` as keyof CategoryLabels] ?? category.category_slug;
 }
-
-const RouteLines = () => (
-  <svg className="route-lines" viewBox="0 0 420 300" fill="none" aria-hidden="true">
-    <g stroke="currentColor" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 230h110l80-80h130l60-60" />
-      <path d="M70 30v90l80 80v100" opacity=".6" />
-    </g>
-    <g fill="currentColor">
-      <circle cx="130" cy="230" r="16" />
-      <circle cx="340" cy="150" r="16" />
-    </g>
-  </svg>
-);
 
 type BusStopRow = {
   id: string; name_de: string; name_it: string; name_en: string; municipality: string;
@@ -172,11 +161,12 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
   if (!user) return (
     <main className="login-page">
       <section className="login-intro">
+        <Image className="login-photo" src={loginPhoto} alt="" fill priority placeholder="blur"
+          sizes="(max-width: 900px) 100vw, 55vw" />
         <BrandLogo tone="dark" sub="portal" />
         <p>{t.login.eyebrow}</p>
         <h1>{t.login.headline[0]}<br />{t.login.headline[1]}</h1>
         <span className="login-lead">{t.login.lead}</span>
-        <RouteLines />
       </section>
       <section className="login-panel"><div className="login-card">
         <div className="login-card-top">
@@ -197,7 +187,7 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
         <BrandLogo sub="portal" />
         <div className="user-actions">
           <LanguageSwitch language={language} label={t.portal.language} />
-          <span className="user-pill">{user.email}</span>
+          <span className="user-pill" title={user.email}>{user.email}</span>
           <form action={signOut}><button type="submit" className="sign-out">{t.portal.signOut}</button></form>
         </div>
       </div>
