@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import worldIcon from "@/components/vector.png";
+import { LanguageSelector } from "@/components/language-selector";
 import { useRouter } from "next/navigation";
 import { TransportIcon, type TransportType } from "@/components/transport-icon";
 import { useLanguage } from "@/components/language-provider";
@@ -239,13 +239,11 @@ export function FeedbackForm({ pointId, stopName, stopLocation, transportType, l
           </div>
         </div>
         <div className="feedback-heading-tools">
-          <label className="feedback-language"><span className="sr-only">{copy.language}</span><Image src={worldIcon} width={16} height={16} alt="" aria-hidden="true" /><select aria-label={copy.language} value={language} onChange={event => {
-            const next = event.target.value as Language;
-            setLanguage(next);
+          <LanguageSelector className="feedback-language" variant="menu" value={language} onChange={next => {
             const url = new URL(window.location.href);
             url.searchParams.set("lang", next);
             router.replace(`${url.pathname}${url.search}${url.hash}`, { scroll: false });
-          }}><option value="de">Deutsch</option><option value="it">Italiano</option><option value="en">English</option></select></label>
+          }} />
           <Link className="feedback-close" href="/" aria-label={copy.close}><Image src="/icons/close.svg" width={12} height={12} alt="" aria-hidden="true" /></Link>
         </div>
         <p className="heading-required"><span>*</span> {copy.required}</p>
