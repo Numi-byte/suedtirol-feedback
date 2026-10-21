@@ -47,7 +47,7 @@ export function SiteFooter() {
           <div className="footer-links">
             {t.footer.links.slice(0, 2).map((link, index) => <a key={link} href={footerHrefs[index]}>{link}</a>)}
           </div>
-          <LanguageSelector className="footer-language" />
+          <LanguageSelector className="footer-language" variant="menu" />
         </div>
       </div>
     </footer>

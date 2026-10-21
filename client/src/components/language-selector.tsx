@@ -8,17 +8,21 @@ import { languages, type Language } from "@/lib/i18n";
 
 const languageNames: Record<Language, string> = { de: "Deutsch", it: "Italiano", en: "English" };
 
-export function LanguageSelector({ className = "", variant = "select" }: { className?: string; variant?: "select" | "menu" }) {
-  const { language, setLanguage, t } = useLanguage();
+export function LanguageSelector({ className = "", variant = "select", value, onChange }: {
+  className?: string; variant?: "select" | "menu"; value?: Language; onChange?: (language: Language) => void;
+}) {
+  const { language: siteLanguage, setLanguage, t } = useLanguage();
+  const language = value ?? siteLanguage;
   const [open, setOpen] = useState(false);
   const optionsId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const chooseLanguage = (code: Language) => {
     setLanguage(code);
+    onChange?.(code);
     // A language supplied in the URL must not undo the choice on reload.
     const url = new URL(window.location.href);
-    if (url.searchParams.has("lang")) {
+    if (!onChange && url.searchParams.has("lang")) {
       url.searchParams.set("lang", code);
       window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
     }
