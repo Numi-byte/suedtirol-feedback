@@ -9,6 +9,8 @@ export type BusStop = {
   name_it: string;
   name_en: string;
   municipality: string;
+  municipality_de?: string;
+  municipality_it?: string;
   latitude: number;
   longitude: number;
   is_accessible: boolean;

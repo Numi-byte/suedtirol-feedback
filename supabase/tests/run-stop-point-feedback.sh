@@ -21,3 +21,5 @@ run_sql "$repo_root/supabase/tests/bootstrap.sql"
 for migration in "$repo_root"/supabase/migrations/*.sql; do run_sql "$migration"; done
 run_sql "$repo_root/supabase/tests/stop-point-feedback.sql"
 tail -1 "$test_log"
+run_sql "$repo_root/supabase/tests/bilingual-municipalities.sql"
+tail -1 "$test_log"

@@ -31,7 +31,7 @@ export async function loadPortalPage<T>(page: number, size: number,
 /** Match every word against any name, municipality or stop code. Quotes and
  * LIKE metacharacters are literals, never PostgREST filter syntax. */
 export function stopSearchFilter(search: string): string | null {
-  const columns = ["name_de", "name_it", "name_en", "municipality", "stop_code"];
+  const columns = ["name_de", "name_it", "name_en", "municipality_de", "municipality_it", "municipality", "stop_code"];
   const terms = search.trim().split(/\s+/).filter(Boolean);
   if (!terms.length) return null;
   const clauses = terms.map(term => {

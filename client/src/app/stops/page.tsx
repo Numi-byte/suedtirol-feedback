@@ -1,5 +1,6 @@
 "use client";
 
+import { municipalityName } from "../../../../shared/municipality";
 import Link from "next/link";
 import Image from "next/image";
 import { useMemo, useState } from "react";
@@ -25,7 +26,7 @@ function StopPoints({ placeId }: { placeId: string }) {
 /** Matches on all three stop names plus the municipality, so a search works
  *  whichever language the stop is known by. */
 function matches(stop: BusStop, query: string) {
-  const haystack = [stop.name_de, stop.name_it, stop.name_en, stop.municipality].join(" ").toLowerCase();
+  const haystack = [stop.name_de, stop.name_it, stop.name_en, stop.municipality_de, stop.municipality_it, stop.municipality].join(" ").toLowerCase();
   return query.split(/\s+/).every((term) => haystack.includes(term));
 }
 
@@ -82,7 +83,7 @@ export default function StopsPage() {
             <li key={stop.id}>
               <article className="stop-card">
                 <div>
-                  <span className="stop-card-place">{stop.municipality}</span>
+                  <span className="stop-card-place">{municipalityName(stop, language)}</span>
                   <h2>{stopName(stop, language)}</h2>
                   {stop.is_accessible ? <div className="transport-tags"><span>{t.stops.accessible}</span></div> : null}
                 </div>

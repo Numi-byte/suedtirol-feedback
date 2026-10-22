@@ -1,5 +1,6 @@
 "use client";
 
+import { municipalityName } from "../../../shared/municipality";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
@@ -124,7 +125,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
     const terms = query.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
     if (!terms.length) return stops;
     return stops.filter((stop) => {
-      const searchable = [stop.name_de, stop.name_it, stop.name_en, stop.municipality].join(" ").toLocaleLowerCase();
+      const searchable = [stop.name_de, stop.name_it, stop.name_en, stop.municipality_de, stop.municipality_it, stop.municipality].join(" ").toLocaleLowerCase();
       return terms.every((term) => searchable.includes(term));
     });
   }, [query, stops, selectedId]);
@@ -253,7 +254,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
         const marker = L.marker([stop.latitude, stop.longitude], {
           icon: stop.id === selectedIdRef.current ? selectedIcon : normalIcon,
           title: name,
-          alt: `${name} – ${stop.municipality}`,
+          alt: `${name} – ${municipalityName(stop, language)}`,
           keyboard: true,
         });
         const text = document.createElement("span");
@@ -548,7 +549,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
                       <button type="button" aria-current={stop.id === selectedId} onClick={() => focusStop(stop)}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={busIcon.src} alt="" aria-hidden="true" />
-                        <span><strong>{stopName(stop)}</strong><small>{stop.municipality}</small></span>
+                        <span><strong>{stopName(stop)}</strong><small>{municipalityName(stop, language)}</small></span>
                       </button>
                     </li>
                   ))}
@@ -561,7 +562,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
         <div id="map-stop-points" className="map-panel" aria-live="polite">
           {selected ? (
             <>
-              <span className="map-panel-label">{selected.municipality}</span>
+              <span className="map-panel-label">{municipalityName(selected, language)}</span>
               <div className="map-panel-heading">
                 <h3>{stopName(selected)}</h3>
                 <button type="button" className="map-deselect" aria-label={labels.deselect} title={labels.deselect}
