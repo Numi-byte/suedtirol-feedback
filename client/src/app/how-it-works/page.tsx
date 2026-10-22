@@ -49,18 +49,6 @@ export default function HowItWorksPage() {
       </section>
 
       <section className="help-section">
-        <h2>{t.how.afterTitle}</h2>
-        <ol className="after-list">
-          {t.how.after.map((item) => (
-            <li key={item.title}>
-              <strong>{item.title}</strong>
-              <span>{item.copy}</span>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      <section className="help-section">
         <h2>{t.how.faqTitle}</h2>
         <div className="faq-list">
           {t.how.faq.map((entry) => (
