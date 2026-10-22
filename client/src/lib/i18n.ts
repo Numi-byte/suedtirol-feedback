@@ -65,7 +65,7 @@ export const translations = {
     about: {
       eyebrow: "Über das Projekt", title: "Über das Projekt",
       lead: [
-        "Mit dem Projekt „Haltestellencheck“ möchten wir die Fahrgäste aktiv in die Weiterentwicklung des öffentlichen Verkehrs in Südtirol einbeziehen. Im Mittelpunkt stehen dabei die Bushaltestellen und Bahnhöfe des öffentlichen Nahverkehrs und die Frage, wie die Nutzerinnen und Nutzer ihren Aufenthalt und ihre Erfahrungen vor Ort wahrnehmen.",
+        "Mit dem Projekt „Haltestellencheck“ möchten wir die Fahrgäste aktiv in die Weiterentwicklung des öffentlichen Verkehrs in Südtirol einbeziehen. Im Mittelpunkt stehen dabei die Bushaltestellen, Bahnhöfe und Seilbahnstationen des öffentlichen Nahverkehrs und die Frage, wie die Nutzerinnen und Nutzer ihren Aufenthalt und ihre Erfahrungen vor Ort wahrnehmen.",
         "Die Fahrgäste erhalten die Möglichkeit, ihre persönliche Erfahrung direkt mit uns zu teilen, konkrete Verbesserungsvorschläge einzubringen und auf positive Aspekte aufmerksam zu machen. Damit wird das Feedback der Fahrgäste zu einem wichtigen Bestandteil der kontinuierlichen Verbesserung des öffentlichen Verkehrsangebots.",
       ],
       sections: [
