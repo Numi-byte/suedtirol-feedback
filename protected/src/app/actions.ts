@@ -67,7 +67,7 @@ export async function signOut() {
 }
 
 type StopFields = {
-  name_de: string; name_it: string; name_en: string; municipality: string;
+  name_de: string; name_it: string; name_en: string; municipality: string; municipality_de: string; municipality_it: string;
   stop_code: string | null; latitude: number; longitude: number;
   is_accessible: boolean; is_published: boolean;
 };
@@ -76,11 +76,16 @@ function readStopFields(formData: FormData): StopFields {
   const latitude = Number(formData.get("latitude"));
   const longitude = Number(formData.get("longitude"));
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) throw new Error("Valid coordinates are required.");
+  const municipalityDe = String(formData.get("municipality_de") ?? "").trim();
+  const municipalityIt = String(formData.get("municipality_it") ?? "").trim();
+  if (!municipalityDe || !municipalityIt) throw new Error("German and Italian municipality names are required.");
   return {
     name_de: String(formData.get("name_de") ?? "").trim(),
     name_it: String(formData.get("name_it") ?? "").trim(),
     name_en: String(formData.get("name_en") ?? "").trim(),
-    municipality: String(formData.get("municipality") ?? "").trim(),
+    municipality: municipalityIt,
+    municipality_de: municipalityDe,
+    municipality_it: municipalityIt,
     stop_code: String(formData.get("stop_code") ?? "").trim() || null,
     latitude,
     longitude,

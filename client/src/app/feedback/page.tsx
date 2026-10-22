@@ -1,3 +1,4 @@
+import { municipalityName } from "../../../../shared/municipality";
 import { notFound, redirect } from "next/navigation";
 import { FeedbackForm } from "./feedback-form";
 import { FeedbackThreads } from "./feedback-threads";
@@ -7,7 +8,7 @@ import type { TransportType } from "@/components/transport-icon";
 import { stopPointName } from "@/lib/stop-point-links";
 
 type PublishedPoint = { id: string; point_number: string; name_de: string; name_it: string; transport_type: TransportType;
-  place_name_de: string; place_name_it: string; place_name_en: string; municipality: string };
+  place_name_de: string; place_name_it: string; place_name_en: string; municipality: string; municipality_de?: string; municipality_it?: string };
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -29,7 +30,7 @@ export default async function FeedbackPage({ searchParams }: {
   const placeName = point[`place_name_${language}`] || point.place_name_it || point.place_name_de;
   const name = `${placeName} · ${stopPointName(point, language)} · ${translations[language].map.pointLabel} ${point.point_number}`;
   return <main className="feedback-page">
-    <FeedbackForm pointId={point.id} stopName={name} stopLocation={point.municipality} transportType={point.transport_type} language={language} />
+    <FeedbackForm pointId={point.id} stopName={name} stopLocation={municipalityName(point, language)} transportType={point.transport_type} language={language} />
     <FeedbackThreads pointId={point.id} language={language} />
   </main>;
 }

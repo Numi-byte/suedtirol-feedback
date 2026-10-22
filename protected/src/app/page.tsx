@@ -1,3 +1,4 @@
+import { municipalityName } from "../../../shared/municipality";
 import Link from "next/link";
 import Image from "next/image";
 import loginPhoto from "@/components/3e665714419485d3f8c4ee7c0026d022bef11c77.jpg";
@@ -41,7 +42,7 @@ function formatSubmittedAt(value: string, language: Language) {
 }
 
 type BusStopRow = {
-  id: string; name_de: string; name_it: string; name_en: string; municipality: string;
+  id: string; name_de: string; name_it: string; name_en: string; municipality: string; municipality_de?: string; municipality_it?: string;
   stop_code: string | null; latitude: number; longitude: number;
   is_accessible: boolean; is_published: boolean; archived_at: string | null;
 };
@@ -97,7 +98,7 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
   const searchQuery = q?.trim() ?? "";
   const searchFilter = stopSearchFilter(searchQuery);
   const validSelectedId = selectedId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selectedId) ? selectedId : null;
-  const stopFields = "id,name_de,name_it,name_en,municipality,stop_code,latitude,longitude,is_accessible,is_published,archived_at";
+  const stopFields = "id,name_de,name_it,name_en,municipality,municipality_de,municipality_it,stop_code,latitude,longitude,is_accessible,is_published,archived_at";
   const buildStopQuery = (head = false) => {
     let query = supabase.from("bus_stops").select(stopFields, { count: "exact", head }).is("archived_at", null);
     if (searchFilter) query = query.or(searchFilter);
@@ -106,7 +107,7 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
   const buildArchiveQuery = (head = false) => supabase.from("bus_stops").select(stopFields, { count: "exact", head })
     .not("archived_at", "is", null).order("archived_at", { ascending: false }).order("id");
   const replyFilter: ReplyFilter = replies === "replied" || replies === "unreplied" ? replies : "all";
-  const feedbackSelect = "id,severity,description,overall_rating,cleanliness_rating,safety_rating,accessibility_rating,information_rating,shelter_rating,has_shelter,has_seating,has_lighting,comment,email,consent_to_contact,language,status,created_at,bus_stops(name_de,name_it,name_en,municipality),stop_points(point_number,name_de,name_it),stop_feedback_categories(category_slug,feedback_categories(label_de,label_it,label_en)),stop_feedback_photos(id,storage_path),feedback_replies!left(id,body,created_at,updated_at)";
+  const feedbackSelect = "id,severity,description,overall_rating,cleanliness_rating,safety_rating,accessibility_rating,information_rating,shelter_rating,has_shelter,has_seating,has_lighting,comment,email,consent_to_contact,language,status,created_at,bus_stops(name_de,name_it,name_en,municipality,municipality_de,municipality_it),stop_points(point_number,name_de,name_it),stop_feedback_categories(category_slug,feedback_categories(label_de,label_it,label_en)),stop_feedback_photos(id,storage_path),feedback_replies!left(id,body,created_at,updated_at)";
   const buildFeedbackQuery = (head = false) => {
     let query = supabase.from("stop_feedback").select(feedbackSelect, { count: "exact", head });
     if (replyFilter === "replied") query = query.not("feedback_replies", "is", null);
@@ -203,7 +204,8 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
           <form action={editing ? updateBusStop : createBusStop} key={editing?.id ?? "new"}>
             {editing ? <input type="hidden" name="id" value={editing.id} /> : null}
             <div className="field-grid three"><label>{t.editor.nameDe}<input name="name_de" defaultValue={editing?.name_de ?? ""} /></label><label>{t.editor.nameIt}<input name="name_it" defaultValue={editing?.name_it ?? ""} required /></label><label>{t.editor.nameEn}<input name="name_en" defaultValue={editing?.name_en ?? ""} /></label></div>
-            <div className="field-grid"><label>{t.editor.municipality}<input name="municipality" defaultValue={editing?.municipality ?? ""} /></label><label>{t.editor.stopCode}<input name="stop_code" defaultValue={editing?.stop_code ?? ""} placeholder={t.editor.optional} /></label></div>
+            <div className="field-grid"><label>{t.editor.municipalityDe}<input name="municipality_de" defaultValue={editing?.municipality_de ?? ""} required /></label><label>{t.editor.municipalityIt}<input name="municipality_it" defaultValue={editing?.municipality_it ?? ""} required /></label></div>
+            <div className="field-grid"><label>{t.editor.stopCode}<input name="stop_code" defaultValue={editing?.stop_code ?? ""} placeholder={t.editor.optional} /></label></div>
             <div className="field-grid"><label>{t.editor.latitude}<input name="latitude" type="number" min="-90" max="90" step="any" defaultValue={editing?.latitude ?? ""} placeholder="46.4983" required /></label><label>{t.editor.longitude}<input name="longitude" type="number" min="-180" max="180" step="any" defaultValue={editing?.longitude ?? ""} placeholder="11.3548" required /></label></div>
             <div className="checks"><label><input name="is_accessible" type="checkbox" defaultChecked={editing?.is_accessible ?? false} /> {t.editor.accessible}</label><label><input name="is_published" type="checkbox" defaultChecked={editing?.is_published ?? true} /> {t.editor.publish}</label></div>
             <button type="submit">{editing ? t.editorEdit.save : t.editor.save}</button>
@@ -243,7 +245,7 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
                 <div>
                   <strong>{stop.name_de || stop.name_it}</strong>
                   <small>{stop.name_it} · {stop.name_en}</small>
-                  <small>{stop.municipality} · {stop.latitude.toFixed(5)}, {stop.longitude.toFixed(5)}</small>
+                  <small>{municipalityName(stop, language)} · {stop.latitude.toFixed(5)}, {stop.longitude.toFixed(5)}</small>
                 </div>
               </PortalLink>
             ))}
@@ -265,7 +267,7 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
             <h3>{t.archived.title} · {archivePage.count} {t.archived.count}</h3>
             {archivedStops.map((stop) => (
               <div className="archived-row" key={stop.id}>
-                <div><strong>{stop.name_de || stop.name_it}</strong><small>{stop.municipality}</small></div>
+                <div><strong>{stop.name_de || stop.name_it}</strong><small>{municipalityName(stop, language)}</small></div>
                 <form action={restoreBusStop}>
                   <input type="hidden" name="id" value={stop.id} />
                   <button type="submit" className="restore">{t.archived.restore}</button>
@@ -304,7 +306,7 @@ export default async function PortalHomePage({ searchParams }: { searchParams: P
             const severity = entry.severity as Severity | null;
             return <article className="feedback-entry" key={entry.id}>
               <header>
-                <div><strong>{stop?.name_de || stop?.name_it || t.feedback.unavailableStop}</strong><small>{point ? `${t.pointEditor.point} ${point.point_number} · ${point.name_de || point.name_it}` : t.pointEditor.legacy}</small><small>{stop?.municipality} · {stop?.name_it} · {stop?.name_en}</small></div>
+                <div><strong>{stop?.name_de || stop?.name_it || t.feedback.unavailableStop}</strong><small>{point ? `${t.pointEditor.point} ${point.point_number} · ${point.name_de || point.name_it}` : t.pointEditor.legacy}</small><small>{municipalityName(stop, language)} · {stop?.name_it} · {stop?.name_en}</small></div>
                 <div className="feedback-meta"><span className="status-badge" data-status={status}>{t.status[status] ?? status}</span><time dateTime={entry.created_at}>{formatSubmittedAt(entry.created_at, language)}</time></div>
               </header>
               <div className="feedback-entry-body">

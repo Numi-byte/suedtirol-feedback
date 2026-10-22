@@ -295,3 +295,36 @@ boundary, complete snapshots, excluded private data, staff-only read access,
 write protection, transaction rollback on capture failure, transport types,
 frozen history, pause/resume, and retention after deleting source records.
 It never connects to the hosted Supabase database.
+
+### German and Italian municipality names
+
+Apply `supabase/migrations/20261022120000_bilingual_bus_stop_municipalities.sql`
+in the Supabase SQL Editor **before deploying either updated app**. It adds
+`municipality_de` and `municipality_it` to `bus_stops` only and extends the public
+stop and point lookup RPCs to return those parent-place fields. No municipality
+columns are added to `stop_points` or the frozen testing dataset.
+
+Both municipality names are required when creating or saving a stop in the
+protected portal, with browser and server validation. Database constraints allow
+either two nonempty names or two empty fields for imports awaiting completion.
+CSV and EFA imports can continue without translations; reimporting a stop keeps
+municipality translations already entered by staff.
+
+Existing `municipality` values are retained as a display fallback. Their language
+is unknown, so the migration does not copy them into either translation field.
+Complete both fields manually when editing an existing or imported stop. The
+portal also writes the Italian name to the legacy `municipality` field for
+compatibility with older consumers and the existing feedback snapshot format.
+
+The map, stop list, feedback form, and portal show the German name in German and
+the Italian name in Italian or English. If translations are missing, the other
+available name or legacy value is shown. Searches match both translations and
+the legacy value. Historical feedback snapshots are not rewritten.
+
+Checks:
+
+```sh
+node --test shared/municipality.test.mjs protected/scripts/portal-pagination.test.mjs
+supabase/tests/run-stop-point-feedback.sh
+supabase/tests/run-feedback-test-results.sh
+```
