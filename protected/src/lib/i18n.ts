@@ -24,7 +24,7 @@ export const translations = {
       errorInvalid: "E-Mail-Adresse oder Passwort ist nicht korrekt.",
     },
     portal: {
-      kicker: "Portal für Verkehrsdaten", title: "Haltestellen verwalten",
+      loading: "Daten werden geladen …", kicker: "Portal für Verkehrsdaten", title: "Haltestellen verwalten",
       signOut: "Abmelden", language: "Sprache ändern",
     },
     importer: {
@@ -47,7 +47,7 @@ export const translations = {
       kicker: "Neuer Standort", title: "Haltestelle hinzufügen",
       subtitle: "Trage alle drei öffentlichen Namen und die exakten WGS84-Koordinaten ein.",
       nameDe: "Name (Deutsch)", nameIt: "Name (Italienisch)", nameEn: "Name (Englisch)",
-      municipality: "Gemeinde", stopCode: "Haltestellennummer", optional: "Optional",
+      municipalityDe: "Gemeinde (Deutsch)", municipalityIt: "Gemeinde (Italienisch)", stopCode: "Haltestellennummer", optional: "Optional",
       latitude: "Breitengrad", longitude: "Längengrad",
       accessible: "Barrierefrei", publish: "Auf der öffentlichen Karte anzeigen",
       save: "Haltestelle speichern",
@@ -102,6 +102,7 @@ export const translations = {
       errorInvalid: "L'indirizzo e-mail o la password non sono corretti.",
     },
     portal: {
+      loading: "Caricamento dei dati …",
       kicker: "Portale dati del trasporto", title: "Gestione delle fermate",
       signOut: "Esci", language: "Cambia lingua",
     },
@@ -125,7 +126,7 @@ export const translations = {
       kicker: "Nuova posizione", title: "Aggiungi una fermata",
       subtitle: "Inserisci tutti e tre i nomi pubblici e le coordinate WGS84 esatte.",
       nameDe: "Nome (tedesco)", nameIt: "Nome (italiano)", nameEn: "Nome (inglese)",
-      municipality: "Comune", stopCode: "Codice fermata", optional: "Facoltativo",
+      municipalityDe: "Comune (tedesco)", municipalityIt: "Comune (italiano)", stopCode: "Codice fermata", optional: "Facoltativo",
       latitude: "Latitudine", longitude: "Longitudine",
       accessible: "Accessibile", publish: "Mostra sulla mappa pubblica",
       save: "Salva la fermata",
@@ -180,6 +181,7 @@ export const translations = {
       errorInvalid: "The email address or password is incorrect.",
     },
     portal: {
+      loading: "Loading data …",
       kicker: "Transport data portal", title: "Bus stop management",
       signOut: "Sign out", language: "Change language",
     },
@@ -203,7 +205,7 @@ export const translations = {
       kicker: "New location", title: "Add a bus stop",
       subtitle: "Enter all three public names and the exact WGS84 coordinates.",
       nameDe: "German name", nameIt: "Italian name", nameEn: "English name",
-      municipality: "Municipality", stopCode: "Stop code", optional: "Optional",
+      municipalityDe: "Municipality (German)", municipalityIt: "Municipality (Italian)", stopCode: "Stop code", optional: "Optional",
       latitude: "Latitude", longitude: "Longitude",
       accessible: "Accessible", publish: "Publish on client map",
       save: "Save bus stop",

@@ -13,10 +13,10 @@ export default function HowItWorksPage() {
   const { t } = useLanguage();
 
   return (
-    <main className="content-page how-page">
+    <main className="content-page info-page how-page">
       <div className="page-title"><h1>{t.how.title}</h1></div>
 
-      <section className="help-section">
+      <section className="help-section help-intro">
         <span className="mini-label">{t.how.eyebrow}</span>
         <p className="help-lead">{t.how.lead}</p>
       </section>
@@ -46,18 +46,6 @@ export default function HowItWorksPage() {
             </div>
           ))}
         </dl>
-      </section>
-
-      <section className="help-section">
-        <h2>{t.how.afterTitle}</h2>
-        <ol className="after-list">
-          {t.how.after.map((item) => (
-            <li key={item.title}>
-              <strong>{item.title}</strong>
-              <span>{item.copy}</span>
-            </li>
-          ))}
-        </ol>
       </section>
 
       <section className="help-section">

@@ -67,6 +67,12 @@ popular-stops sidebar is limited to five suggestions. Pagination regression test
 node --test client/scripts/published-stop-pages.test.mjs
 ```
 
+The public Stops directory searches the complete published dataset and renders
+12 results per page to keep large lists responsive. Search matches all stop names
+and both municipality languages. Stop points load when their card is expanded;
+feedback, comments, and map links stay scoped to each point. Failed stop requests
+show a retry control rather than a misleading empty-directory message.
+
 The map groups nearby stop places into blue count circles; larger groups use
 larger circles. Click a group or zoom in to reveal its stops (individual places
 are shown from zoom 18). Stop-point/platform dots remain a separate layer for the
@@ -226,3 +232,105 @@ publication and archive rules, transport defaults and re-imports, atomic report
 creation, reply scoping, report retention, and the historic feedback workflow.
 It never connects to the hosted Supabase project. `supabase/tests/bootstrap.sql`
 provides minimal Auth/Storage stubs for the isolated tests only.
+
+### Structured feedback dataset for official testing
+
+After all earlier migrations, run
+`supabase/migrations/20261020120000_capture_structured_test_feedback.sql` in the
+Supabase SQL Editor. Applying it activates capture immediately; a Git push alone
+does not apply database migrations. No client or protected-app deployment is needed.
+
+The new `public.feedback_test_results` table starts empty and records one row for
+each **new** feedback submission. Existing feedback is never copied, including
+when an older report is edited or answered. Each row contains the submission time,
+language, severity, selected issue codes and labels in German/Italian/English,
+and a snapshot of the selected stop point and its parent place: identifiers,
+names, municipality, transport type, and the point's coordinates.
+
+The dataset excludes descriptions and other visitor-written text, emails,
+contact preferences, photos, replies, and visitor/account identifiers. The internal
+feedback UUID remains for deduplication and can be linked to the original report
+by an authorized administrator. The original private feedback/contact workflow
+continues separately.
+
+Capture runs in the submission transaction, after its category links have been
+inserted. If capture fails, the entire submission rolls back rather than silently
+losing its test record. Application users cannot insert, edit, delete, or truncate
+test results. Public visitors cannot read them; authenticated portal staff have
+read-only access, consistent with the existing staff authorization model.
+Database administrators can inspect/export the table in Supabase Table Editor or
+SQL Editor, for example:
+
+```sql
+select submitted_at, stop_place_name_it, stop_point_number, transport_type,
+       category_labels_de, severity, language
+from public.feedback_test_results
+order by submitted_at desc;
+```
+
+Names, coordinates, and issue labels are frozen at submission time. Changes to,
+or deletion of, the source feedback, stops, points, or replies do not change or
+delete the saved test results. The table deliberately has no source foreign keys.
+
+To end/pause the official testing phase without interrupting normal submissions,
+run this as a database administrator:
+
+```sql
+alter table public.stop_feedback disable trigger capture_structured_test_feedback;
+```
+
+To resume capture of future submissions:
+
+```sql
+alter table public.stop_feedback enable trigger capture_structured_test_feedback;
+```
+
+Neither action deletes results or backfills submissions made while capture was
+paused. Capture uses a deferred constraint trigger; keep it deferred until the
+submission RPC has inserted its category links (the normal PostgREST RPC
+transaction already does this).
+
+Run the dedicated integration suite against disposable PostgreSQL 17 with Docker:
+
+```sh
+supabase/tests/run-feedback-test-results.sh
+```
+
+It seeds feedback before applying the capture migration, then checks the activation
+boundary, complete snapshots, excluded private data, staff-only read access,
+write protection, transaction rollback on capture failure, transport types,
+frozen history, pause/resume, and retention after deleting source records.
+It never connects to the hosted Supabase database.
+
+### German and Italian municipality names
+
+Apply `supabase/migrations/20261022120000_bilingual_bus_stop_municipalities.sql`
+in the Supabase SQL Editor **before deploying either updated app**. It adds
+`municipality_de` and `municipality_it` to `bus_stops` only and extends the public
+stop and point lookup RPCs to return those parent-place fields. No municipality
+columns are added to `stop_points` or the frozen testing dataset.
+
+Both municipality names are required when creating or saving a stop in the
+protected portal, with browser and server validation. Database constraints allow
+either two nonempty names or two empty fields for imports awaiting completion.
+CSV and EFA imports can continue without translations; reimporting a stop keeps
+municipality translations already entered by staff.
+
+Existing `municipality` values are retained as a display fallback. Their language
+is unknown, so the migration does not copy them into either translation field.
+Complete both fields manually when editing an existing or imported stop. The
+portal also writes the Italian name to the legacy `municipality` field for
+compatibility with older consumers and the existing feedback snapshot format.
+
+The map, stop list, feedback form, and portal show the German name in German and
+the Italian name in Italian or English. If translations are missing, the other
+available name or legacy value is shown. Searches match both translations and
+the legacy value. Historical feedback snapshots are not rewritten.
+
+Checks:
+
+```sh
+node --test shared/municipality.test.mjs protected/scripts/portal-pagination.test.mjs
+supabase/tests/run-stop-point-feedback.sh
+supabase/tests/run-feedback-test-results.sh
+```

@@ -20,8 +20,10 @@ insert into public.stop_points(id, stop_place_id, point_ref, id_version, point_n
  ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1','22222222-2222-4222-8222-222222222222','it:apb:ScheduledStopPoint:it:22021:312:1:1','(it:apb:ScheduledStopPoint:it:22021:312:1:1,any)','1',46.5,11.35,'Privat','Privato','bdee91d9-c969-4bd4-b336-8f7e780ead3e');
 select pg_temp.check_true((select bool_and(transport_type = 'bus') from public.stop_points), 'all points default to bus');
 alter table public.stop_feedback disable trigger require_feedback_stop_point;
+alter table public.stop_feedback disable trigger capture_structured_test_feedback;
 insert into public.stop_feedback(id,bus_stop_id,severity,language) values ('cccccccc-cccc-4ccc-8ccc-cccccccccccc','11111111-1111-4111-8111-111111111111','low','de');
 alter table public.stop_feedback enable trigger require_feedback_stop_point;
+alter table public.stop_feedback enable trigger capture_structured_test_feedback;
 insert into public.stop_feedback_categories values ('cccccccc-cccc-4ccc-8ccc-cccccccccccc','seating');
 
 grant select on public.stop_feedback to anon;
