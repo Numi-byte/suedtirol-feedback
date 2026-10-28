@@ -67,6 +67,12 @@ popular-stops sidebar is limited to five suggestions. Pagination regression test
 node --test client/scripts/published-stop-pages.test.mjs
 ```
 
+The public Stops directory searches the complete published dataset and renders
+12 results per page to keep large lists responsive. Search matches all stop names
+and both municipality languages. Stop points load when their card is expanded;
+feedback, comments, and map links stay scoped to each point. Failed stop requests
+show a retry control rather than a misleading empty-directory message.
+
 The map groups nearby stop places into blue count circles; larger groups use
 larger circles. Click a group or zoom in to reveal its stops (individual places
 are shown from zoom 18). Stop-point/platform dots remain a separate layer for the

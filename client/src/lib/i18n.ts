@@ -16,6 +16,7 @@ export const translations = {
       bus: "Bus", accessible: "Barrierefrei", feedback: "Feedback geben", comments: "Kommentare ansehen", attribution: OSM_ATTRIBUTION,
     },
     stops: {
+      loadError: "Haltestellen konnten nicht geladen werden.", retry: "Erneut versuchen", hidePoints: "Haltepunkte ausblenden", paginationLabel: "Seiten der Haltestellenliste", previous: "Zurück", next: "Weiter", page: "Seite", of: "von",
       eyebrow: "Alle Haltestellen", title: "Haltestellen",
       searchLabel: "Haltestelle, Bahnhof oder Gemeinde suchen",
       placeholder: "z. B. Bozen Bahnhof, Meran ...",
@@ -94,6 +95,7 @@ export const translations = {
       bus: "Bus", accessible: "Accessibile", feedback: "Lascia un feedback", comments: "Vedi i commenti", attribution: OSM_ATTRIBUTION,
     },
     stops: {
+      loadError: "Impossibile caricare le fermate.", retry: "Riprova", hidePoints: "Nascondi punti di fermata", paginationLabel: "Pagine dell’elenco fermate", previous: "Indietro", next: "Avanti", page: "Pagina", of: "di",
       eyebrow: "Tutte le fermate", title: "Fermate",
       searchLabel: "Cerca una fermata, stazione o comune",
       placeholder: "es. Bolzano stazione, Merano ...",
@@ -172,6 +174,7 @@ export const translations = {
       bus: "Bus", accessible: "Accessible", feedback: "Give feedback", comments: "View comments", attribution: OSM_ATTRIBUTION,
     },
     stops: {
+      loadError: "Stops could not be loaded.", retry: "Try again", hidePoints: "Hide stop points", paginationLabel: "Stop list pages", previous: "Previous", next: "Next", page: "Page", of: "of",
       eyebrow: "All stops", title: "Stops",
       searchLabel: "Search for a stop, station or municipality",
       placeholder: "e.g. Bolzano station, Merano ...",
