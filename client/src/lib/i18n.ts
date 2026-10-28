@@ -5,14 +5,14 @@ const OSM_ATTRIBUTION = '© <a href="https://www.openstreetmap.org/copyright">Op
 
 export const translations = {
   de: {
-    nav: { menu: "Menu", closeMenu: "Menü schließen", navigation: "Hauptnavigation", find: "Haltestellen", how: "So funktioniert's", about: "Über das Projekt", language: "Sprache ändern", service: "Service Desk", cta: "Feedback geben", home: "Startseite" },
+    nav: { menu: "Menu", closeMenu: "Menü schließen", navigation: "Hauptnavigation", find: "Haltestellenliste", how: "So funktioniert's", about: "Über das Projekt", language: "Sprache ändern", service: "Service Desk", cta: "Feedback geben", home: "Startseite" },
     map: {
       deselect: "Auswahl aufheben", expandSearch: "Haltestellensuche öffnen", pointLabel: "Haltepunkt", selectPoints: "Haltepunkte anzeigen", showPointOnMap: "Haltepunkt auf der Karte ansehen", collapseSearch: "Suche minimieren", stopPoints: "Haltepunkte", pointsLoading: "Haltepunkte werden geladen …", pointsError: "Haltepunkte konnten nicht geladen werden.", noPoints: "Noch keine Haltepunkte importiert.",
-      eyebrow: "Haltestellenkarte", title: "Finde deine Haltestelle", stopsAvailable: "Haltestellen verfügbar",
+      eyebrow: "Haltestellenkarte", title: "Bewerte deine Haltestelle", stopsAvailable: "Haltestellen verfügbar",
       loading: "Karte wird geladen …", loadError: "Die Karte konnte nicht geladen werden.",
       choose: "Wähle eine Haltestelle auf der Karte, um Feedback zu geben.",
       noStops: "Es sind noch keine Haltestellen veröffentlicht.",
-      searchLabel: "Haltestellen auf der Karte durchsuchen", searchPlaceholder: "Wo möchtest du einsteigen?", noResults: "Keine passende Haltestelle gefunden.", popularStops: "Meistbewertete Haltestellen",
+      searchLabel: "Haltestellen auf der Karte durchsuchen", searchPlaceholder: "Suche deine Haltestelle", noResults: "Keine passende Haltestelle gefunden.", popularStops: "Meistbewertete Haltestellen",
       bus: "Bus", accessible: "Barrierefrei", feedback: "Feedback geben", comments: "Kommentare ansehen", attribution: OSM_ATTRIBUTION,
     },
     stops: {
@@ -32,7 +32,7 @@ export const translations = {
       copy: "Du brauchst dafür kein Konto.",
       stepsTitle: "Deine Rückmeldung in vier Schritten",
       steps: [
-        { title: "Haltepunkt wählen", copy: "Suche deine Haltestelle auf der Karte oder unter „Haltestellen“. Wähle dort den passenden Haltepunkt aus und öffne „Feedback geben“." },
+        { title: "Haltepunkt wählen", copy: "Suche deine Haltestelle auf der Karte oder unter „Haltestellenliste“. Wähle dort den passenden Haltepunkt aus und öffne „Feedback geben“." },
         { title: "Problem einordnen", copy: "Wähle die zutreffenden Themen und gib an, wie stark dich das Problem beeinträchtigt: gering, mittel oder hoch." },
         { title: "Details ergänzen", copy: "Wenn du möchtest, beschreibe die Situation genauer oder füge ein Foto hinzu." },
         { title: "Prüfen und absenden", copy: "Kontrolliere deine Angaben in der Übersicht und sende die Rückmeldung ab." },
@@ -60,38 +60,37 @@ export const translations = {
       eyebrow: "Über das Projekt",
       title: "Über das Projekt",
       lead: [
-        "Wie erleben Fahrgäste die Bushaltestellen, Bahnhöfe und Seilbahnstationen in Südtirol? Der „Haltestellencheck“ bringt ihre Erfahrungen in die Weiterentwicklung des öffentlichen Verkehrs ein.",
+        "Wie erleben Fahrgäste die Bushaltestellen, Bahnhöfe und Seilbahnstationen in Südtirol? Mit dem „Haltestellen-Check“ tragen die Erfahrungen der Fahrgäste dazu bei, den öffentlichen Nahverkehr zu verbessern.",
       ],
       sections: [
         {
-          title: "Hinweise für bessere Haltestellen",
+          title: "Bewerte deine Haltestelle",
           body: [
-            "Was im Alltag fehlt oder den Zugang erschwert, fällt oft zuerst den Menschen auf, die vor Ort ein- und aussteigen. Ihre Rückmeldungen helfen, solche Bedürfnisse zu erkennen und Verbesserungen gezielt zu prüfen.",
-            "Die gesammelten Hinweise dienen als Grundlage für die Auswertung durch die zuständigen Stellen. Welche Maßnahmen daraus entstehen können, hängt von den Möglichkeiten vor Ort ab.",
+            "Wer kann uns besser sagen, was wir verbessern können, als diejenigen, die täglich mit öffentlichen Verkehrsmitteln unterwegs sind? Was fehlt an der Infrastruktur? Was erschwert den Zugang? Euer Feedback hilft uns, diese Bedürfnisse zu erkennen und gezielte Verbesserungen umzusetzen.",
+            "Die Rückmeldungen werden gesammelt und von den zuständigen Stellen analysiert, um anschließend – sofern möglich – entsprechende Maßnahmen umzusetzen.",
           ],
         },
         {
           title: "Rückmeldungen nachvollziehen",
           body: [
-            "Bei jedem Haltepunkt kannst du die gemeldeten Themen und die Antworten des Teams einsehen. Persönliche Angaben, Beschreibungen und Fotos werden dort nicht veröffentlicht.",
+            "Für jede Haltestelle kannst du sehen, welche Rückmeldungen eingegangen sind, und die entsprechenden Antworten einsehen. Die Angabe persönlicher Daten ist freiwillig. Alle Rückmeldungen werden anonym veröffentlicht.",
           ],
         },
       ],
-      closing: "Deine Erfahrung zählt – für Haltestellen, die den Bedürfnissen der Fahrgäste besser entsprechen.",
-      tagline: "Für alle, die Südtirol täglich in Bewegung halten.",
-      cta: "Feedback geben",
+      tagline: "Deine Meinung ist uns wichtig: Hilf uns dabei, Haltestellen zu gestalten, die besser auf die Bedürfnisse der Fahrgäste abgestimmt sind.",
+      cta: "Bewerte deine Haltestelle",
     },
-    footer: { note: "Ein Projekt für den öffentlichen Nahverkehr in Südtirol.", links: ["Impressum", "Datenschutz", "Kontakt"] },
+    footer: { address: "Gerbergasse 60, 39100 Bozen Italien", vatLabel: "Mwst. Nr.", note: "Ein Projekt für den öffentlichen Nahverkehr in Südtirol.", links: ["Impressum", "Datenschutz", "Kontakt"] },
   },
   it: {
-    nav: { menu: "Menu", closeMenu: "Chiudi menu", navigation: "Navigazione principale", find: "Fermate", how: "Come funziona", about: "Il progetto", language: "Cambia lingua", service: "Service Desk", cta: "Lascia un feedback", home: "Home" },
+    nav: { menu: "Menu", closeMenu: "Chiudi menu", navigation: "Navigazione principale", find: "Elenco fermate", how: "Come funziona", about: "Il progetto", language: "Cambia lingua", service: "Service Desk", cta: "Lascia un feedback", home: "Home" },
     map: {
       deselect: "Deseleziona fermata", expandSearch: "Apri ricerca fermate", pointLabel: "Punto di fermata", selectPoints: "Mostra punti di fermata", showPointOnMap: "Vedi punto sulla mappa", collapseSearch: "Riduci ricerca", stopPoints: "punti di fermata", pointsLoading: "Caricamento dei punti di fermata …", pointsError: "Impossibile caricare i punti di fermata.", noPoints: "Nessun punto di fermata importato.",
-      eyebrow: "Mappa delle fermate", title: "Trova la tua fermata", stopsAvailable: "fermate disponibili",
+      eyebrow: "Mappa delle fermate", title: "Valuta la tua fermata", stopsAvailable: "fermate disponibili",
       loading: "Caricamento della mappa …", loadError: "Non è stato possibile caricare la mappa.",
       choose: "Scegli una fermata sulla mappa per lasciare un feedback.",
       noStops: "Non ci sono ancora fermate pubblicate.",
-      searchLabel: "Cerca fermate sulla mappa", searchPlaceholder: "Da dove vuoi partire?", noResults: "Nessuna fermata corrispondente trovata.", popularStops: "Fermate più valutate",
+      searchLabel: "Cerca fermate sulla mappa", searchPlaceholder: "Cerca la tua fermata", noResults: "Nessuna fermata corrispondente trovata.", popularStops: "Fermate più valutate",
       bus: "Bus", accessible: "Accessibile", feedback: "Lascia un feedback", comments: "Vedi i commenti", attribution: OSM_ATTRIBUTION,
     },
     stops: {
@@ -111,7 +110,7 @@ export const translations = {
       copy: "Non serve un account.",
       stepsTitle: "Il tuo feedback in quattro passi",
       steps: [
-        { title: "Scegli il punto", copy: "Cerca la fermata sulla mappa o nella sezione «Fermate». Seleziona il punto di fermata corretto e apri «Lascia un feedback»." },
+        { title: "Scegli il punto", copy: "Cerca la fermata sulla mappa o nella sezione «Elenco fermate». Seleziona il punto di fermata corretto e apri «Lascia un feedback»." },
         { title: "Indica il problema", copy: "Seleziona i temi pertinenti e indica quanto il problema ti limita: gravità bassa, media o alta." },
         { title: "Aggiungi dettagli", copy: "Se vuoi, descrivi meglio la situazione oppure aggiungi una foto." },
         { title: "Controlla e invia", copy: "Verifica i dati nel riepilogo e invia il feedback." },
@@ -139,38 +138,37 @@ export const translations = {
       eyebrow: "Il progetto",
       title: "Il progetto",
       lead: [
-        "Come vivono i passeggeri le fermate degli autobus, le stazioni ferroviarie e quelle delle funivie in Alto Adige? «Haltestellencheck» porta le loro esperienze nello sviluppo del trasporto pubblico.",
+        "Come vivono i passeggeri le fermate degli autobus, le stazioni ferroviarie e quelle delle funivie in Alto Adige? Con il “Controllo fermate” le esperienze dei viaggiatori contribuiscono a migliorare il trasporto pubblico locale.",
       ],
       sections: [
         {
-          title: "Segnalazioni per fermate migliori",
+          title: "Valuta la tua fermata",
           body: [
-            "Chi sale e scende ogni giorno nota spesso per primo che cosa manca o rende difficile l’accesso. I feedback aiutano a riconoscere queste esigenze e a valutare miglioramenti mirati.",
-            "Le segnalazioni raccolte sono la base per l’analisi da parte degli uffici competenti. Gli interventi possibili dipendono dalle condizioni del luogo.",
+            "Chi meglio dell’utilizzatore quotidiano del trasporto pubblico può suggerirci in che cosa possiamo migliorare? Cosa manca nell’infrastruttura? Cosa rende difficile l’accesso? I feedback ci aiutano a riconoscere queste esigenze e ad intervenire in modo mirato.",
+            "Le segnalazioni vengono raccolte ed analizzate dagli uffici competenti per essere poi, se possibile, implementate.",
           ],
         },
         {
           title: "Consultare i feedback",
           body: [
-            "Per ogni punto di fermata puoi consultare i temi segnalati e le risposte del team. Dati personali, descrizioni e foto non vengono pubblicati in questa sezione.",
+            "Per ogni fermata puoi vedere quali segnalazioni sono state fatte e consultare le relative risposte. Nessun dato personale è obbligatorio. Tutte le recensioni sono anonime.",
           ],
         },
       ],
-      closing: "La tua esperienza conta: per fermate più vicine alle esigenze dei passeggeri.",
-      tagline: "Per chi tiene in movimento l’Alto Adige ogni giorno.",
-      cta: "Lascia un feedback",
+      tagline: "La tua opinione è importante: aiutaci a realizzare fermate più adatte alle esigenze di chi viaggia.",
+      cta: "Valuta la tua fermata",
     },
-    footer: { note: "Un progetto per il trasporto pubblico locale in Alto Adige.", links: ["Note legali", "Privacy", "Contatti"] },
+    footer: { address: "Via dei Conciapelli 60, 39100 Bolzano", vatLabel: "Partita IVA", note: "Un progetto per il trasporto pubblico locale in Alto Adige.", links: ["Note legali", "Privacy", "Contatti"] },
   },
   en: {
-    nav: { menu: "Menu", closeMenu: "Close menu", navigation: "Primary navigation", find: "Stops", how: "How it works", about: "About the project", language: "Change language", service: "Service desk", cta: "Give feedback", home: "Home" },
+    nav: { menu: "Menu", closeMenu: "Close menu", navigation: "Primary navigation", find: "Stop list", how: "How it works", about: "About the project", language: "Change language", service: "Service desk", cta: "Give feedback", home: "Home" },
     map: {
       deselect: "Deselect stop", expandSearch: "Open stop search", pointLabel: "Stop point", selectPoints: "Show stop points", showPointOnMap: "View stop point on the map", collapseSearch: "Minimize search", stopPoints: "stop points", pointsLoading: "Loading stop points …", pointsError: "Stop points could not be loaded.", noPoints: "No stop points imported yet.",
-      eyebrow: "Stop map", title: "Find your stop", stopsAvailable: "stops available",
+      eyebrow: "Stop map", title: "Rate your stop", stopsAvailable: "stops available",
       loading: "Loading map …", loadError: "The map could not be loaded.",
       choose: "Pick a stop on the map to give feedback.",
       noStops: "No stops have been published yet.",
-      searchLabel: "Search stops on the map", searchPlaceholder: "Where would you like to depart?", noResults: "No matching stop found.", popularStops: "Most rated stops",
+      searchLabel: "Search stops on the map", searchPlaceholder: "Search for your stop", noResults: "No matching stop found.", popularStops: "Most rated stops",
       bus: "Bus", accessible: "Accessible", feedback: "Give feedback", comments: "View comments", attribution: OSM_ATTRIBUTION,
     },
     stops: {
@@ -190,7 +188,7 @@ export const translations = {
       copy: "You do not need an account.",
       stepsTitle: "Your feedback in four steps",
       steps: [
-        { title: "Choose a stop point", copy: "Find your stop on the map or under “Stops”. Select the relevant stop point and open “Give feedback”." },
+        { title: "Choose a stop point", copy: "Find your stop on the map or under “Stop list”. Select the relevant stop point and open “Give feedback”." },
         { title: "Identify the problem", copy: "Choose the relevant topics and indicate how much the problem affects you: low, medium or high severity." },
         { title: "Add details", copy: "If you wish, describe the situation in more detail or add a photo." },
         { title: "Check and submit", copy: "Review your details in the summary and submit your feedback." },
@@ -218,27 +216,26 @@ export const translations = {
       eyebrow: "About the project",
       title: "About the project",
       lead: [
-        "How do passengers experience South Tyrol’s bus stops, railway stations and cable car stations? “Haltestellencheck” brings their experiences into the development of public transport.",
+        "How do passengers experience South Tyrol’s bus stops, railway stations and cable car stations? Through the “Stop Check” project, passengers’ experiences help improve local public transport.",
       ],
       sections: [
         {
-          title: "Feedback for better stops",
+          title: "Rate your stop",
           body: [
-            "People who board and alight every day are often the first to notice missing facilities or difficulties with access. Their feedback helps identify these needs and assess improvements.",
-            "The responsible teams use the collected reports as a basis for their review. The measures they can take depend on conditions at each location.",
+            "Who better to tell us what we can improve than the people who use public transport every day? What is missing from the infrastructure? What makes access difficult? Your feedback helps us identify these needs and make targeted improvements.",
+            "Reports are collected and analysed by the responsible teams so that appropriate measures can then be implemented wherever possible.",
           ],
         },
         {
           title: "View the feedback",
           body: [
-            "For each stop point, you can view the reported topics and the team’s replies. Personal details, descriptions and photos are not published in this section.",
+            "For each stop, you can see the feedback received and read the corresponding replies. Providing personal information is optional. All feedback is published anonymously.",
           ],
         },
       ],
-      closing: "Your experience matters: it helps make stops better suited to passengers’ needs.",
-      tagline: "For the people who keep South Tyrol moving every day.",
-      cta: "Give feedback",
+      tagline: "Your opinion matters to us: help us create stops that better meet passengers’ needs.",
+      cta: "Rate your stop",
     },
-    footer: { note: "A project for local public transport in South Tyrol.", links: ["Imprint", "Privacy", "Contact"] },
+    footer: { address: "Via dei Conciapelli 60, 39100 Bolzano, Italy", vatLabel: "VAT No.", note: "A project for local public transport in South Tyrol.", links: ["Imprint", "Privacy", "Contact"] },
   },
 } as const;

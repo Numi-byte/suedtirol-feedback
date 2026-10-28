@@ -29,10 +29,10 @@ export function SiteFooter() {
         {!pinned && (
           <address className="footer-address">
             <strong>{companyName}</strong>
-            <span>Gerbergasse 60, 39100 Bozen Italien</span>
+            <span>{t.footer.address}</span>
             <a href="tel:+390471312888">+39 0471 312 888</a>
             <a href="mailto:info@sta.bz.it">info@sta.bz.it</a>
-            <span>Mwst. Nr. 00586190217</span>
+            <span>{t.footer.vatLabel} 00586190217</span>
             <a className="footer-contact" href={footerHrefs[2]}>{t.footer.links[2]} <span aria-hidden="true">›</span></a>
           </address>
         )}

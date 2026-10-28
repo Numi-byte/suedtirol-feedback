@@ -53,10 +53,6 @@ export default function AboutPage() {
         </section>
       ))}
 
-      <section className="help-section">
-        <p className="about-closing">{t.about.closing}</p>
-      </section>
-
       <section className="about-strip">
         <p>{t.about.tagline}</p>
         <Link href="/stops">{t.about.cta} <ArrowIcon /></Link>

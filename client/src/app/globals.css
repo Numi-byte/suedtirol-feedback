@@ -211,7 +211,6 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
 .about-photo img { object-fit: cover; object-position: center; }
 .about-section-content { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 40px; }
 .about-page .help-section:has(.about-section-content) { padding: 32px; border: 1px solid var(--line); border-radius: 48px; }
-.about-page .help-section:has(.about-closing) { padding: 32px; border-radius: 32px; background: var(--blue-50); }
 
 /* ---------- section furniture ---------- */
 .mini-label { display: block; color: var(--blue); font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
@@ -367,7 +366,6 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
 .prose p { max-width: 68ch; margin: 0 0 16px; font-size: 16px; line-height: 26px; }
 .prose p:last-child { margin-bottom: 0; }
 .prose-lead p { color: var(--gray-800); font-size: 18px; line-height: 28px; }
-.about-closing { max-width: 65ch; margin: 0; color: var(--blue-800); font-family: var(--font-display); font-size: 24px; line-height: 32px; }
 
 .steps-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 24px; }
 .step { min-width: 0; padding: 32px; border-radius: 48px; background: var(--blue-800); color: #fff; }
@@ -415,10 +413,9 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
   .info-page { gap: 32px; padding: 32px 16px 40px; }
   .info-page .page-title h1 { font-size: 32px; line-height: 40px; }
   .help-section h2 { margin-bottom: 12px; font-size: 24px; line-height: 32px; }
-  .help-section-tinted, .help-intro, .about-page .help-section:has(.about-section-content), .about-page .help-section:has(.about-closing) { padding: 24px; border-radius: 32px; }
+  .help-section-tinted, .help-intro, .about-page .help-section:has(.about-section-content) { padding: 24px; border-radius: 32px; }
   .help-lead, .prose-lead p { font-size: 16px; line-height: 26px; }
   .about-photo-frame { border-radius: 32px; }
-  .about-closing { font-size: 20px; line-height: 28px; }
   .steps-grid, .criteria-grid { grid-template-columns: minmax(0, 1fr); }
   .step { padding: 24px; border-radius: 32px; }
   .step h3 { margin-top: 16px; font-size: 24px; line-height: 32px; }
