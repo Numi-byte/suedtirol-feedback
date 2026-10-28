@@ -4,7 +4,6 @@ import { usePathname } from "next/navigation";
 import { useLanguage } from "@/components/language-provider";
 import { LanguageSelector } from "@/components/language-selector";
 
-const companyName = "Südtiroler Transportstrukturen AG";
 const footerHrefs = [
   "https://www.sta.bz.it/de/impressum/",
   "https://www.suedtirolmobil.info/de/service-und-kontakt/privacy",
@@ -28,7 +27,7 @@ export function SiteFooter() {
       <div className="footer-inner">
         {!pinned && (
           <address className="footer-address">
-            <strong>{companyName}</strong>
+            <strong>{t.footer.companyName}</strong>
             <span>{t.footer.address}</span>
             <a href="tel:+390471312888">+39 0471 312 888</a>
             <a href="mailto:info@sta.bz.it">info@sta.bz.it</a>
@@ -36,7 +35,7 @@ export function SiteFooter() {
             <a className="footer-contact" href={footerHrefs[2]}>{t.footer.links[2]} <span aria-hidden="true">›</span></a>
           </address>
         )}
-        {pinned && <p className="footer-company">{companyName}</p>}
+        {pinned && <p className="footer-company">{t.footer.companyName}</p>}
         {pinned && (
           <p className="footer-service">
             <span>{t.nav.service}:</span>{" "}
