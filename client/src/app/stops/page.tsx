@@ -3,6 +3,9 @@
 import { municipalityName } from "../../../../shared/municipality";
 import Link from "next/link";
 import Image from "next/image";
+import outlineLocation from "@/components/OutlineLocation.svg";
+import arrowRight from "@/components/vectorarrowright.svg";
+import arrowDown from "@/components/vectorarrowdown.svg";
 import { useMemo, useRef, useState } from "react";
 import { useLanguage } from "@/components/language-provider";
 import { stopName, useStops } from "@/lib/stops";
@@ -93,9 +96,6 @@ export default function StopsPage() {
           <h2 id="stops-results-heading" className="stops-count" aria-live="polite">
             {loading ? t.stops.loading : error ? t.stops.loadError : `${results.length} ${results.length === 1 ? t.stops.countOne : t.stops.countMany}`}
           </h2>
-          {!loading && !error && results.length > 0 ? <span className="stops-range">
-            {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, results.length)} / {results.length}
-          </span> : null}
         </div>
 
         {loading ? <div className="stops-skeleton-grid" aria-hidden="true">
@@ -111,22 +111,28 @@ export default function StopsPage() {
           {visibleStops.map(stop => (
             <li key={stop.id}>
               <article className={`stop-card${expandedPlaceId === stop.id ? " is-expanded" : ""}`}>
-                <div className="stop-card-heading">
-                  <span className="stop-card-place">{municipalityName(stop, language)}</span>
-                  <h3>{stopName(stop, language)}</h3>
-                  {stop.is_accessible ? <div className="transport-tags"><span>{t.stops.accessible}</span></div> : null}
-                </div>
-                <div className="stop-card-actions">
-                  <button type="button" className="stop-card-cta" aria-expanded={expandedPlaceId === stop.id}
-                    aria-label={`${expandedPlaceId === stop.id ? t.stops.hidePoints : t.map.selectPoints} · ${stopName(stop, language)}`}
-                    aria-controls={`stop-points-${stop.id}`} onClick={() => setExpandedPlaceId(current => current === stop.id ? null : stop.id)}>
-                    <span>{expandedPlaceId === stop.id ? t.stops.hidePoints : t.map.selectPoints}</span>
-                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="m7 10 5 5 5-5" /></svg>
-                  </button>
-                  <Link className="stop-card-map" href={`/?stop=${encodeURIComponent(stop.id)}`}
-                    aria-label={`${t.stops.onMap} · ${stopName(stop, language)}`} title={t.stops.onMap}>
-                    <Image src="/icons/map-pin.svg" width={24} height={24} alt="" aria-hidden="true" />
-                  </Link>
+                <div className="stop-card-summary">
+                  <div className="stop-card-heading">
+                    <h3>{stopName(stop, language)}</h3>
+                    <div className="stop-card-meta">
+                      <span className="stop-card-place">{municipalityName(stop, language)}</span>
+                      {stop.is_accessible ? <div className="transport-tags"><span>{t.stops.accessible}</span></div> : null}
+                    </div>
+                  </div>
+                  <div className="stop-card-actions">
+                    <Link className="stop-card-map" href={`/?stop=${encodeURIComponent(stop.id)}`}
+                      aria-label={`${t.stops.onMap} · ${stopName(stop, language)}`} title={t.stops.onMap}>
+                      <Image src={outlineLocation} width={24} height={24} alt="" aria-hidden="true" />
+                    </Link>
+                    <button type="button" className="stop-card-toggle" aria-expanded={expandedPlaceId === stop.id}
+                      aria-label={`${expandedPlaceId === stop.id ? t.stops.hidePoints : t.map.selectPoints} · ${stopName(stop, language)}`}
+                      title={expandedPlaceId === stop.id ? t.stops.hidePoints : t.map.selectPoints}
+                      aria-controls={`stop-points-${stop.id}`} onClick={() => setExpandedPlaceId(current => current === stop.id ? null : stop.id)}>
+                      <Image src={expandedPlaceId === stop.id ? arrowDown : arrowRight}
+                        width={expandedPlaceId === stop.id ? 20 : 10} height={expandedPlaceId === stop.id ? 10 : 20}
+                        alt="" aria-hidden="true" />
+                    </button>
+                  </div>
                 </div>
                 <div id={`stop-points-${stop.id}`} className="stop-card-points" hidden={expandedPlaceId !== stop.id}>
                   {expandedPlaceId === stop.id ? <StopPoints placeId={stop.id} /> : null}
