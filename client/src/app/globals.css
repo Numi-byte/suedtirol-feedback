@@ -179,14 +179,18 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
 .stops-page .stop-card-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin-top: 4px; }
 .stops-page .stop-card-meta .transport-tags { margin: 0; }
 .stops-page .stop-card-meta .transport-tags span { padding: 4px 8px; line-height: 16px; }
-.stops-page .stop-card-place { display: block; color: var(--gray-600); font-family: "Neue Frutiger World", var(--font-brand); font-size: 16px; line-height: 24px; font-weight: 400; font-style: normal; letter-spacing: 0; overflow-wrap: anywhere; }
+.stops-page .stop-card-place { display: inline-flex; align-items: center; gap: 8px; min-width: 0; color: var(--gray-600); font-family: "Neue Frutiger World", var(--font-brand); font-size: 16px; line-height: 24px; font-weight: 400; font-style: normal; letter-spacing: 0; overflow-wrap: anywhere; }
+.stops-page .stop-card-place img { width: 24px; height: 24px; flex: none; }
 .stops-page .stop-card h3 { margin: 0; color: var(--gray-950); font-family: "Neue Frutiger World", var(--font-brand); font-size: 24px; line-height: 32px; font-weight: 700; font-style: normal; letter-spacing: -.03em; overflow-wrap: anywhere; }
 .stops-page .stop-card-actions { display: flex; align-items: center; gap: 8px; flex: none; }
 .stops-page .stop-card-toggle { display: grid; place-items: center; flex: none; width: 48px; height: 48px; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; }
 .stops-page .stop-card-toggle:hover { background: var(--blue-50); }
 .stops-page .stop-card-toggle img { width: 10px; height: 20px; max-width: none; }
 .stops-page .stop-card-toggle[aria-expanded="true"] img { width: 20px; height: 10px; }
-.stops-page .stop-card-map, .stops-page .map-panel-comments { width: 48px; height: 48px; border-radius: 50%; }
+.stops-page .map-panel-comments { width: 48px; height: 48px; border-radius: 50%; }
+.stops-page .stop-card-map { width: 48px; height: 48px; padding: 0; border: 0; border-radius: 0; background: transparent; }
+.stops-page .stop-card-map:hover { background: transparent; }
+.stops-page .stop-card-map img { width: 16px; height: 14px; }
 .stops-page .stop-card-points:not([hidden]) { padding-top: 24px; border-top: 1px solid var(--line); }
 .stops-page .stop-card-points .stop-point-list { max-height: none; margin: 0; overflow: visible; }
 .stops-page .stop-point-list > li { padding: 16px; border-radius: 24px; }
