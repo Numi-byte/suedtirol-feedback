@@ -176,11 +176,11 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
 .stops-page .stop-card.is-expanded { border-color: var(--gray-500); background: var(--gray-50); }
 .stops-page .stop-card-summary { display: flex; justify-content: space-between; align-items: center; gap: 24px; min-width: 0; }
 .stops-page .stop-card-heading { flex: 1; min-width: 0; }
-.stops-page .stop-card-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
+.stops-page .stop-card-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin-top: 4px; }
 .stops-page .stop-card-meta .transport-tags { margin: 0; }
 .stops-page .stop-card-meta .transport-tags span { padding: 4px 8px; line-height: 16px; }
-.stops-page .stop-card-place { display: block; color: var(--gray-600); font-size: 14px; line-height: 20px; font-weight: 500; overflow-wrap: anywhere; }
-.stops-page .stop-card h3 { margin: 4px 0 0; color: var(--gray-950); font-family: "Neue Frutiger World", var(--font-brand); font-size: 24px; line-height: 32px; font-weight: 700; font-style: normal; letter-spacing: -.03em; overflow-wrap: anywhere; }
+.stops-page .stop-card-place { display: block; color: var(--gray-600); font-family: "Neue Frutiger World", var(--font-brand); font-size: 16px; line-height: 24px; font-weight: 400; font-style: normal; letter-spacing: 0; overflow-wrap: anywhere; }
+.stops-page .stop-card h3 { margin: 0; color: var(--gray-950); font-family: "Neue Frutiger World", var(--font-brand); font-size: 24px; line-height: 32px; font-weight: 700; font-style: normal; letter-spacing: -.03em; overflow-wrap: anywhere; }
 .stops-page .stop-card-actions { display: flex; align-items: center; gap: 8px; flex: none; }
 .stops-page .stop-card-toggle { display: grid; place-items: center; flex: none; width: 48px; height: 48px; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; }
 .stops-page .stop-card-toggle:hover { background: var(--blue-50); }

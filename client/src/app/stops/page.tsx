@@ -113,11 +113,11 @@ export default function StopsPage() {
               <article className={`stop-card${expandedPlaceId === stop.id ? " is-expanded" : ""}`}>
                 <div className="stop-card-summary">
                   <div className="stop-card-heading">
+                    <h3>{stopName(stop, language)}</h3>
                     <div className="stop-card-meta">
                       <span className="stop-card-place">{municipalityName(stop, language)}</span>
                       {stop.is_accessible ? <div className="transport-tags"><span>{t.stops.accessible}</span></div> : null}
                     </div>
-                    <h3>{stopName(stop, language)}</h3>
                   </div>
                   <div className="stop-card-actions">
                     <Link className="stop-card-map" href={`/?stop=${encodeURIComponent(stop.id)}`}
