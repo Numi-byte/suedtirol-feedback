@@ -888,3 +888,12 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
 @media (max-width: 767px) {
   .site-footer-pages .footer-language-group { display: none; }
 }
+
+.map-search input::-webkit-search-cancel-button { -webkit-appearance: none; }
+.map-search-clear { display: grid; place-items: center; flex: none; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; }
+.map-search-clear:hover { background: #e7eef1; }
+.map-search-clear img { width: 12px; height: 12px; }
+@media (max-width: 767px) {
+  .has-selected-stop.search-expanded .map-intro { display: flex; flex: none; margin-bottom: 16px; }
+  .has-selected-stop .map-intro h2, .has-selected-stop .map-search-results { display: none; }
+}
