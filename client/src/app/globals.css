@@ -879,3 +879,12 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
   .footer-page-links { width: 100%; gap: 16px; }
   .footer-pages-bottom { margin-top: 40px; }
 }
+
+.footer-pages-bottom .footer-links { flex-wrap: wrap; gap: 12px 26px; }
+.footer-language-group { display: flex; align-items: center; gap: 12px; flex: none; }
+@media (max-width: 1023px) {
+  .footer-pages-bottom { flex-wrap: wrap; }
+}
+@media (max-width: 767px) {
+  .site-footer-pages .footer-language-group { display: none; }
+}
