@@ -88,9 +88,9 @@ export function SiteFooter() {
           {t.footer.additionalLinks.map((label, index) => <a key={label} href={additionalFooterHrefs[index]}>{label}</a>)}
         </div>
         <div className="map-footer-branding">
+          <LanguageSelector className="footer-language" variant="menu" />
           <span className="map-footer-company">{t.footer.companyName}</span>
           <div className="map-footer-tools">
-            <LanguageSelector className="footer-language" variant="menu" />
             <Image src={provinceLogo} width={96} height={24} alt="Autonome Provinz Bozen – Südtirol / Provincia autonoma di Bolzano – Alto Adige" />
             <div className="map-footer-socials">
               <a href="https://www.linkedin.com/company/sta-s%C3%BCdtiroler-transportstrukturen-ag/posts/" aria-label="LinkedIn"><Image src={linkedin} width={24} height={24} alt="" /></a>
