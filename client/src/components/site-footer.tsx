@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import provinceLogo from "@/components/provincelogo.svg";
 import instagram from "@/components/Insta.svg";
 import linkedin from "@/components/linkedin.svg";
 import youtube from "@/components/youtube.svg";
@@ -57,10 +58,13 @@ export function SiteFooter() {
               <a href="https://www.instagram.com/suedtirol.altoadige_mobility/" aria-label="Instagram"><Image src={instagram} width={40} height={40} alt="" /></a>
             </div>
           </div>
-          <nav className="footer-page-links" aria-label={t.nav.navigation}>
+          <nav className="footer-page-links" aria-labelledby="footer-check-heading">
+            <h2 id="footer-check-heading">{t.footer.navigationTitle}</h2>
+            <div className="footer-page-link-list">
             {[["/stops", t.nav.find], ["/how-it-works", t.nav.how], ["/about", t.nav.about]].map(([href, label]) => (
               <Link key={href} href={href} aria-current={pathname === href ? "page" : undefined}>{label}</Link>
             ))}
+            </div>
           </nav>
         </div>
         <div className="footer-pages-bottom">
@@ -69,6 +73,7 @@ export function SiteFooter() {
             {t.footer.additionalLinks.map((link, index) => <a key={link} href={additionalFooterHrefs[index]}>{link}</a>)}
           </div>
           <div className="footer-language-group"><span>{t.footer.languageLabel}</span><LanguageSelector className="footer-language" variant="menu" /></div>
+          <Image className="footer-province-logo" src={provinceLogo} width={96} height={24} alt="Autonome Provinz Bozen – Südtirol / Provincia autonoma di Bolzano – Alto Adige" />
         </div>
       </div>
     </footer>
