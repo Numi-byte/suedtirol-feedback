@@ -924,3 +924,6 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
   .footer-page-link-list { min-height: 0; }
   .footer-pages-bottom > .footer-links { flex-basis: 100%; }
 }
+
+.how-region-map { width: 100%; max-width: 640px; margin-inline: auto; }
+.how-region-map img { display: block; width: 100%; height: auto; }
