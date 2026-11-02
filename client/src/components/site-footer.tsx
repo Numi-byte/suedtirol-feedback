@@ -79,6 +79,29 @@ export function SiteFooter() {
     </footer>
   );
 
+  if (pinned) return (
+    <footer className="site-footer site-footer-pinned map-footer">
+      <div className="map-footer-inner">
+        <p className="map-footer-service">{t.nav.service}: <a href="tel:+390471220880">+39 0471 220 880</a></p>
+        <div className="footer-links map-footer-links">
+          {t.footer.links.slice(0, 2).map((label, index) => <a key={label} href={footerHrefs[index]}>{label}</a>)}
+          {t.footer.additionalLinks.map((label, index) => <a key={label} href={additionalFooterHrefs[index]}>{label}</a>)}
+        </div>
+        <div className="map-footer-branding">
+          <LanguageSelector className="footer-language" variant="menu" />
+          <div className="map-footer-tools">
+            <Image src={provinceLogo} width={96} height={24} alt="Autonome Provinz Bozen – Südtirol / Provincia autonoma di Bolzano – Alto Adige" />
+            <div className="map-footer-socials">
+              <a href="https://www.linkedin.com/company/sta-s%C3%BCdtiroler-transportstrukturen-ag/posts/" aria-label="LinkedIn"><Image src={linkedin} width={24} height={24} alt="" /></a>
+              <a href="https://www.youtube.com/" aria-label="YouTube"><Image src={youtube} width={24} height={24} alt="" /></a>
+              <a href="https://www.instagram.com/suedtirol.altoadige_mobility/" aria-label="Instagram"><Image src={instagram} width={24} height={24} alt="" /></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+
   return (
     <footer className={`site-footer${pinned ? " site-footer-pinned" : ""}`}>
       <div className="footer-inner">
