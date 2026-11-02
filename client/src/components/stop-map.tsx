@@ -29,6 +29,7 @@ export type MapLabels = {
   loadError: string;
   searchLabel: string;
   searchPlaceholder: string;
+  clearSearch: string;
   noResults: string;
   popularStops: string;
   stopPoints: string;
@@ -109,6 +110,17 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
     else { url.searchParams.delete("stop"); setQuery(""); }
     router.replace(`${url.pathname}${url.search}${url.hash}`, { scroll: false });
   }, [router]);
+
+  const updateSearch = (value: string) => {
+    setQuery(value);
+    setSearchExpanded(true);
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("stop") || url.searchParams.has("point")) {
+      url.searchParams.delete("stop");
+      url.searchParams.delete("point");
+      router.replace(`${url.pathname}${url.search}${url.hash}`, { scroll: false });
+    }
+  };
 
   const updatePointSelection = useCallback((id: string) => {
     setSearchExpanded(true);
@@ -531,13 +543,17 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
           </button>
           <div id="map-search-content" className="map-search-content">
             <h2 id="map-heading">{labels.title}</h2>
-            <label className="map-search" htmlFor="map-stop-search">
-              <span className="sr-only">{labels.searchLabel}</span>
+            <div className="map-search">
+              <label className="sr-only" htmlFor="map-stop-search">{labels.searchLabel}</label>
               <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="11" cy="11" r="7" /><path d="m16 16 4.5 4.5" />
               </svg>
-              <input id="map-stop-search" type="search" value={query} placeholder={labels.searchPlaceholder} autoComplete="off" onFocus={() => setSearchExpanded(true)} onChange={(event) => setQuery(event.target.value)} />
-            </label>
+              <input id="map-stop-search" type="search" value={query} placeholder={labels.searchPlaceholder} autoComplete="off" onFocus={() => setSearchExpanded(true)} onChange={(event) => updateSearch(event.target.value)} />
+              {query || selectedId || selectedPointId ? <button type="button" className="map-search-clear" aria-label={labels.clearSearch}
+                onClick={() => { updateSearch(""); document.getElementById("map-stop-search")?.focus(); }}>
+                <Image src="/icons/close.svg" width={12} height={12} alt="" aria-hidden="true" />
+              </button> : null}
+            </div>
             <div className="map-search-results">
               <div className="map-quick-heading">
                 {query.trim() ? `${filteredStops.length} ${labels.stopsAvailable}` : labels.popularStops}
