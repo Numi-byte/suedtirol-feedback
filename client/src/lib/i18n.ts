@@ -81,7 +81,7 @@ export const translations = {
       tagline: "Deine Meinung ist uns wichtig: Hilf uns dabei, Haltestellen zu gestalten, die besser auf die Bedürfnisse der Fahrgäste abgestimmt sind.",
       cta: "Bewerte deine Haltestelle",
     },
-    footer: { companyName: "Südtiroler Transportstrukturen AG", address: "Gerbergasse 60, 39100 Bozen Italien", vatLabel: "Mwst. Nr.", note: "Ein Projekt für den öffentlichen Nahverkehr in Südtirol.", links: ["Impressum", "Datenschutz", "Kontakt"] },
+    footer: { companyName: "Südtiroler Transportstrukturen AG", address: "Gerbergasse 60, 39100 Bozen Italien", vatLabel: "Mwst. Nr.", note: "Ein Projekt für den öffentlichen Nahverkehr in Südtirol.", languageLabel: "Sprache", additionalLinks: ["Nutzungsbedingungen", "Cookies", "Beschwerdemanagement"], links: ["Impressum", "Datenschutz", "Kontakt"] },
   },
   it: {
     nav: { menu: "Menu", closeMenu: "Chiudi menu", navigation: "Navigazione principale", find: "Elenco fermate", how: "Come funziona", about: "Il progetto", language: "Cambia lingua", service: "Service Desk", cta: "Lascia un feedback", home: "Home" },
@@ -160,7 +160,7 @@ export const translations = {
       tagline: "La tua opinione è importante: aiutaci a realizzare fermate più adatte alle esigenze di chi viaggia.",
       cta: "Valuta la tua fermata",
     },
-    footer: { companyName: "Strutture Trasporto Alto Adige SpA", address: "Via dei Conciapelli 60, 39100 Bolzano", vatLabel: "Partita IVA", note: "Un progetto per il trasporto pubblico locale in Alto Adige.", links: ["Note legali", "Privacy", "Contatti"] },
+    footer: { companyName: "Strutture Trasporto Alto Adige SpA", address: "Via dei Conciapelli 60, 39100 Bolzano", vatLabel: "Partita IVA", note: "Un progetto per il trasporto pubblico locale in Alto Adige.", languageLabel: "Lingua", additionalLinks: ["Condizioni di utilizzo", "Cookie", "Gestione reclami"], links: ["Note legali", "Privacy", "Contatti"] },
   },
   en: {
     nav: { menu: "Menu", closeMenu: "Close menu", navigation: "Primary navigation", find: "Stop list", how: "How it works", about: "About the project", language: "Change language", service: "Service desk", cta: "Give feedback", home: "Home" },
@@ -239,6 +239,6 @@ export const translations = {
       tagline: "Your opinion matters to us: help us create stops that better meet passengers’ needs.",
       cta: "Rate your stop",
     },
-    footer: { companyName: "Strutture Trasporto Alto Adige SpA", address: "Via dei Conciapelli 60, 39100 Bolzano, Italy", vatLabel: "VAT No.", note: "A project for local public transport in South Tyrol.", links: ["Imprint", "Privacy", "Contact"] },
+    footer: { companyName: "Strutture Trasporto Alto Adige SpA", address: "Via dei Conciapelli 60, 39100 Bolzano, Italy", vatLabel: "VAT No.", note: "A project for local public transport in South Tyrol.", languageLabel: "Language", additionalLinks: ["Terms & Conditions", "Cookies", "Complaint Management"], links: ["Imprint", "Privacy", "Contact"] },
   },
 } as const;

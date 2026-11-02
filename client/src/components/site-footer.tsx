@@ -10,6 +10,12 @@ import { usePathname } from "next/navigation";
 import { useLanguage } from "@/components/language-provider";
 import { LanguageSelector } from "@/components/language-selector";
 
+const additionalFooterHrefs = [
+  "https://www.suedtirolmobil.info/en/contact-us/terms-of-use",
+  "https://www.suedtirolmobil.info/en/contact-us/privacy-and-cookie-policy",
+  "https://www.suedtirolmobil.info/en/contact-us/complaints",
+] as const;
+
 const footerHrefs = [
   "https://www.sta.bz.it/de/impressum/",
   "https://www.suedtirolmobil.info/de/service-und-kontakt/privacy",
@@ -58,8 +64,11 @@ export function SiteFooter() {
           </nav>
         </div>
         <div className="footer-pages-bottom">
-          <div className="footer-links">{t.footer.links.slice(0, 2).map((link, index) => <a key={link} href={footerHrefs[index]}>{link}</a>)}</div>
-          <LanguageSelector className="footer-language" variant="menu" />
+          <div className="footer-links">
+            {t.footer.links.slice(0, 2).map((link, index) => <a key={link} href={footerHrefs[index]}>{link}</a>)}
+            {t.footer.additionalLinks.map((link, index) => <a key={link} href={additionalFooterHrefs[index]}>{link}</a>)}
+          </div>
+          <div className="footer-language-group"><span>{t.footer.languageLabel}</span><LanguageSelector className="footer-language" variant="menu" /></div>
         </div>
       </div>
     </footer>
