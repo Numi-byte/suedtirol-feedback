@@ -927,3 +927,24 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
 
 .how-region-map { width: 100%; max-width: 640px; margin-inline: auto; }
 .how-region-map img { display: block; width: 100%; height: auto; }
+
+/* Compact desktop map footer; keep its reserved height in the map shell. */
+.map-footer { padding: 0 24px; background: #fff; border-top: 1px solid var(--line); border-radius: 0 0 12px 12px; font-size: 13px; line-height: 20px; }
+.map-footer-inner { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 24px; width: 100%; }
+.map-footer-service { white-space: nowrap; color: var(--gray-600); }
+.map-footer-service a { color: var(--blue); }
+.map-footer-links { justify-content: center; flex-wrap: wrap; gap: 4px 20px; }
+.map-footer-branding { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.map-footer-company { color: var(--gray-600); font-size: 11px; line-height: 14px; }
+.map-footer-tools { display: flex; align-items: center; gap: 16px; }
+.map-footer .language-menu-trigger { width: 118px; min-width: 118px; height: 32px; padding: 4px 8px 4px 30px; gap: 4px; font-size: 13px; line-height: 20px; }
+.map-footer .language-menu-trigger img { left: 8px; }
+.map-footer .language-menu-trigger svg { width: 12px; height: 12px; }
+.map-footer-socials { display: flex; align-items: center; gap: 8px; }
+.map-footer-socials a, .map-footer-socials img { display: block; width: 24px; height: 24px; }
+.map-footer a:hover { text-decoration: underline; }
+@media (min-width: 768px) and (max-width: 1199px) {
+  :root { --footer-h: 112px; }
+  .map-footer-inner { grid-template-columns: 1fr auto; gap: 8px 24px; }
+  .map-footer-links { grid-column: 1 / -1; grid-row: 2; }
+}
