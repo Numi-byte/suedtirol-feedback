@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+import southTyrolMap from "@/components/Group 6.svg";
 import { FeedbackBanner } from "@/components/feedback-banner";
 import { useLanguage } from "@/components/language-provider";
 
@@ -14,6 +16,10 @@ export default function HowItWorksPage() {
         <span className="mini-label">{t.how.eyebrow}</span>
         <p className="help-lead">{t.how.lead}</p>
       </section>
+
+      <div className="how-region-map">
+        <Image src={southTyrolMap} width={377} height={229} alt="" sizes="(min-width: 672px) 640px, calc(100vw - 32px)" />
+      </div>
 
       <section className="help-section how-steps-section">
         <h2>{t.how.stepsTitle}</h2>
