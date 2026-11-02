@@ -4,6 +4,7 @@ import { municipalityName } from "../../../../shared/municipality";
 import Link from "next/link";
 import Image from "next/image";
 import outlineLocation from "@/components/OutlineLocation.svg";
+import vectorMap from "@/components/vectormap.svg";
 import arrowRight from "@/components/vectorarrowright.svg";
 import arrowDown from "@/components/vectorarrowdown.svg";
 import { useMemo, useRef, useState } from "react";
@@ -115,14 +116,14 @@ export default function StopsPage() {
                   <div className="stop-card-heading">
                     <h3>{stopName(stop, language)}</h3>
                     <div className="stop-card-meta">
-                      <span className="stop-card-place">{municipalityName(stop, language)}</span>
+                      <span className="stop-card-place"><Image src={outlineLocation} width={24} height={24} alt="" aria-hidden="true" /><span>{municipalityName(stop, language)}</span></span>
                       {stop.is_accessible ? <div className="transport-tags"><span>{t.stops.accessible}</span></div> : null}
                     </div>
                   </div>
                   <div className="stop-card-actions">
                     <Link className="stop-card-map" href={`/?stop=${encodeURIComponent(stop.id)}`}
                       aria-label={`${t.stops.onMap} · ${stopName(stop, language)}`} title={t.stops.onMap}>
-                      <Image src={outlineLocation} width={24} height={24} alt="" aria-hidden="true" />
+                      <Image src={vectorMap} width={16} height={14} alt="" aria-hidden="true" />
                     </Link>
                     <button type="button" className="stop-card-toggle" aria-expanded={expandedPlaceId === stop.id}
                       aria-label={`${expandedPlaceId === stop.id ? t.stops.hidePoints : t.map.selectPoints} · ${stopName(stop, language)}`}

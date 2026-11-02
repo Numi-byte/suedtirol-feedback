@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import outlineLocation from "@/components/OutlineLocation.svg";
+import vectorMap from "@/components/vectormap.svg";
 import { CommentsIcon } from "@/components/comments-icon";
 import { TransportIcon } from "@/components/transport-icon";
 import type { Language } from "@/lib/i18n";
@@ -43,7 +43,7 @@ export function StopPointList({ points, status, language, labels, placeId, selec
           aria-label={`${labels.comments} · ${labels.pointLabel} ${point.point_number}`} title={labels.comments}><CommentsIcon /></Link>
         {showMapLinks ? <Link className="stop-card-map" href={`/?stop=${encodeURIComponent(placeId)}&point=${encodeURIComponent(point.id)}`}
           aria-label={`${labels.showPointOnMap} · ${point.point_number}`} title={labels.showPointOnMap}>
-          <Image src={outlineLocation} width={24} height={24} alt="" aria-hidden="true" />
+          <Image src={vectorMap} width={16} height={14} alt="" aria-hidden="true" />
         </Link> : null}
       </div>
     </li>)}
