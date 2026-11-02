@@ -289,7 +289,7 @@ export function FeedbackForm({ pointId, stopName, stopLocation, transportType, l
           {photoError && <p className="form-error" role="alert">{copy[photoError]}</p>}
           <label className="contact-toggle"><span>{copy.contactToggle} <em>{copy.optional}</em></span><input type="checkbox" name="consent_to_contact" checked={contact} onChange={(event) => { setContact(event.target.checked); setShowEmailError(false); }} /></label>
           {contact && <div className={`email-field ${showEmailError ? "field-invalid" : ""}`}><label className="field-label" htmlFor="email">{copy.email} <b className="required-mark" aria-label={copy.required}>*</b></label><input id="email" name="email" type="email" maxLength={320} required aria-invalid={showEmailError} aria-describedby={showEmailError ? "email-error" : undefined} value={email} onChange={(event) => { setEmail(event.target.value); setShowEmailError(false); }} />{showEmailError && <p id="email-error" className="field-error" role="alert">{copy.emailError}</p>}</div>}
-          <p className="privacy-note"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 3 4 6v5c0 5 3.3 8.5 8 10 4.7-1.5 8-5 8-10V6Z" /></svg><span>{copy.privacy} <Link href="/about">{copy.privacyLink}</Link></span></p>
+          <p className="privacy-note"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 3 4 6v5c0 5 3.3 8.5 8 10 4.7-1.5 8-5 8-10V6Z" /></svg><span>{copy.privacy} <a href="https://www.suedtirolmobil.info/de/service-und-kontakt/privacy">{copy.privacyLink}</a></span></p>
           <p className="required-note"><span>*</span> {copy.required}</p>
           <div className="mobile-actions"><button type="button" onClick={() => setStep(1)}>{copy.back}</button><button type="button" onClick={goToReview}>{copy.next}</button></div>
         </fieldset>
@@ -312,7 +312,7 @@ export function FeedbackForm({ pointId, stopName, stopLocation, transportType, l
       </form>
       <footer className="feedback-dialog-footer">
         <span><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M12 3 4 6v5c0 5 3.3 8.5 8 10 4.7-1.5 8-5 8-10V6Z" /><path d="m9 12 2 2 4-4" /></svg> {copy.tagline}</span>
-        <span>{copy.questions} <Link href="/about">{copy.customerService}</Link></span>
+        <span>{copy.questions} <a href="https://www.suedtirolmobil.info/de/service-und-kontakt">{copy.customerService}</a></span>
       </footer>
     </section>
   );
