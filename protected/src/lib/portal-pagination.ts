@@ -32,7 +32,7 @@ export async function loadPortalPage<T>(page: number, size: number,
  * LIKE metacharacters are literals, never PostgREST filter syntax. */
 export function stopSearchFilter(search: string): string | null {
   const columns = ["name_de", "name_it", "name_en", "municipality_de", "municipality_it", "municipality", "stop_code"];
-  const terms = search.trim().split(/\s+/).filter(Boolean);
+  const terms = search.trim().slice(0, 200).split(/\s+/).filter(Boolean).slice(0, 10);
   if (!terms.length) return null;
   const clauses = terms.map(term => {
     const pattern = `%${term.replace(/[\\%_]/g, "\\$&")}%`;

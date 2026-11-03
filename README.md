@@ -6,6 +6,10 @@ Two independent Next.js applications backed by the same hosted Supabase Cloud pr
 - `protected/` — internal administration portal on port 3001
 - `supabase/` — versioned database assets (migrations are planned for Phase 2)
 
+## Security
+
+See [the security review and deployment checklist](docs/security/REVIEW.md) before deploying the hardened applications. The staff/photo-access migration must be applied first; production anti-abuse controls and capacity validation remain required.
+
 ## Requirements
 
 - Node.js 20 or newer

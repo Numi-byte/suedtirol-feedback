@@ -21,6 +21,7 @@ import { reportedIssueLabel, type FeedbackCategory } from "@/lib/reported-issues
 import { PortalHeader, PortalFooter } from "@/components/portal-shell";
 import { portalShellCopy } from "@/lib/portal-shell-copy";
 import { PortalNavigation, PortalLink, PortalSearchForm } from "./portal-navigation";
+import { isPortalStaff } from "@/lib/staff-authorization";
 
 export const dynamic = "force-dynamic";
 
@@ -78,7 +79,7 @@ export default async function PortalPage({ view, searchParams }: { view: "feedba
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return (
+  if (!user || !await isPortalStaff(supabase)) return (
     <main className="login-page">
       <section className="login-intro">
         <Image className="login-photo" src={loginPhoto} alt="" fill priority placeholder="blur"

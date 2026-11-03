@@ -11,6 +11,7 @@ begin
 end; $$;
 do $$ begin execute format('grant usage on schema %I to anon, authenticated', (select nspname from pg_namespace where oid = pg_my_temp_schema())); end; $$;
 insert into auth.users(id) values ('bdee91d9-c969-4bd4-b336-8f7e780ead3e') on conflict do nothing;
+insert into public.portal_staff(user_id) values ('bdee91d9-c969-4bd4-b336-8f7e780ead3e') on conflict do nothing;
 insert into public.bus_stops(id, name_de, name_it, name_en, municipality, latitude, longitude, created_by, is_published, id_version) values
  ('11111111-1111-4111-8111-111111111111','Test Ort','Test luogo','Test place','Bozen',46.5,11.35,'bdee91d9-c969-4bd4-b336-8f7e780ead3e',true,'(it:apb:StopPlace:it:22021:311,any)'),
  ('22222222-2222-4222-8222-222222222222','Privat','Privato','Hidden','Bozen',46.5,11.35,'bdee91d9-c969-4bd4-b336-8f7e780ead3e',false,'(it:apb:StopPlace:it:22021:312,any)');
