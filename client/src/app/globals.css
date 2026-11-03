@@ -961,3 +961,16 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
   .site-header .desktop-nav a { padding-inline: 8px; }
   .site-header .header-inner > .header-cta { padding-inline: 12px; }
 }
+.feedback-location { grid-column: 1 / -1; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.feedback-location-hint { margin: 0; font-size: 14px; line-height: 20px; color: var(--gray-600); }
+.feedback-location-frame { position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: 24px; }
+.feedback-location-canvas { width: 100%; height: 280px; background: #e7eef1; cursor: default; }
+.feedback-location-status { position: absolute; z-index: 500; top: 12px; left: 12px; right: 12px; margin: 0; padding: 12px; background: #fff; border-radius: 12px; font-size: 14px; }
+.feedback-point-marker { display: grid; place-items: center; width: 44px; height: 44px; border: 0; padding: 0; background: transparent; cursor: pointer; }
+.feedback-point-marker span { display: block; width: 12px; height: 12px; border: 2px solid #fff; border-radius: 50%; background: #007eb5; box-shadow: 0 1px 4px #0f273344; }
+.feedback-point-marker[aria-pressed="true"] span { width: 18px; height: 18px; background: #007eb5; border: 3px solid #fff; box-shadow: 0 0 0 2px #005980; }
+.feedback-point-marker:disabled { cursor: wait; }
+.feedback-location-points { display: flex; flex-wrap: wrap; gap: 8px; }
+.feedback-location-points button { min-width: 44px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 20px; background: #fff; color: var(--gray-800); text-align: center; font-size: 14px; line-height: 20px; }
+.feedback-location-points button[aria-pressed="true"] { border-color: #007eb5; background: var(--blue-50); color: #005980; font-weight: 700; }
+@media (max-width: 767px) { .feedback-location-canvas { height: 220px; } .feedback-location-frame { border-radius: 16px; } }
