@@ -2,7 +2,7 @@
 
 Reviewed 2026-11-03. Deployment target supplied by the owner: Vercel, with hosted Supabase shared by both apps.
 
-**Status: hardening implemented and locally tested; production safety is not certified.** The database migration has NOT been applied to the hosted project. Hosting configuration, live grants/schema drift, Auth configuration, backups, traffic expectations and subscription limits were not accessible through connected management tools. No production writes, imports, penetration tests or load tests were performed.
+**Status: hardening implemented and locally tested; production safety is not certified.** At the initial review the database migration had not been applied. The owner subsequently reported applying it; the limited live checks below verify selected anonymous-access boundaries, not the entire migration ledger. Hosting configuration, live grants/schema drift, Auth configuration, backups, traffic expectations and subscription limits were not accessible through connected management tools. No production writes, imports, penetration tests or load tests were performed.
 
 ## Findings and remediation
 
@@ -64,3 +64,17 @@ npm audit --prefix protected --omit=dev
 ```
 
 Stop development servers before builds because they share `.next`. ESLint now ignores generated `.next`, `out` and `next-env.d.ts` artifacts; source-file rules remain enabled. Shared code remains part of TypeScript checks. Run Docker tests only against the local disposable daemon.
+
+## Post-migration live verification — 2026-11-03
+
+The owner reported applying the migration and supplied two Vercel preview URLs. With the existing public Supabase key, read-only checks confirmed:
+
+- `is_portal_staff()` returns HTTP 200 and `false` for anonymous requests.
+- Zero-row requests against `stop_feedback`, `portal_staff` and `feedback_upload_capabilities` return HTTP 401 with PostgreSQL permission code `42501`. No private report contents or credential values were fetched or logged.
+- The published-stop RPC returns HTTP 200 with one requested public row.
+- Public point-detail and discussion RPCs return HTTP 200 with empty results for the all-zero nonexistent UUID.
+- The API-schema endpoint denies anonymous schema discovery (HTTP 401), so its response was not used to claim that every deployed function signature matches the source.
+
+Both supplied Vercel preview URLs were blocked by this cloud environment's egress proxy (CONNECT 403), before reaching Vercel. This is not evidence of a Vercel application failure. Their two exact hostnames were added to the environment configuration draft while preserving the three existing custom domains. Saving the draft does not activate network access or publish the environment.
+
+Still unverified: preview commit/version, deployed HTTP headers, browser rendering, real staff and ordinary-account authorization, login/session lifecycle, a complete photo/report submission, distributed abuse protection and sustained capacity. No live accounts, reports, photos or configuration in Vercel/Supabase were changed by these checks. After network access is activated, test the previews first; use approved test fixtures in staging for write flows. Next implementation priority is a trusted, rate-limited and challenge-verified submission gateway that also closes direct anonymous write bypasses. MFA enforcement, operational monitoring/backups, staging capacity tests and the dev-tool advisory upgrade follow.
