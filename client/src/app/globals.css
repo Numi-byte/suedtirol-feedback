@@ -970,7 +970,6 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
 .feedback-point-marker span { display: block; width: 12px; height: 12px; border: 2px solid #fff; border-radius: 50%; background: #007eb5; box-shadow: 0 1px 4px #0f273344; }
 .feedback-point-marker[aria-pressed="true"] span { width: 18px; height: 18px; background: #007eb5; border: 3px solid #fff; box-shadow: 0 0 0 2px #005980; }
 .feedback-point-marker:disabled { cursor: wait; }
-.feedback-place-pin { display: block; width: 20px; height: 20px; border: 3px solid #4b6673; border-radius: 4px; background: #e7eef1; }
 .feedback-location-points { display: flex; flex-wrap: wrap; gap: 8px; }
 .feedback-location-points button { min-width: 44px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 20px; background: #fff; color: var(--gray-800); text-align: center; font-size: 14px; line-height: 20px; }
 .feedback-location-points button[aria-pressed="true"] { border-color: #007eb5; background: var(--blue-50); color: #005980; font-weight: 700; }

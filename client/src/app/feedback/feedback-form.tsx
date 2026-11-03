@@ -78,7 +78,7 @@ function SubmitButton({ disabled, pending, copy }: { disabled: boolean; pending:
   );
 }
 
-export function FeedbackForm({ placeId, placePosition, placeName, pointId, stopName, stopLocation, transportType, language: requestedLanguage }: { placeId: string; placePosition: { latitude: number; longitude: number } | null; placeName: string; pointId: string; transportType: TransportType; stopName: string; stopLocation: string; language?: string }) {
+export function FeedbackForm({ placeId, pointId, stopName, stopLocation, transportType, language: requestedLanguage }: { placeId: string; pointId: string; transportType: TransportType; stopName: string; stopLocation: string; language?: string }) {
   const router = useRouter();
   const [changingPoint, startPointChange] = useTransition();
   const { language: siteLanguage, setLanguage } = useLanguage();
@@ -248,7 +248,7 @@ export function FeedbackForm({ placeId, placePosition, placeName, pointId, stopN
           }} />
           <Link className="feedback-close" href="/" aria-label={copy.close}><Image src="/icons/close.svg" width={12} height={12} alt="" aria-hidden="true" /></Link>
         </div>
-        <FeedbackPointMap placeId={placeId} placePosition={placePosition} placeName={placeName} selectedId={pointId} language={language}
+        <FeedbackPointMap placeId={placeId} selectedId={pointId} language={language}
           disabled={pending || changingPoint} onSelect={id => {
             if (submissionStarted.current || pending || changingPoint || id === pointId) return;
             const url = new URL(window.location.href);

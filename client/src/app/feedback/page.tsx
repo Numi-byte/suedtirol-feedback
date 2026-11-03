@@ -27,12 +27,10 @@ export default async function FeedbackPage({ searchParams }: {
   const { data: point, error } = await supabase.rpc("get_published_stop_point", { p_stop_point_id: params.point }).returns<PublishedPoint[]>().maybeSingle();
   if (error) throw new Error("Stop point could not be loaded.");
   if (!point) notFound();
-  const { data: place } = await supabase.from("bus_stops").select("latitude, longitude")
-    .eq("id", point.stop_place_id).eq("is_published", true).is("archived_at", null).maybeSingle();
   const placeName = point[`place_name_${language}`] || point.place_name_it || point.place_name_de;
   const name = `${placeName} · ${stopPointName(point, language)} · ${translations[language].map.pointLabel} ${point.point_number}`;
   return <main className="feedback-page">
-    <FeedbackForm placeId={point.stop_place_id} placePosition={place} placeName={placeName} pointId={point.id} stopName={name} stopLocation={municipalityName(point, language)} transportType={point.transport_type} language={language} />
+    <FeedbackForm placeId={point.stop_place_id} pointId={point.id} stopName={name} stopLocation={municipalityName(point, language)} transportType={point.transport_type} language={language} />
     <FeedbackThreads pointId={point.id} language={language} />
   </main>;
 }
