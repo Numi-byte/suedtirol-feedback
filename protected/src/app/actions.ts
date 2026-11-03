@@ -12,6 +12,8 @@ import type { StopPointImportRow } from "@/lib/stop-point-csv";
 import { stopPointIdentity } from "@/lib/stop-point-csv";
 import { EFA_STOP_LIST_URL, readEfaStopPlaces } from "@/lib/efa-stop-places";
 import { importEfaBatches } from "@/lib/efa-import-batches";
+import { isPortalStaff } from "@/lib/staff-authorization";
+import { limitedJson } from "../../../shared/limited-json";
 
 export async function importEfaStopPlaces(): Promise<{ message: string; error?: boolean; details: string[] }> {
   let imported = 0;
@@ -20,7 +22,7 @@ export async function importEfaStopPlaces(): Promise<{ message: string; error?: 
     const { supabase } = await requireUser();
     const response = await fetch(EFA_STOP_LIST_URL, { cache: "no-store", signal: AbortSignal.timeout(60000) });
     if (!response.ok) throw new Error(`EFA returned HTTP ${response.status}.`);
-    const { rows, errors, excluded, duplicates, received, matching } = readEfaStopPlaces(await response.json());
+    const { rows, errors, excluded, duplicates, received, matching } = readEfaStopPlaces(await limitedJson(response, 20 * 1024 * 1024));
     details.push(...errors);
     if (!rows.length) throw new Error("EFA returned no valid South Tyrol stop places. See the import report for details.");
     await importEfaBatches(rows, async batch => {
@@ -51,10 +53,15 @@ export async function signIn(_state: AuthState, formData: FormData): Promise<Aut
   const password = String(formData.get("password") ?? "");
   const { t } = await getTranslations();
   if (!email || !password) return { error: t.login.errorEmpty };
+  if (email.length > 320 || password.length > 1024) return { error: t.login.errorInvalid };
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error: t.login.errorInvalid };
+  if (!await isPortalStaff(supabase)) {
+    await supabase.auth.signOut();
+    return { error: t.login.errorInvalid };
+  }
 
   revalidatePath("/", "layout");
   redirect("/");
@@ -98,6 +105,7 @@ async function requireUser() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("You must be authenticated to manage bus stops.");
+  if (!await isPortalStaff(supabase)) throw new Error("Staff access is required.");
   return { supabase, user };
 }
 

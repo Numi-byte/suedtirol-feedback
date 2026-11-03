@@ -176,6 +176,9 @@ export function FeedbackForm({ placeId, pointId, stopName, stopLocation, transpo
 
     try {
       const { url, publishableKey } = getSupabaseConfig();
+      // The report ID is public; an independent capability authorizes its one photo.
+      const uploadToken = photo ? crypto.randomUUID() : null;
+      const extension = photo ? photoExtensions.get(photo.type) : null;
       const reportResponse = await publicRequest(`${url}/rest/v1/rpc/create_stop_point_feedback`, publishableKey, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -187,6 +190,8 @@ export function FeedbackForm({ placeId, pointId, stopName, stopLocation, transpo
           p_email: contact ? email.trim() : null,
           p_consent_to_contact: contact,
           p_language: language,
+          p_upload_token: uploadToken,
+          p_photo_extension: extension,
         }),
       });
       if (!reportResponse.ok) throw new Error("report");
@@ -196,8 +201,7 @@ export function FeedbackForm({ placeId, pointId, stopName, stopLocation, transpo
       let photoUploadFailed = false;
       if (photo) {
         try {
-          const extension = photoExtensions.get(photo.type);
-          const path = `${feedbackId}/${crypto.randomUUID()}.${extension}`;
+          const path = `${feedbackId}/${uploadToken}.${extension}`;
           const uploadResponse = await publicRequest(`${url}/storage/v1/object/feedback-photos/${path}`, publishableKey, {
             method: "POST",
             headers: { "Content-Type": photo.type, "x-upsert": "false" },
