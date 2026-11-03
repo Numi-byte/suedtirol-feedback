@@ -32,7 +32,7 @@ export async function importEfaStopPlaces(): Promise<{ message: string; error?: 
   } catch (error) {
     return { error: true, details, message: `${imported} stop places saved before the import stopped. ${error instanceof Error ? error.message : "The EFA import failed."} Retrying is safe.` };
   } finally {
-    if (imported) revalidatePath("/");
+    if (imported) revalidatePath("/", "layout");
   }
 }
 
@@ -113,7 +113,7 @@ export async function replyToFeedback(_state: FeedbackReplyState, formData: Form
 
   const { error } = await supabase.rpc("reply_to_feedback", { p_feedback_id: feedbackId, p_body: body });
   if (error) return { error: error.message };
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   return { success: true };
 }
 
@@ -121,7 +121,7 @@ export async function createBusStop(formData: FormData) {
   const { supabase, user } = await requireUser();
   const { error } = await supabase.from("bus_stops").insert({ ...readStopFields(formData), created_by: user.id });
   if (error) throw new Error(error.message);
-  revalidatePath("/");
+  revalidatePath("/", "layout");
 }
 
 export async function updateBusStop(formData: FormData) {
@@ -134,8 +134,8 @@ export async function updateBusStop(formData: FormData) {
     .update({ ...readStopFields(formData), updated_at: new Date().toISOString() })
     .eq("id", id);
   if (error) throw new Error(error.message);
-  revalidatePath("/");
-  redirect("/");
+  revalidatePath("/", "layout");
+  redirect(`/stops?stop=${encodeURIComponent(id)}`);
 }
 
 export async function updateStopPointType(formData: FormData) {
@@ -148,8 +148,8 @@ export async function updateStopPointType(formData: FormData) {
     .update({ transport_type: transportType, updated_at: new Date().toISOString() })
     .eq("id", id).eq("stop_place_id", placeId).select("id").single();
   if (error) throw new Error(error.message);
-  revalidatePath("/");
-  redirect(`/?stop=${encodeURIComponent(placeId)}#stop-points-editor`);
+  revalidatePath("/", "layout");
+  redirect(`/stops?stop=${encodeURIComponent(placeId)}#stop-points-editor`);
 }
 
 /**
@@ -169,8 +169,8 @@ export async function archiveBusStop(formData: FormData) {
     .update({ archived_at: new Date().toISOString(), is_published: false, updated_at: new Date().toISOString() })
     .eq("id", id);
   if (error) throw new Error(error.message);
-  revalidatePath("/");
-  redirect("/");
+  revalidatePath("/", "layout");
+  redirect("/database");
 }
 
 export async function restoreBusStop(formData: FormData) {
@@ -183,7 +183,7 @@ export async function restoreBusStop(formData: FormData) {
     .update({ archived_at: null, updated_at: new Date().toISOString() })
     .eq("id", id);
   if (error) throw new Error(error.message);
-  revalidatePath("/");
+  revalidatePath("/", "layout");
 }
 
 export type StopPlaceBatchRow = StopPlaceImportRow;
@@ -223,7 +223,7 @@ export async function importStopPlaceBatch(rows: StopPlaceBatchRow[], published:
     if (!Number.isInteger(data) || data < 0 || data > rows.length) {
       throw new Error("The database returned an invalid import count.");
     }
-    revalidatePath("/");
+    revalidatePath("/", "layout");
     revalidatePath("/api/stops");
     return { imported: data, skipped: rows.length - data, errors: [] };
   } catch (error) {
@@ -255,6 +255,6 @@ export async function importStopPointBatch(rows: StopPointImportRow[]): Promise<
     !Array.isArray(data.errors) || !data.errors.every((message: unknown) => typeof message === "string")) {
     throw new Error("The database returned an invalid stop-point import result.");
   }
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   return data as StopPointBatchResult;
 }

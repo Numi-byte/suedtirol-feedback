@@ -55,6 +55,8 @@ Or start them independently with `npm run dev:client` and `npm run dev:protected
 | Public client | http://localhost:3000 |
 | Protected portal | http://localhost:3001 |
 
+The authenticated portal opens the feedback inbox at `/`. Stop management, CSV/EFA imports, and stop-point transport editing are at `/stops`. The searchable stop database and archived stops are at `/database`; selecting a database row opens its editor on `/stops?stop=<id>`. All three routes enforce the existing login check and load only the data for their section.
+
 ## Checks
 
 Run `npm run lint`, `npm run typecheck`, and `npm run build` from the repository root.
