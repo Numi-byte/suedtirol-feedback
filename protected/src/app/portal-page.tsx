@@ -83,19 +83,16 @@ export default async function PortalPage({ view, searchParams }: { view: "feedba
       <section className="login-intro">
         <Image className="login-photo" src={loginPhoto} alt="" fill priority placeholder="blur"
           sizes="(max-width: 900px) 100vw, 55vw" />
-        <BrandLogo tone="dark" sub="portal" />
-        <p>{t.login.eyebrow}</p>
+        <BrandLogo tone="dark" sub="" />
         <h1>{t.login.headline[0]}<br />{t.login.headline[1]}</h1>
         <span className="login-lead">{t.login.lead}</span>
       </section>
       <section className="login-panel"><div className="login-card">
         <div className="login-card-top">
-          <p>{t.login.kicker}</p>
           <LanguageSwitch language={language} label={t.portal.language} />
         </div>
         <h2>{t.login.welcome}</h2><span>{t.login.panelLead}</span>
         <LoginForm labels={t.login} />
-        <small>{t.login.restricted}</small>
       </div></section>
     </main>
   );
