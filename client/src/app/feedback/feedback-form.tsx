@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition, type FormEvent, type ReactNode } from "react";
+import { FeedbackPointMap } from "@/components/feedback-point-map";
 import Link from "next/link";
 import Image from "next/image";
 import { LanguageSelector } from "@/components/language-selector";
@@ -77,8 +78,9 @@ function SubmitButton({ disabled, pending, copy }: { disabled: boolean; pending:
   );
 }
 
-export function FeedbackForm({ pointId, stopName, stopLocation, transportType, language: requestedLanguage }: { pointId: string; transportType: TransportType; stopName: string; stopLocation: string; language?: string }) {
+export function FeedbackForm({ placeId, placePosition, placeName, pointId, stopName, stopLocation, transportType, language: requestedLanguage }: { placeId: string; placePosition: { latitude: number; longitude: number } | null; placeName: string; pointId: string; transportType: TransportType; stopName: string; stopLocation: string; language?: string }) {
   const router = useRouter();
+  const [changingPoint, startPointChange] = useTransition();
   const { language: siteLanguage, setLanguage } = useLanguage();
   const language: Language = requestedLanguage === "de" || requestedLanguage === "it" || requestedLanguage === "en" ? requestedLanguage : siteLanguage;
   useEffect(() => {
@@ -149,7 +151,7 @@ export function FeedbackForm({ pointId, stopName, stopLocation, transportType, l
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (submissionStarted.current || pending) return;
+    if (submissionStarted.current || pending || changingPoint) return;
 
     if (!pointId || selected.length === 0) {
       setShowCategoryError(true);
@@ -246,6 +248,14 @@ export function FeedbackForm({ pointId, stopName, stopLocation, transportType, l
           }} />
           <Link className="feedback-close" href="/" aria-label={copy.close}><Image src="/icons/close.svg" width={12} height={12} alt="" aria-hidden="true" /></Link>
         </div>
+        <FeedbackPointMap placeId={placeId} placePosition={placePosition} placeName={placeName} selectedId={pointId} language={language}
+          disabled={pending || changingPoint} onSelect={id => {
+            if (submissionStarted.current || pending || changingPoint || id === pointId) return;
+            const url = new URL(window.location.href);
+            url.searchParams.set("point", id);
+            url.searchParams.set("lang", language);
+            startPointChange(() => router.replace(`${url.pathname}${url.search}${url.hash}`, { scroll: false }));
+          }} />
         <p className="heading-required"><span>*</span> {copy.required}</p>
       </header>
 
@@ -307,7 +317,7 @@ export function FeedbackForm({ pointId, stopName, stopLocation, transportType, l
           </div>
           <aside><span>i</span><p>{copy.thanksHint}</p></aside>
           {submitError && <p className="form-error" role="alert">{copy[submitError]}</p>}
-          <div className="submit-actions"><button type="button" disabled={pending} onClick={() => setStep(2)}>{copy.back}</button><SubmitButton disabled={!pointId} pending={pending} copy={copy} /></div>
+          <div className="submit-actions"><button type="button" disabled={pending} onClick={() => setStep(2)}>{copy.back}</button><SubmitButton disabled={!pointId || changingPoint} pending={pending} copy={copy} /></div>
         </fieldset>
       </form>
       <footer className="feedback-dialog-footer">
