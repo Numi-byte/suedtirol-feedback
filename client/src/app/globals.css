@@ -947,3 +947,17 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
   .map-footer-inner { grid-template-columns: 1fr auto; gap: 8px 24px; }
   .map-footer-links { grid-column: 1 / -1; grid-row: 2; }
 }
+/* Balance the desktop navigation around the centre of the header. */
+@media (min-width: 768px) {
+  .header-inner { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+  .header-inner > .brand { justify-self: start; }
+  .site-header .desktop-nav { margin-left: 0; justify-self: center; }
+  .site-header .header-inner > .header-cta { justify-self: end; background: transparent; color: #007eb5; border-radius: 0; font-family: "Neue Frutiger World", var(--font-brand); font-weight: 400; font-style: normal; font-size: 16px; line-height: 24px; letter-spacing: 0; height: 40px; min-height: 40px; padding: 8px 16px; }
+  .site-header .header-inner > .header-cta:hover { background: transparent; color: #006a99; text-decoration: underline; }
+}
+@media (min-width: 768px) and (max-width: 1100px) {
+  .header-inner { gap: 8px; }
+  .site-header .desktop-nav { gap: 0; }
+  .site-header .desktop-nav a { padding-inline: 8px; }
+  .site-header .header-inner > .header-cta { padding-inline: 12px; }
+}
