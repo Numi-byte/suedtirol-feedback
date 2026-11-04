@@ -931,10 +931,8 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
 
 /* Compact desktop map footer; keep its reserved height in the map shell. */
 .map-footer { padding: 0 24px; background: var(--gray-50); border-top: 0; border-radius: 0; font-size: 14px; line-height: 20px; font-weight: 400; }
-.map-footer-inner { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 24px; width: 100%; }
-.map-footer-service { white-space: nowrap; color: var(--gray-600); }
-.map-footer-service a { color: var(--blue); }
-.map-footer-links { justify-content: center; flex-wrap: wrap; gap: 12px 26px; }
+.map-footer-inner { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 24px; width: 100%; }
+.map-footer-links { justify-content: flex-start; flex-wrap: wrap; gap: 12px 26px; }
 .map-footer-branding { display: flex; align-items: center; gap: 24px; }
 .map-footer-tools { display: flex; align-items: center; justify-content: flex-end; gap: 16px; }
 .map-footer .language-menu-trigger { width: 118px; min-width: 118px; height: 36px; border-radius: 28px; padding: 8px 8px 8px 30px; gap: 4px; font-size: 14px; line-height: 20px; }
@@ -945,8 +943,9 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
 .map-footer a:hover { text-decoration: underline; }
 @media (min-width: 768px) and (max-width: 1399px) {
   :root { --footer-h: 112px; }
-  .map-footer-inner { grid-template-columns: 1fr auto; gap: 8px 24px; }
-  .map-footer-links { grid-column: 1 / -1; grid-row: 2; }
+  .map-footer-inner { grid-template-columns: 1fr; gap: 12px; }
+  .map-footer-links { justify-content: center; }
+  .map-footer-branding { justify-content: center; }
 }
 /* Balance the desktop navigation around the centre of the header. */
 @media (min-width: 768px) {

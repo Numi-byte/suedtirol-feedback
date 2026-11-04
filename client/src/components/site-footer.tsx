@@ -82,7 +82,6 @@ export function SiteFooter() {
   if (pinned) return (
     <footer className="site-footer site-footer-pinned map-footer">
       <div className="map-footer-inner">
-        <p className="map-footer-service">{t.nav.service}: <a href="tel:+390471220880">+39 0471 220 880</a></p>
         <div className="footer-links map-footer-links">
           {t.footer.links.slice(0, 2).map((label, index) => <a key={label} href={footerHrefs[index]}>{label}</a>)}
           {t.footer.additionalLinks.map((label, index) => <a key={label} href={additionalFooterHrefs[index]}>{label}</a>)}
