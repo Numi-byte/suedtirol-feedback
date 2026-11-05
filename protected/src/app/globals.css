@@ -354,3 +354,25 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 #stop-database, #feedback-inbox, #archived-stops, #stop-points-editor { scroll-margin-top: 112px; }
 .portal-loading-indicator { top: 112px; }
 @media (max-width: 767px) { #stop-database, #feedback-inbox, #archived-stops, #stop-points-editor { scroll-margin-top: 96px; } .portal-loading-indicator { top: 96px; } }
+
+/* Keep the searchable list next to its editor; saves never replace the workspace. */
+.database-workspace { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); align-items: start; gap: 24px; }
+.database-workspace > .stops-card { grid-column: auto; grid-row: auto; }
+.database-editors { display: grid; min-width: 0; gap: 24px; }
+.database-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+#stop-editor { scroll-margin-top: 24px; }
+.stop-mutation-form > fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.stop-edit-form > fieldset { display: grid; gap: 24px; }
+.stop-edit-form > fieldset > button { width: 100%; min-height: 56px; }
+.point-editor .point-edit-form { display: block; }
+.point-edit-form > fieldset { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 16px; }
+.point-edit-form h3 { grid-column: 1 / -1; }
+.stop-save-status, .stop-save-error { margin: 12px 0 0; font-size: 14px; line-height: 22px; }
+.stop-save-status { color: var(--blue-800); }
+.stop-save-error { color: #9b2f22; }
+@media (max-width: 1100px) {
+  .database-workspace { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 640px) {
+  .point-edit-form > fieldset { grid-template-columns: minmax(0, 1fr); }
+}

@@ -59,11 +59,19 @@ Or start them independently with `npm run dev:client` and `npm run dev:protected
 | Public client | http://localhost:3000 |
 | Protected portal | http://localhost:3001 |
 
-The authenticated portal opens the feedback inbox at `/`. Stop management, CSV/EFA imports, and stop-point transport editing are at `/stops`. The searchable stop database and archived stops are at `/database`; selecting a database row opens its editor on `/stops?stop=<id>`. All three routes enforce the existing login check and load only the data for their section.
+The authenticated portal opens the feedback inbox at `/`. CSV/EFA imports are at `/stops`. Stop creation, the searchable database, archived stops, and stop/stop-point editing are together at `/database`. Selecting a result keeps its search and page numbers in the URL while opening the editor beside the list (below it on smaller screens). Saves report success or errors inline without redirecting or clearing fields, including unsaved changes in the other editor. Creating a stop selects the new record so the next save updates it. Archive/restore preserve the list context; old `/stops?stop=<id>` links redirect to the database editor. All three routes enforce staff authorization and load only the data for their section.
 
 ## Checks
 
 Run `npm run lint`, `npm run typecheck`, and `npm run build` from the repository root.
+
+The editing browser regression runs Next.js against a synthetic local Supabase fixture; it never writes to the hosted project. With Playwright available to Node and Chromium installed, run:
+
+```bash
+CHROMIUM_PATH=/usr/bin/chromium node protected/scripts/database-editing.e2e.mjs
+```
+
+It checks create/edit, search and pagination retention, unsaved fields, failure/retry, archive confirmation/restore, legacy links, mobile scrolling, and denied non-staff access. Stop development servers before running a production build because they share `.next` outputs.
 
 The public map API pages through all published, unarchived stops using a stable
 ID order, so Supabase's response row limit cannot truncate the map. Only the

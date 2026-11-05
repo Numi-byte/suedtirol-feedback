@@ -1,9 +1,8 @@
 import { municipalityName } from "../../../shared/municipality";
-import Link from "next/link";
 import Image from "next/image";
 import loginPhoto from "@/components/3e665714419485d3f8c4ee7c0026d022bef11c77.jpg";
 import { archiveBusStop, createBusStop, restoreBusStop, updateBusStop, updateStopPointType } from "./actions";
-import { ConfirmButton } from "./confirm-button";
+import { StopMutationForm } from "./stop-mutation-form";
 import { FeedbackReplyForm } from "./feedback-reply-form";
 import { LanguageSwitch } from "./language-switch";
 import { LoginForm } from "./login-form";
@@ -130,8 +129,8 @@ export default async function PortalPage({ view, searchParams }: { view: "feedba
     view === "database" && searchFilter ? supabase.from("bus_stops").select("id", { count: "exact", head: true }).is("archived_at", null) : Promise.resolve({ count: null, error: null }),
     view === "feedback" && replyFilter !== "all" ? supabase.from("stop_feedback").select("id", { count: "exact", head: true }) : Promise.resolve({ count: null, error: null }),
     view === "feedback" ? supabase.from("stop_feedback").select("id", { count: "exact", head: true }).eq("status", "new") : Promise.resolve({ count: 0, error: null }),
-    view === "stops" && validSelectedId ? supabase.from("bus_stops").select(stopFields).eq("id", validSelectedId).is("archived_at", null).maybeSingle() : Promise.resolve({ data: null, error: null }),
-    view === "stops" && validSelectedId ? loadAllStopRows<{ id: string; point_number: string; name_de: string; name_it: string; transport_type: string }>((from, to) =>
+    view === "database" && validSelectedId ? supabase.from("bus_stops").select(stopFields).eq("id", validSelectedId).is("archived_at", null).maybeSingle() : Promise.resolve({ data: null, error: null }),
+    view === "database" && validSelectedId ? loadAllStopRows<{ id: string; point_number: string; name_de: string; name_it: string; transport_type: string }>((from, to) =>
       supabase.from("stop_points").select("id,point_number,name_de,name_it,transport_type", { count: "exact" })
         .eq("stop_place_id", validSelectedId).order("point_number").order("id").range(from, to)) : Promise.resolve([]),
   ]);
@@ -190,46 +189,10 @@ export default async function PortalPage({ view, searchParams }: { view: "feedba
         <section className="import-card">
           <StopDataImport places={t.importer} points={t.pointImporter} />
         </section>
-        <section className="editor-card">
-          <div className="card-heading">
-            <span>{editing ? t.editorEdit.kicker : t.editor.kicker}</span>
-            <h2>{editing ? t.editorEdit.title : t.editor.title}</h2>
-            <p>{editing ? t.editorEdit.subtitle : t.editor.subtitle}</p>
-          </div>
-          {/* key remounts the form so the fields reset when the selection changes */}
-          <form action={editing ? updateBusStop : createBusStop} key={editing?.id ?? "new"}>
-            {editing ? <input type="hidden" name="id" value={editing.id} /> : null}
-            <div className="field-grid three"><label>{t.editor.nameDe}<input name="name_de" defaultValue={editing?.name_de ?? ""} /></label><label>{t.editor.nameIt}<input name="name_it" defaultValue={editing?.name_it ?? ""} required /></label><label>{t.editor.nameEn}<input name="name_en" defaultValue={editing?.name_en ?? ""} /></label></div>
-            <div className="field-grid"><label>{t.editor.municipalityDe}<input name="municipality_de" defaultValue={editing?.municipality_de ?? ""} required /></label><label>{t.editor.municipalityIt}<input name="municipality_it" defaultValue={editing?.municipality_it ?? ""} required /></label></div>
-            <div className="field-grid"><label>{t.editor.stopCode}<input name="stop_code" defaultValue={editing?.stop_code ?? ""} placeholder={t.editor.optional} /></label></div>
-            <div className="field-grid"><label>{t.editor.latitude}<input name="latitude" type="number" min="-90" max="90" step="any" defaultValue={editing?.latitude ?? ""} placeholder="46.4983" required /></label><label>{t.editor.longitude}<input name="longitude" type="number" min="-180" max="180" step="any" defaultValue={editing?.longitude ?? ""} placeholder="11.3548" required /></label></div>
-            <div className="checks"><label><input name="is_accessible" type="checkbox" defaultChecked={editing?.is_accessible ?? false} /> {t.editor.accessible}</label><label><input name="is_published" type="checkbox" defaultChecked={editing?.is_published ?? true} /> {t.editor.publish}</label></div>
-            <button type="submit">{editing ? t.editorEdit.save : t.editor.save}</button>
-          </form>
-          {editing ? <div className="editor-actions">
-            <Link className="editor-cancel" href="/database">{t.editorEdit.cancel}</Link>
-            <form action={archiveBusStop}>
-              <input type="hidden" name="id" value={editing.id} />
-              <ConfirmButton className="editor-archive" message={t.editorEdit.archiveConfirm}>{t.editorEdit.archive}</ConfirmButton>
-            </form>
-            <p className="editor-note">{t.editorEdit.archiveNote}</p>
-          </div> : null}
-        </section>
-        {editing ? <section className="editor-card point-editor" id="stop-points-editor">
-          <div className="card-heading"><h2>{t.pointEditor.title}</h2><p>{editing.name_de || editing.name_it}</p></div>
-          {editingPoints.map(point => <form action={updateStopPointType} key={point.id}>
-            <input type="hidden" name="point_id" value={point.id} /><input type="hidden" name="place_id" value={editing.id} />
-            <h3>{point[`name_${language === "it" ? "it" : "de"}`]} · {t.pointEditor.point} {point.point_number}</h3>
-            <label>{t.pointEditor.type}<select name="transport_type" defaultValue={point.transport_type}>
-              <option value="bus">{t.pointEditor.bus}</option><option value="train">{t.pointEditor.train}</option><option value="cable_car">{t.pointEditor.cable_car}</option>
-            </select></label>
-            <button type="submit">{t.editorEdit.save}</button>
-          </form>)}
-          {!editingPoints.length ? <p>{t.pointEditor.empty}</p> : null}
-        </section> : null}
         </> : null}
-        {view === "database" ? <section className="stops-card" id="stop-database">
-          <div className="card-heading"><span>{t.stops.kicker}</span><h2>{activeStopCount} {t.stops.count}</h2></div>
+        {view === "database" ? <div className="database-workspace">
+        <section className="stops-card" id="stop-database">
+          <div className="database-heading"><div className="card-heading"><span>{t.stops.kicker}</span><h2>{activeStopCount} {t.stops.count}</h2></div><PortalLink className="editor-cancel" href={navigationHref({ stop: null }, "stop-editor")}>{t.editor.title}</PortalLink></div>
           <PortalSearchForm className="database-search">
             <label htmlFor="database-stop-search">{t.stops.searchLabel}</label>
             <div><input id="database-stop-search" name="q" type="search" defaultValue={searchQuery} placeholder={t.stops.searchPlaceholder} autoComplete="off" /><button type="submit">{t.stops.search}</button></div>
@@ -237,7 +200,7 @@ export default async function PortalPage({ view, searchParams }: { view: "feedba
           {searchQuery ? <p className="database-search-count" aria-live="polite">{stopPage.count} {t.stops.results}</p> : null}
           <div className="stop-list">
             {stops.map((stop) => (
-              <PortalLink className="stop-row" href={`/stops?stop=${encodeURIComponent(stop.id)}`} key={stop.id} aria-current={stop.id === editing?.id ? "true" : undefined}>
+              <PortalLink className="stop-row" href={navigationHref({ stop: stop.id }, "stop-editor")} key={stop.id} aria-current={stop.id === editing?.id ? "true" : undefined}>
                 <div className="status-dot" data-published={stop.is_published} />
                 <div>
                   <strong>{stop.name_de || stop.name_it}</strong>
@@ -265,10 +228,10 @@ export default async function PortalPage({ view, searchParams }: { view: "feedba
             {archivedStops.map((stop) => (
               <div className="archived-row" key={stop.id}>
                 <div><strong>{stop.name_de || stop.name_it}</strong><small>{municipalityName(stop, language)}</small></div>
-                <form action={restoreBusStop}>
+                <StopMutationForm action={restoreBusStop} labels={t.editor}>
                   <input type="hidden" name="id" value={stop.id} />
                   <button type="submit" className="restore">{t.archived.restore}</button>
-                </form>
+                </StopMutationForm>
               </div>
             ))}
             {archivePage.pageCount > 1 ? <nav className="stop-pagination" aria-label={t.archived.title}>
@@ -277,7 +240,47 @@ export default async function PortalPage({ view, searchParams }: { view: "feedba
               {archivePage.currentPage < archivePage.pageCount ? <PortalLink href={archivePageHref(archivePage.currentPage + 1)}>{t.stops.next}</PortalLink> : <span className="disabled" aria-disabled="true">{t.stops.next}</span>}
             </nav> : null}
           </div> : null}
+        </section>
+        <div className="database-editors">
+        <section className="editor-card" id="stop-editor">
+          <div className="card-heading">
+            <span>{editing ? t.editorEdit.kicker : t.editor.kicker}</span>
+            <h2>{editing ? t.editorEdit.title : t.editor.title}</h2>
+            <p>{editing ? t.editorEdit.subtitle : t.editor.subtitle}</p>
+          </div>
+          {/* key remounts the form so the fields reset when the selection changes */}
+          <StopMutationForm action={editing ? updateBusStop : createBusStop} labels={t.editor} className="stop-edit-form" key={editing?.id ?? "new"}>
+            {editing ? <input type="hidden" name="id" value={editing.id} /> : null}
+            <div className="field-grid three"><label>{t.editor.nameDe}<input name="name_de" defaultValue={editing?.name_de ?? ""} /></label><label>{t.editor.nameIt}<input name="name_it" defaultValue={editing?.name_it ?? ""} required /></label><label>{t.editor.nameEn}<input name="name_en" defaultValue={editing?.name_en ?? ""} /></label></div>
+            <div className="field-grid"><label>{t.editor.municipalityDe}<input name="municipality_de" defaultValue={editing?.municipality_de ?? ""} required /></label><label>{t.editor.municipalityIt}<input name="municipality_it" defaultValue={editing?.municipality_it ?? ""} required /></label></div>
+            <div className="field-grid"><label>{t.editor.stopCode}<input name="stop_code" defaultValue={editing?.stop_code ?? ""} placeholder={t.editor.optional} /></label></div>
+            <div className="field-grid"><label>{t.editor.latitude}<input name="latitude" type="number" min="-90" max="90" step="any" defaultValue={editing?.latitude ?? ""} placeholder="46.4983" required /></label><label>{t.editor.longitude}<input name="longitude" type="number" min="-180" max="180" step="any" defaultValue={editing?.longitude ?? ""} placeholder="11.3548" required /></label></div>
+            <div className="checks"><label><input name="is_accessible" type="checkbox" defaultChecked={editing?.is_accessible ?? false} /> {t.editor.accessible}</label><label><input name="is_published" type="checkbox" defaultChecked={editing?.is_published ?? true} /> {t.editor.publish}</label></div>
+            <button type="submit">{editing ? t.editorEdit.save : t.editor.save}</button>
+          </StopMutationForm>
+          {editing ? <div className="editor-actions">
+            <PortalLink className="editor-cancel" href={navigationHref({ stop: null }, "stop-database")}>{t.editorEdit.cancel}</PortalLink>
+            <StopMutationForm action={archiveBusStop} labels={t.editor} confirmMessage={t.editorEdit.archiveConfirm}>
+              <input type="hidden" name="id" value={editing.id} />
+              <button type="submit" className="editor-archive">{t.editorEdit.archive}</button>
+            </StopMutationForm>
+            <p className="editor-note">{t.editorEdit.archiveNote}</p>
+          </div> : null}
+        </section>
+        {editing ? <section className="editor-card point-editor" id="stop-points-editor">
+          <div className="card-heading"><h2>{t.pointEditor.title}</h2><p>{editing.name_de || editing.name_it}</p></div>
+          {editingPoints.map(point => <StopMutationForm action={updateStopPointType} labels={t.editor} className="point-edit-form" key={point.id}>
+            <input type="hidden" name="point_id" value={point.id} /><input type="hidden" name="place_id" value={editing.id} />
+            <h3>{point[`name_${language === "it" ? "it" : "de"}`]} · {t.pointEditor.point} {point.point_number}</h3>
+            <label>{t.pointEditor.type}<select name="transport_type" defaultValue={point.transport_type}>
+              <option value="bus">{t.pointEditor.bus}</option><option value="train">{t.pointEditor.train}</option><option value="cable_car">{t.pointEditor.cable_car}</option>
+            </select></label>
+            <button type="submit">{t.editorEdit.save}</button>
+          </StopMutationForm>)}
+          {!editingPoints.length ? <p>{t.pointEditor.empty}</p> : null}
         </section> : null}
+        </div>
+        </div> : null}
       </div> : null}
       {view === "feedback" ? <section className="feedback-card" id="feedback-inbox">
         <div className="feedback-heading-row">

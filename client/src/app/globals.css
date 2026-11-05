@@ -841,7 +841,8 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
 }
 
 /* Full footer for the three information pages. */
-.site-footer-pages { padding: 80px var(--shell-pad) 40px; font-family: "Neue Frutiger World", var(--font-brand); color: var(--gray-600); }
+.site-footer-pages, .map-footer { font-family: "Neue Frutiger World", var(--font-brand); color: var(--gray-600); }
+.site-footer-pages { padding: 80px var(--shell-pad) 40px; }
 .footer-pages-inner { max-width: 1281px; margin: 0 auto; }
 .footer-pages-top { display: flex; align-items: flex-start; gap: 80px; }
 .footer-company-column { display: flex; flex-direction: column; gap: 40px; width: 298px; flex: none; }
@@ -929,23 +930,22 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
 .how-region-map img { display: block; width: 100%; height: auto; }
 
 /* Compact desktop map footer; keep its reserved height in the map shell. */
-.map-footer { padding: 0 24px; background: #fff; border-top: 1px solid var(--line); border-radius: 0 0 12px 12px; font-size: 16px; line-height: 24px; }
-.map-footer-inner { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 24px; width: 100%; }
-.map-footer-service { white-space: nowrap; color: var(--gray-600); }
-.map-footer-service a { color: var(--blue); }
-.map-footer-links { justify-content: center; flex-wrap: wrap; gap: 4px 20px; }
-.map-footer-branding { display: flex; align-items: center; gap: 16px; }
+.map-footer { padding: 0 24px; background: var(--gray-50); border-top: 0; border-radius: 0; font-size: 14px; line-height: 20px; font-weight: 400; }
+.map-footer-inner { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 24px; width: 100%; }
+.map-footer-links { justify-content: flex-start; flex-wrap: wrap; gap: 12px 26px; }
+.map-footer-branding { display: flex; align-items: center; gap: 24px; }
 .map-footer-tools { display: flex; align-items: center; justify-content: flex-end; gap: 16px; }
-.map-footer .language-menu-trigger { min-width: 144px; height: 44px; padding: 10px 12px 10px 36px; gap: 8px; font-size: 16px; line-height: 24px; }
-.map-footer .language-menu-trigger img { left: 10px; }
-.map-footer .language-menu-trigger svg { width: 16px; height: 16px; }
+.map-footer .language-menu-trigger { width: 118px; min-width: 118px; height: 36px; border-radius: 28px; padding: 8px 8px 8px 30px; gap: 4px; font-size: 14px; line-height: 20px; }
+.map-footer .language-menu-trigger img { left: 8px; }
+.map-footer .language-menu-trigger svg { width: 12px; height: 12px; }
 .map-footer-socials { display: flex; align-items: center; gap: 8px; }
 .map-footer-socials a, .map-footer-socials img { display: block; width: 24px; height: 24px; }
 .map-footer a:hover { text-decoration: underline; }
 @media (min-width: 768px) and (max-width: 1399px) {
   :root { --footer-h: 112px; }
-  .map-footer-inner { grid-template-columns: 1fr auto; gap: 8px 24px; }
-  .map-footer-links { grid-column: 1 / -1; grid-row: 2; }
+  .map-footer-inner { grid-template-columns: 1fr; gap: 12px; }
+  .map-footer-links { justify-content: center; }
+  .map-footer-branding { justify-content: center; }
 }
 /* Balance the desktop navigation around the centre of the header. */
 @media (min-width: 768px) {

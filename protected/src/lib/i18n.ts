@@ -44,6 +44,7 @@ export const translations = {
     },
     pointEditor: { title: "Haltepunkte bearbeiten", type: "Verkehrsmittel", bus: "Bus", train: "Zug", cable_car: "Seilbahn", point: "Haltepunkt", legacy: "Bestehende Rückmeldung zur Haltestelle (ohne Haltepunkt)", empty: "Noch keine Haltepunkte importiert." },
     editor: {
+      saving: "Wird gespeichert …", saved: "Gespeichert.", failed: "Die Änderung konnte nicht gespeichert werden. Bitte erneut versuchen.",
       kicker: "Neuer Standort", title: "Haltestelle hinzufügen",
       subtitle: "Trage alle drei öffentlichen Namen und die exakten WGS84-Koordinaten ein.",
       nameDe: "Name (Deutsch)", nameIt: "Name (Italienisch)", nameEn: "Name (Englisch)",
@@ -123,6 +124,7 @@ export const translations = {
     },
     pointEditor: { title: "Modifica punti di fermata", type: "Mezzo di trasporto", bus: "Autobus", train: "Treno", cable_car: "Funivia", point: "Punto di fermata", legacy: "Riscontro precedente sulla fermata (senza punto)", empty: "Nessun punto di fermata importato." },
     editor: {
+      saving: "Salvataggio …", saved: "Salvato.", failed: "Impossibile salvare la modifica. Riprova.",
       kicker: "Nuova posizione", title: "Aggiungi una fermata",
       subtitle: "Inserisci tutti e tre i nomi pubblici e le coordinate WGS84 esatte.",
       nameDe: "Nome (tedesco)", nameIt: "Nome (italiano)", nameEn: "Nome (inglese)",
@@ -202,6 +204,7 @@ export const translations = {
     },
     pointEditor: { title: "Edit stop points", type: "Transport type", bus: "Bus", train: "Train", cable_car: "Cable car", point: "Stop point", legacy: "Historic place feedback (no stop point)", empty: "No stop points imported yet." },
     editor: {
+      saving: "Saving …", saved: "Saved.", failed: "The change could not be saved. Please try again.",
       kicker: "New location", title: "Add a bus stop",
       subtitle: "Enter all three public names and the exact WGS84 coordinates.",
       nameDe: "German name", nameIt: "Italian name", nameEn: "English name",
