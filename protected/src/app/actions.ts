@@ -12,7 +12,7 @@ import type { StopPointImportRow } from "@/lib/stop-point-csv";
 import { stopPointIdentity } from "@/lib/stop-point-csv";
 import { EFA_STOP_LIST_URL, readEfaStopPlaces } from "@/lib/efa-stop-places";
 import { importEfaBatches } from "@/lib/efa-import-batches";
-import { isPortalStaff } from "@/lib/staff-authorization";
+import { getPortalAccess, portalHome, type PortalSection } from "@/lib/portal-access";
 import { limitedJson } from "../../../shared/limited-json";
 import type { StopMutationResult } from "@/lib/database-navigation";
 
@@ -20,7 +20,7 @@ export async function importEfaStopPlaces(): Promise<{ message: string; error?: 
   let imported = 0;
   const details: string[] = [];
   try {
-    const { supabase } = await requireUser();
+    const { supabase } = await requireUser("stops");
     const response = await fetch(EFA_STOP_LIST_URL, { cache: "no-store", signal: AbortSignal.timeout(60000) });
     if (!response.ok) throw new Error(`EFA returned HTTP ${response.status}.`);
     const { rows, errors, excluded, duplicates, received, matching } = readEfaStopPlaces(await limitedJson(response, 20 * 1024 * 1024));
@@ -59,13 +59,15 @@ export async function signIn(_state: AuthState, formData: FormData): Promise<Aut
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error: t.login.errorInvalid };
-  if (!await isPortalStaff(supabase)) {
+  const access = await getPortalAccess(supabase);
+  const home = portalHome(access);
+  if (!home) {
     await supabase.auth.signOut();
     return { error: t.login.errorInvalid };
   }
 
   revalidatePath("/", "layout");
-  redirect("/");
+  redirect(home);
 }
 
 export async function signOut() {
@@ -102,18 +104,18 @@ function readStopFields(formData: FormData): StopFields {
   };
 }
 
-async function requireUser() {
+async function requireUser(section: PortalSection) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("You must be authenticated to manage bus stops.");
-  if (!await isPortalStaff(supabase)) throw new Error("Staff access is required.");
+  if (!(await getPortalAccess(supabase))[section]) throw new Error("You do not have access to this section.");
   return { supabase, user };
 }
 
 export type FeedbackReplyState = { error?: string; success?: boolean };
 
 export async function replyToFeedback(_state: FeedbackReplyState, formData: FormData): Promise<FeedbackReplyState> {
-  const { supabase, user } = await requireUser();
+  const { supabase, user } = await requireUser("feedback");
   if (!canReplyToFeedback(user.id)) return { error: "You are not authorized to reply to public feedback." };
   const feedbackId = String(formData.get("feedback_id") ?? "");
   const body = String(formData.get("body") ?? "").trim();
@@ -129,7 +131,7 @@ export async function replyToFeedback(_state: FeedbackReplyState, formData: Form
 /** All edits retain server-side staff checks and return inline feedback. */
 async function mutateStop(operation: (context: Awaited<ReturnType<typeof requireUser>>) => Promise<StopMutationResult>): Promise<StopMutationResult> {
   try {
-    const result = await operation(await requireUser());
+    const result = await operation(await requireUser("database"));
     revalidatePath("/database");
     return { ...result, success: true };
   } catch (error) {
@@ -208,7 +210,7 @@ export type ImportBatchResult = { imported: number; skipped: number; errors: str
  */
 export async function importStopPlaceBatch(rows: StopPlaceBatchRow[], published: boolean): Promise<ImportBatchResult> {
   try {
-    const { supabase } = await requireUser();
+    const { supabase } = await requireUser("stops");
     if (!Array.isArray(rows) || !rows.length || rows.length > 250) throw new Error("An import batch must contain between 1 and 250 stops.");
     rows.forEach((row) => {
       if (!row.nameDe?.trim() || !row.nameIt?.trim() || !row.nameEn?.trim() || !row.stopCode?.trim() ||
@@ -245,7 +247,7 @@ export async function importStopPlaceBatch(rows: StopPlaceBatchRow[], published:
 export type StopPointBatchResult = { imported: number; unmatched: number; errors: string[] };
 
 export async function importStopPointBatch(rows: StopPointImportRow[]): Promise<StopPointBatchResult> {
-  const { supabase } = await requireUser();
+  const { supabase } = await requireUser("stops");
   if (!Array.isArray(rows) || rows.length < 1 || rows.length > 250) throw new Error("An import batch must contain between 1 and 250 points.");
   for (const row of rows) {
     if (!stopPointIdentity(row.idVersion) || !row.pointNumber?.trim() || !row.nameDe?.trim() || !row.nameIt?.trim() ||

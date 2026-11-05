@@ -23,6 +23,17 @@ const records = Array.from({ length: 40 }, (_, i) => ({
 const points = new Map();
 const writes = [];
 let staff = true;
+let currentUserId = userId;
+const serverAdminKey = 'synthetic-server-admin-key-not-for-browser';
+const accounts = [{ user_id:userId,email:'staff@example.test',is_active:true,can_manage_stops:true,can_manage_database:true,can_view_feedback:true,is_owner:true }];
+const authAdminCalls = [];
+const managementEvents = [];
+function accessForCurrentUser() {
+  if (!staff) return { feedback:false,stops:false,database:false,users:false };
+  if (currentUserId === userId) return { feedback:true,stops:true,database:true,users:true };
+  const account=accounts.find(x=>x.user_id===currentUserId);
+  return { users:false,stops:!!(account?.is_active&&account.can_manage_stops),database:!!(account?.is_active&&account.can_manage_database),feedback:!!(account?.is_active&&account.can_view_feedback) };
+}
 const user = { id: userId, email: 'staff@example.test', aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {} };
 const fixture = createServer(async (req, res) => {
   try {
@@ -31,11 +42,34 @@ const fixture = createServer(async (req, res) => {
       res.writeHead(status, { 'Content-Type': 'application/json', ...(count !== undefined ? { 'Content-Range': `0-0/${count}` } : {}) });
       res.end(req.method === 'HEAD' ? undefined : JSON.stringify(body));
     };
-    if (url.pathname === '/auth/v1/user') return reply(user);
+    if (url.pathname === '/auth/v1/user') return reply({ ...user,id:currentUserId,user_metadata:{is_owner:true} });
     if (url.pathname === '/rest/v1/rpc/is_portal_staff') return reply(staff);
+    if (url.pathname === '/rest/v1/rpc/get_portal_access') return reply(accessForCurrentUser());
     const chunks = [];
     for await (const chunk of req) chunks.push(chunk);
     const body = chunks.length ? JSON.parse(Buffer.concat(chunks).toString()) : null;
+    if (url.pathname.startsWith('/auth/v1/admin/users')) {
+      assert.equal(req.headers.apikey,serverAdminKey);
+      if (req.method === 'POST') {
+        if(accounts.some(x=>x.email===body.email)) return reply({msg:'This email is already registered.'},422);
+        const account={user_id:idFor(1000+accounts.length),email:body.email,is_active:false,can_manage_stops:false,can_manage_database:false,can_view_feedback:false,is_owner:false};
+        accounts.push(account);authAdminCalls.push({kind:'create',id:account.user_id});
+        return reply({id:account.user_id,email:account.email});
+      }
+      const account=accounts.find(x=>x.user_id===url.pathname.split('/').at(-1));
+      assert.ok(account); account.email=body.email;
+      authAdminCalls.push({kind:'credentials',id:account.user_id,passwordChanged:!!body.password});
+      return reply({id:account.user_id,email:account.email});
+    }
+    if (['/rest/v1/rpc/list_portal_users','/rest/v1/rpc/set_portal_user_access','/rest/v1/rpc/record_portal_user_event'].includes(url.pathname)) {
+      if(currentUserId!==userId) return reply({message:'Owner access required',code:'42501'},403);
+      if(url.pathname.endsWith('/list_portal_users')) return reply(accounts.filter(x=>x.email.includes(body.p_search??'')));
+      if(url.pathname.endsWith('/record_portal_user_event')) { managementEvents.push(body);return reply(null); }
+      const account=accounts.find(x=>x.user_id===body.p_user_id);
+      assert.ok(account);assert.notEqual(account.user_id,userId);
+      Object.assign(account,{is_active:body.p_active,can_manage_stops:body.p_stops,can_manage_database:body.p_database,can_view_feedback:body.p_feedback});
+      return reply(null);
+    }
     const eq = key => url.searchParams.get(key)?.replace(/^eq\./, '');
     const single = value => req.headers.accept?.includes('vnd.pgrst.object') ? value : [value];
     if (url.pathname === '/rest/v1/bus_stops') {
@@ -90,7 +124,7 @@ let app, browser, appLog = '';
 try {
   app = spawn(process.execPath, [require.resolve('next/dist/bin/next'), 'dev', '--hostname', '127.0.0.1', '--port', String(appPort)], {
     cwd: appDir, detached: true,
-    env: { ...process.env, NODE_ENV: 'development', NEXT_TELEMETRY_DISABLED: '1', NEXT_PUBLIC_SUPABASE_URL: fixtureUrl, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'synthetic-public-key' },
+    env: { ...process.env, NODE_ENV: 'development', NEXT_TELEMETRY_DISABLED: '1', NEXT_PUBLIC_SUPABASE_URL: fixtureUrl, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'synthetic-public-key', SUPABASE_SERVICE_ROLE_KEY: serverAdminKey },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   for (const stream of [app.stdout, app.stderr]) stream.on('data', chunk => { appLog = (appLog + chunk).slice(-30000); });
@@ -217,6 +251,66 @@ try {
   assert.equal(await page.evaluate(() => performance.timeOrigin), mobileTimeOrigin);
   listContext();
   console.log('PASS: legacy editor links preserve context; mobile editing has no horizontal overflow or save jump');
+  await page.setViewportSize({width:1440,height:1000});
+  await page.goto(`${appUrl}/users`);
+  await page.getByRole('heading',{name:'Benutzerverwaltung',exact:true}).waitFor();
+  let capturedCreate;
+  page.on('request',request=>{
+    if(request.method()==='POST'&&request.headers()['next-action']&&request.url().includes('/users')&&!capturedCreate) capturedCreate=request;
+  });
+  const create=page.locator('.user-create');
+  assert.equal(await create.locator('[name=feedback]').isChecked(),false);
+  await create.locator('[name=email]').fill('operator@example.test');
+  await create.locator('[name=password]').fill('Synthetic-password-123');
+  await create.locator('[name=database]').uncheck();
+  await create.getByRole('button',{name:'Benutzer erstellen',exact:true}).click();
+  await create.getByRole('status').filter({hasText:'Gespeichert.'}).waitFor();
+  const created=accounts.find(x=>x.email==='operator@example.test');
+  assert.ok(created?.is_active&&created.can_manage_stops&&!created.can_manage_database&&!created.can_view_feedback);
+  assert.equal(await create.locator('[name=password]').inputValue(),'');
+  assert.equal(authAdminCalls.filter(x=>x.kind==='create').length,1);
+  let accountCard=page.locator('.managed-user').filter({has:page.getByRole('heading',{name:'operator@example.test',exact:true})});
+  await accountCard.waitFor();
+  assert.ok(!JSON.stringify(managementEvents).includes('Synthetic-password'));
+  assert.ok(!(await page.content()).includes(serverAdminKey));
+  console.log('PASS: owner creates Auth accounts with explicit permissions; feedback defaults off and password/key stay out of returned HTML');
+  const accessForm=accountCard.locator('form').first();
+  await accessForm.locator('[name=active]').uncheck();
+  await accessForm.getByRole('button',{name:'Berechtigungen speichern',exact:true}).click();
+  await accessForm.getByRole('status').filter({hasText:'Gespeichert.'}).waitFor();
+  assert.equal(created.is_active,false);
+  await accessForm.locator('[name=active]').check();
+  await accessForm.getByRole('button',{name:'Berechtigungen speichern',exact:true}).click();
+  await accessForm.getByRole('status').filter({hasText:'Gespeichert.'}).waitFor();
+  assert.equal(created.is_active,true);
+  await accountCard.locator('summary').click();
+  const credentials=accountCard.locator('details form');
+  await credentials.locator('[name=email]').fill('changed@example.test');
+  await credentials.locator('[name=password]').fill('Different-password-456');
+  await credentials.getByRole('button',{name:'Zugangsdaten speichern',exact:true}).click();
+  accountCard=page.locator('.managed-user').filter({has:page.getByRole('heading',{name:'changed@example.test',exact:true})});
+  await accountCard.locator('details form').getByRole('status').filter({hasText:'Gespeichert.'}).waitFor();
+  assert.equal(created.email,'changed@example.test');
+  assert.equal(authAdminCalls.at(-1).passwordChanged,true);
+  assert.equal(await accountCard.locator('[name=password]').inputValue(),'');
+  console.log('PASS: owner can deactivate/reactivate accounts and update email/password without exposing password values');
+  currentUserId=created.user_id;
+  await page.goto(`${appUrl}/users`);
+  await page.waitForURL(url=>url.pathname==='/stops');
+  await page.waitForLoadState('networkidle');
+  assert.equal(await page.locator('.portal-users').count(),0);
+  assert.equal(await page.locator('a[href="/users"]').count(),0);
+  assert.equal(await page.locator('a[href="/database"]').count(),0);
+  await page.goto(`${appUrl}/database`);
+  await page.waitForURL(url=>url.pathname==='/stops');
+  await page.waitForLoadState('networkidle');
+  const beforeAttack=authAdminCalls.length;
+  assert.ok(capturedCreate);
+  const headers=capturedCreate.headers();
+  const denied=await context.request.post(`${appUrl}/users`,{headers:{'next-action':headers['next-action'],'content-type':headers['content-type'],origin:appUrl},data:capturedCreate.postDataBuffer()});
+  assert.equal(authAdminCalls.length,beforeAttack);
+  assert.ok((await denied.text()).includes('designated owner'));
+  console.log('PASS: non-owner cannot see user management or forbidden sections; replayed owner action is denied before Auth Admin access');
   staff = false;
   await page.goto(`${appUrl}/database?q=Bozen&page=2`);
   await page.locator('.login-form').waitFor();

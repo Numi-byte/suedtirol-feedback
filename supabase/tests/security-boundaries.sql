@@ -89,12 +89,10 @@ select public.update_feedback_status(:'report_id','in_review');
 select public.reply_to_feedback(:'report_id','Authorized reply');
 update public.stop_points set transport_type='train';
 reset role;
--- Revocation is effective on the next statement; auth account stays intact.
+-- The fixed owner cannot be locked out by removing an optional staff row.
 delete from public.portal_staff;
 set local role authenticated;
-select pg_temp.check_true(not public.is_portal_staff(), 'removed staff member loses access');
-select pg_temp.check_true((select count(*)=0 from public.stop_feedback), 'revocation hides reports');
-select pg_temp.must_fail(format('select public.update_feedback_status(%L, ''resolved'')', :'report_id'));
+select pg_temp.check_true(public.is_portal_owner() and public.is_portal_staff(), 'fixed owner retains access');
 reset role;
 rollback;
 \echo 'PASS: staff isolation, direct API-role permissions, revocation, upload capabilities, validation, private storage, snapshots'

@@ -61,6 +61,10 @@ Or start them independently with `npm run dev:client` and `npm run dev:protected
 
 The authenticated portal opens the feedback inbox at `/`. CSV/EFA imports are at `/stops`. Stop creation, the searchable database, archived stops, and stop/stop-point editing are together at `/database`. Selecting a result keeps its search and page numbers in the URL while opening the editor beside the list (below it on smaller screens). Saves report success or errors inline without redirecting or clearing fields, including unsaved changes in the other editor. Creating a stop selects the new record so the next save updates it. Archive/restore preserve the list context; old `/stops?stop=<id>` links redirect to the database editor. All three routes enforce staff authorization and load only the data for their section.
 
+## User management
+
+Only Auth user `bdee91d9-c969-4bd4-b336-8f7e780ead3e` can use `/users` to create accounts, change email/password, assign independent import/database/feedback permissions and deactivate portal access. Feedback access is off by default for new accounts. Apply the new migration and configure the protected app's private server key before enabling account creation; see [deployment and permission details](docs/security/USER_MANAGEMENT.md).
+
 ## Checks
 
 Run `npm run lint`, `npm run typecheck`, and `npm run build` from the repository root.

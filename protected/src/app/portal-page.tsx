@@ -20,7 +20,8 @@ import { reportedIssueLabel, type FeedbackCategory } from "@/lib/reported-issues
 import { PortalHeader, PortalFooter } from "@/components/portal-shell";
 import { portalShellCopy } from "@/lib/portal-shell-copy";
 import { PortalNavigation, PortalLink, PortalSearchForm } from "./portal-navigation";
-import { isPortalStaff } from "@/lib/staff-authorization";
+import { getPortalAccess, portalHome } from "@/lib/portal-access";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -78,7 +79,9 @@ export default async function PortalPage({ view, searchParams }: { view: "feedba
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user || !await isPortalStaff(supabase)) return (
+  const access = user ? await getPortalAccess(supabase) : null;
+  const home = access && portalHome(access);
+  if (!user || !home) return (
     <main className="login-page">
       <section className="login-intro">
         <Image className="login-photo" src={loginPhoto} alt="" fill priority placeholder="blur"
@@ -96,6 +99,8 @@ export default async function PortalPage({ view, searchParams }: { view: "feedba
       </div></section>
     </main>
   );
+
+  if (!access || !access[view]) redirect(home);
 
   const searchQuery = q?.trim() ?? "";
   const searchFilter = stopSearchFilter(searchQuery);
@@ -180,7 +185,7 @@ export default async function PortalPage({ view, searchParams }: { view: "feedba
 
   return (
     <PortalNavigation loadingLabel={t.portal.loading}>
-    <PortalHeader language={language} email={user.email ?? ""} />
+    <PortalHeader language={language} email={user.email ?? ""} access={access} />
     <main className={`portal portal-page-${view}`}>
       {view !== "feedback" ? <header><h1>{view === "stops" ? t.portal.title : shellCopy.database}</h1></header> : null}
       {view !== "feedback" ? <div className="portal-grid">
@@ -356,7 +361,7 @@ export default async function PortalPage({ view, searchParams }: { view: "feedba
         </nav> : null}
       </section> : null}
     </main>
-    <PortalFooter language={language} />
+    <PortalFooter language={language} access={access} />
     </PortalNavigation>
   );
 }
