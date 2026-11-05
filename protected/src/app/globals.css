@@ -376,3 +376,24 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 @media (max-width: 640px) {
   .point-edit-form > fieldset { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Owner-only account administration. */
+.portal-users > header p { max-width: 70ch; }
+.user-create { max-width: 720px; }
+.user-management-form > fieldset { display: grid; gap: 20px; min-width: 0; border: 0; margin: 24px 0 0; padding: 0; }
+.user-management-form h3 { margin: 0; }
+.user-permissions { display: grid; gap: 12px; }
+.user-management-form > p { margin: 12px 0 0; font-size: 14px; }
+.user-config-note { padding: 20px; border: 1px solid var(--line); border-radius: 20px; background: var(--sky); overflow-wrap: anywhere; }
+.managed-users { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-items: start; gap: 24px; margin-top: 24px; }
+.managed-user h2 { margin: 0; font-size: 22px; overflow-wrap: anywhere; }
+.user-credentials { margin-top: 24px; border-top: 1px solid var(--line); padding-top: 20px; }
+.user-credentials summary { cursor: pointer; color: var(--blue-800); font-weight: 700; }
+@media (max-width: 1279px) {
+  .portal-desktop-nav, .portal-desktop-signout { display: none; }
+  .portal-menu-toggle { display: flex; }
+  .portal-header-inner { display: flex; justify-content: space-between; }
+  .portal-menu-toggle { align-items: center; gap: 8px; padding: 0; min-height: 32px; background: transparent; color: var(--navy); }
+  .portal-menu-toggle svg { width: 24px; height: 24px; }
+}
+@media (max-width: 767px) { .managed-users { grid-template-columns: minmax(0,1fr); } }
