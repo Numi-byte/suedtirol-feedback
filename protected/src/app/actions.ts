@@ -14,6 +14,7 @@ import { EFA_STOP_LIST_URL, readEfaStopPlaces } from "@/lib/efa-stop-places";
 import { importEfaBatches } from "@/lib/efa-import-batches";
 import { isPortalStaff } from "@/lib/staff-authorization";
 import { limitedJson } from "../../../shared/limited-json";
+import type { StopMutationResult } from "@/lib/database-navigation";
 
 export async function importEfaStopPlaces(): Promise<{ message: string; error?: boolean; details: string[] }> {
   let imported = 0;
@@ -125,73 +126,75 @@ export async function replyToFeedback(_state: FeedbackReplyState, formData: Form
   return { success: true };
 }
 
-export async function createBusStop(formData: FormData) {
-  const { supabase, user } = await requireUser();
-  const { error } = await supabase.from("bus_stops").insert({ ...readStopFields(formData), created_by: user.id });
-  if (error) throw new Error(error.message);
-  revalidatePath("/", "layout");
+/** All edits retain server-side staff checks and return inline feedback. */
+async function mutateStop(operation: (context: Awaited<ReturnType<typeof requireUser>>) => Promise<StopMutationResult>): Promise<StopMutationResult> {
+  try {
+    const result = await operation(await requireUser());
+    revalidatePath("/database");
+    return { ...result, success: true };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "The change could not be saved." };
+  }
 }
 
-export async function updateBusStop(formData: FormData) {
-  const { supabase } = await requireUser();
-  const id = String(formData.get("id") ?? "");
-  if (!id) throw new Error("A bus stop id is required.");
-
-  const { error } = await supabase
-    .from("bus_stops")
-    .update({ ...readStopFields(formData), updated_at: new Date().toISOString() })
-    .eq("id", id);
-  if (error) throw new Error(error.message);
-  revalidatePath("/", "layout");
-  redirect(`/stops?stop=${encodeURIComponent(id)}`);
+export async function createBusStop(formData: FormData): Promise<StopMutationResult> {
+  return mutateStop(async ({ supabase, user }) => {
+    const { data, error } = await supabase.from("bus_stops")
+      .insert({ ...readStopFields(formData), created_by: user.id }).select("id").single();
+    if (error) throw new Error(error.message);
+    return { createdId: data.id };
+  });
 }
 
-export async function updateStopPointType(formData: FormData) {
-  const { supabase } = await requireUser();
-  const id = String(formData.get("point_id") ?? "");
-  const placeId = String(formData.get("place_id") ?? "");
-  const transportType = String(formData.get("transport_type") ?? "");
-  if (!id || !placeId || !["bus", "train", "cable_car"].includes(transportType)) throw new Error("Invalid stop point or transport type.");
-  const { error } = await supabase.from("stop_points")
-    .update({ transport_type: transportType, updated_at: new Date().toISOString() })
-    .eq("id", id).eq("stop_place_id", placeId).select("id").single();
-  if (error) throw new Error(error.message);
-  revalidatePath("/", "layout");
-  redirect(`/stops?stop=${encodeURIComponent(placeId)}#stop-points-editor`);
+export async function updateBusStop(formData: FormData): Promise<StopMutationResult> {
+  return mutateStop(async ({ supabase }) => {
+    const id = String(formData.get("id") ?? "");
+    if (!id) throw new Error("A bus stop id is required.");
+    const { error } = await supabase.from("bus_stops")
+      .update({ ...readStopFields(formData), updated_at: new Date().toISOString() })
+      .eq("id", id).select("id").single();
+    if (error) throw new Error(error.message);
+    return {};
+  });
 }
 
-/**
- * Retiring a stop is a soft delete. stop_feedback references bus_stops with
- * "on delete restrict", so removing the row outright would either be refused by
- * the database or, without that constraint, destroy the reports. Archiving
- * takes the stop off the public map and out of the active list while every
- * report it carries keeps a valid reference to it.
- */
-export async function archiveBusStop(formData: FormData) {
-  const { supabase } = await requireUser();
-  const id = String(formData.get("id") ?? "");
-  if (!id) throw new Error("A bus stop id is required.");
-
-  const { error } = await supabase
-    .from("bus_stops")
-    .update({ archived_at: new Date().toISOString(), is_published: false, updated_at: new Date().toISOString() })
-    .eq("id", id);
-  if (error) throw new Error(error.message);
-  revalidatePath("/", "layout");
-  redirect("/database");
+export async function updateStopPointType(formData: FormData): Promise<StopMutationResult> {
+  return mutateStop(async ({ supabase }) => {
+    const id = String(formData.get("point_id") ?? "");
+    const placeId = String(formData.get("place_id") ?? "");
+    const transportType = String(formData.get("transport_type") ?? "");
+    if (!id || !placeId || !["bus", "train", "cable_car"].includes(transportType)) throw new Error("Invalid stop point or transport type.");
+    const { error } = await supabase.from("stop_points")
+      .update({ transport_type: transportType, updated_at: new Date().toISOString() })
+      .eq("id", id).eq("stop_place_id", placeId).select("id").single();
+    if (error) throw new Error(error.message);
+    return {};
+  });
 }
 
-export async function restoreBusStop(formData: FormData) {
-  const { supabase } = await requireUser();
-  const id = String(formData.get("id") ?? "");
-  if (!id) throw new Error("A bus stop id is required.");
+/** Soft-delete stops so reports and their original references remain intact. */
+export async function archiveBusStop(formData: FormData): Promise<StopMutationResult> {
+  return mutateStop(async ({ supabase }) => {
+    const id = String(formData.get("id") ?? "");
+    if (!id) throw new Error("A bus stop id is required.");
+    const { error } = await supabase.from("bus_stops")
+      .update({ archived_at: new Date().toISOString(), is_published: false, updated_at: new Date().toISOString() })
+      .eq("id", id).select("id").single();
+    if (error) throw new Error(error.message);
+    return { archivedId: id };
+  });
+}
 
-  const { error } = await supabase
-    .from("bus_stops")
-    .update({ archived_at: null, updated_at: new Date().toISOString() })
-    .eq("id", id);
-  if (error) throw new Error(error.message);
-  revalidatePath("/", "layout");
+export async function restoreBusStop(formData: FormData): Promise<StopMutationResult> {
+  return mutateStop(async ({ supabase }) => {
+    const id = String(formData.get("id") ?? "");
+    if (!id) throw new Error("A bus stop id is required.");
+    const { error } = await supabase.from("bus_stops")
+      .update({ archived_at: null, updated_at: new Date().toISOString() })
+      .eq("id", id).select("id").single();
+    if (error) throw new Error(error.message);
+    return {};
+  });
 }
 
 export type StopPlaceBatchRow = StopPlaceImportRow;
