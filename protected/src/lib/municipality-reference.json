@@ -1,0 +1,823 @@
+{
+  "verifiedAt": "2026-11-10",
+  "source": "https://github.com/italia/anpr/blob/master/src/archivi/ANPR_archivio_comuni.csv",
+  "rawSource": "https://raw.githubusercontent.com/italia/anpr/master/src/archivi/ANPR_archivio_comuni.csv",
+  "legend": "https://github.com/italia/anpr/blob/master/src/archivi/ANPR_archivio_comuni_legenda.md",
+  "attribution": "ANPR — Anagrafe Nazionale della Popolazione Residente; municipality archive, CC BY 4.0",
+  "license": "https://creativecommons.org/licenses/by/4.0/",
+  "sourceSha256": "c86791d240f35861a662db78ba4d48978b844a47b5204a38117fe39c4341edb0",
+  "municipalities": [
+    {
+      "omc": "22021001",
+      "de": "Aldein",
+      "it": "Aldino",
+      "anprId": "193",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021002",
+      "de": "Andrian",
+      "it": "Andriano",
+      "anprId": "21842",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021003",
+      "de": "Altrei",
+      "it": "Anterivo",
+      "anprId": "21845",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021004",
+      "de": "Eppan an der Weinstraße",
+      "it": "Appiano sulla strada del vino",
+      "anprId": "361",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021005",
+      "de": "Hafling",
+      "it": "Avelengo",
+      "anprId": "21850",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021006",
+      "de": "Abtei",
+      "it": "Badia",
+      "anprId": "21852",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021007",
+      "de": "Barbian",
+      "it": "Barbiano",
+      "anprId": "21854",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021008",
+      "de": "Bozen",
+      "it": "Bolzano",
+      "anprId": "21857",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021009",
+      "de": "Prags",
+      "it": "Braies",
+      "anprId": "21859",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021010",
+      "de": "Brenner",
+      "it": "Brennero",
+      "anprId": "1246",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021011",
+      "de": "Brixen",
+      "it": "Bressanone",
+      "anprId": "21868",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021012",
+      "de": "Branzoll",
+      "it": "Bronzolo",
+      "anprId": "21870",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021013",
+      "de": "Bruneck",
+      "it": "Brunico",
+      "anprId": "21873",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021014",
+      "de": "Kuens",
+      "it": "Caines",
+      "anprId": "21875",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021015",
+      "de": "Kaltern an der Weinstraße",
+      "it": "Caldaro sulla strada del vino",
+      "anprId": "21878",
+      "sourceUpdatedAt": "2019-09-18"
+    },
+    {
+      "omc": "22021016",
+      "de": "Freienfeld",
+      "it": "Campo di Trens",
+      "anprId": "1665",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021017",
+      "de": "Sand in Taufers",
+      "it": "Campo Tures",
+      "anprId": "21881",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021018",
+      "de": "Kastelbell-Tschars",
+      "it": "Castelbello-Ciardes",
+      "anprId": "21882",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021019",
+      "de": "Kastelruth",
+      "it": "Castelrotto",
+      "anprId": "21885",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021020",
+      "de": "Tscherms",
+      "it": "Cermes",
+      "anprId": "21890",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021021",
+      "de": "Kiens",
+      "it": "Chienes",
+      "anprId": "21893",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021022",
+      "de": "Klausen",
+      "it": "Chiusa",
+      "anprId": "21898",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021023",
+      "de": "Karneid",
+      "it": "Cornedo all'Isarco",
+      "anprId": "1960",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021024",
+      "de": "Kurtatsch an der Weinstraße",
+      "it": "Cortaccia sulla strada del vino",
+      "anprId": "21905",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021025",
+      "de": "Kurtinig an der Weinstraße",
+      "it": "Cortina sulla strada del vino",
+      "anprId": "3314",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021026",
+      "de": "Corvara",
+      "it": "Corvara in Badia",
+      "anprId": "21912",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021027",
+      "de": "Graun im Vinschgau",
+      "it": "Curon Venosta",
+      "anprId": "3481",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021028",
+      "de": "Toblach",
+      "it": "Dobbiaco",
+      "anprId": "21915",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021029",
+      "de": "Neumarkt",
+      "it": "Egna",
+      "anprId": "21918",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021030",
+      "de": "Pfalzen",
+      "it": "Falzes",
+      "anprId": "21921",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021031",
+      "de": "Völs am Schlern",
+      "it": "Fiè allo Sciliar",
+      "anprId": "3860",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021032",
+      "de": "Franzensfeste",
+      "it": "Fortezza",
+      "anprId": "21927",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021033",
+      "de": "Villnöß",
+      "it": "Funes",
+      "anprId": "21930",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021034",
+      "de": "Gais",
+      "it": "Gais",
+      "anprId": "21933",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021035",
+      "de": "Gargazon",
+      "it": "Gargazzone",
+      "anprId": "21936",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021036",
+      "de": "Glurns",
+      "it": "Glorenza",
+      "anprId": "21938",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021037",
+      "de": "Latsch",
+      "it": "Laces",
+      "anprId": "21941",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021038",
+      "de": "Algund",
+      "it": "Lagundo",
+      "anprId": "21945",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021039",
+      "de": "Lajen",
+      "it": "Laion",
+      "anprId": "21948",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021040",
+      "de": "Leifers",
+      "it": "Laives",
+      "anprId": "21950",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021041",
+      "de": "Lana",
+      "it": "Lana",
+      "anprId": "21953",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021042",
+      "de": "Laas",
+      "it": "Lasa",
+      "anprId": "21956",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021043",
+      "de": "Laurein",
+      "it": "Lauregno",
+      "anprId": "21958",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021044",
+      "de": "Lüsen",
+      "it": "Luson",
+      "anprId": "21960",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021045",
+      "de": "Margreid an der Weinstraße",
+      "it": "Magrè sulla strada del vino",
+      "anprId": "5235",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021046",
+      "de": "Mals",
+      "it": "Malles Venosta",
+      "anprId": "5275",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021047",
+      "de": "Enneberg",
+      "it": "Marebbe",
+      "anprId": "21966",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021048",
+      "de": "Marling",
+      "it": "Marlengo",
+      "anprId": "21970",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021049",
+      "de": "Martell",
+      "it": "Martello",
+      "anprId": "21972",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021050",
+      "de": "Mölten",
+      "it": "Meltina",
+      "anprId": "21974",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021051",
+      "de": "Meran",
+      "it": "Merano",
+      "anprId": "21980",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021052",
+      "de": "Welsberg-Taisten",
+      "it": "Monguelfo-Tesido",
+      "anprId": "5835",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021053",
+      "de": "Montan an der Weinstraße",
+      "it": "Montagna sulla strada del vino",
+      "anprId": "23089",
+      "sourceUpdatedAt": "2023-05-16"
+    },
+    {
+      "omc": "22021054",
+      "de": "Moos in Passeier",
+      "it": "Moso in Passiria",
+      "anprId": "6285",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021055",
+      "de": "Nals",
+      "it": "Nalles",
+      "anprId": "21997",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021056",
+      "de": "Naturns",
+      "it": "Naturno",
+      "anprId": "22002",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021057",
+      "de": "Natz-Schabs",
+      "it": "Naz-Sciaves",
+      "anprId": "6381",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021058",
+      "de": "Welschnofen",
+      "it": "Nova Levante",
+      "anprId": "22263",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021059",
+      "de": "Deutschnofen",
+      "it": "Nova Ponente",
+      "anprId": "22266",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021060",
+      "de": "Auer",
+      "it": "Ora",
+      "anprId": "22269",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021061",
+      "de": "St. Ulrich",
+      "it": "Ortisei",
+      "anprId": "22272",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021062",
+      "de": "Partschins",
+      "it": "Parcines",
+      "anprId": "22274",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021063",
+      "de": "Percha",
+      "it": "Perca",
+      "anprId": "22277",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021064",
+      "de": "Plaus",
+      "it": "Plaus",
+      "anprId": "22281",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021065",
+      "de": "Waidbruck",
+      "it": "Ponte Gardena",
+      "anprId": "7448",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021066",
+      "de": "Burgstall",
+      "it": "Postal",
+      "anprId": "22286",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021067",
+      "de": "Prad am Stilfserjoch",
+      "it": "Prato allo Stelvio",
+      "anprId": "7636",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021068",
+      "de": "Prettau",
+      "it": "Predoi",
+      "anprId": "22291",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021069",
+      "de": "Proveis",
+      "it": "Proves",
+      "anprId": "22293",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021070",
+      "de": "Ratschings",
+      "it": "Racines",
+      "anprId": "22297",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021071",
+      "de": "Rasen-Antholz",
+      "it": "Rasun-Anterselva",
+      "anprId": "7836",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021072",
+      "de": "Ritten",
+      "it": "Renon",
+      "anprId": "22300",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021073",
+      "de": "Riffian",
+      "it": "Rifiano",
+      "anprId": "22302",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021074",
+      "de": "Mühlbach",
+      "it": "Rio di Pusteria",
+      "anprId": "22307",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021075",
+      "de": "Rodeneck",
+      "it": "Rodengo",
+      "anprId": "22310",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021076",
+      "de": "Salurn an der Weinstraße",
+      "it": "Salorno sulla strada del vino",
+      "anprId": "23070",
+      "sourceUpdatedAt": "2020-03-17"
+    },
+    {
+      "omc": "22021077",
+      "de": "Innichen",
+      "it": "San Candido",
+      "anprId": "22556",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021079",
+      "de": "Jenesien",
+      "it": "San Genesio Atesino",
+      "anprId": "8555",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021080",
+      "de": "St. Leonhard in Passeier",
+      "it": "San Leonardo in Passiria",
+      "anprId": "22562",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021081",
+      "de": "St. Lorenzen",
+      "it": "San Lorenzo di Sebato",
+      "anprId": "8659",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021082",
+      "de": "St. Martin in Thurn",
+      "it": "San Martino in Badia",
+      "anprId": "22612",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021083",
+      "de": "St. Martin in Passeier",
+      "it": "San Martino in Passiria",
+      "anprId": "22616",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021084",
+      "de": "St. Pankraz",
+      "it": "San Pancrazio",
+      "anprId": "8773",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021085",
+      "de": "St. Christina in Gröden",
+      "it": "Santa Cristina Valgardena",
+      "anprId": "8883",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021086",
+      "de": "Sarntal",
+      "it": "Sarentino",
+      "anprId": "22621",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021087",
+      "de": "Schenna",
+      "it": "Scena",
+      "anprId": "22623",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021088",
+      "de": "Mühlwald",
+      "it": "Selva dei Molini",
+      "anprId": "22626",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021089",
+      "de": "Wolkenstein in Gröden",
+      "it": "Selva di Val Gardena",
+      "anprId": "9335",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021091",
+      "de": "Schnals",
+      "it": "Senales",
+      "anprId": "22635",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021092",
+      "de": "Sexten",
+      "it": "Sesto",
+      "anprId": "22637",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021093",
+      "de": "Schlanders",
+      "it": "Silandro",
+      "anprId": "22640",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021094",
+      "de": "Schluderns",
+      "it": "Sluderno",
+      "anprId": "22642",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021095",
+      "de": "Stilfs",
+      "it": "Stelvio",
+      "anprId": "22645",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021096",
+      "de": "Terenten",
+      "it": "Terento",
+      "anprId": "22648",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021097",
+      "de": "Terlan",
+      "it": "Terlano",
+      "anprId": "22650",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021098",
+      "de": "Tramin an der Weinstraße",
+      "it": "Termeno sulla strada del vino",
+      "anprId": "21509",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021099",
+      "de": "Tisens",
+      "it": "Tesimo",
+      "anprId": "21512",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021100",
+      "de": "Tiers",
+      "it": "Tires",
+      "anprId": "21514",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021101",
+      "de": "Tirol",
+      "it": "Tirolo",
+      "anprId": "21516",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021102",
+      "de": "Truden im Naturpark",
+      "it": "Trodena nel parco naturale",
+      "anprId": "10278",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021103",
+      "de": "Taufers im Münstertal",
+      "it": "Tubre",
+      "anprId": "21520",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021104",
+      "de": "Ulten",
+      "it": "Ultimo",
+      "anprId": "21523",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021105",
+      "de": "Pfatten",
+      "it": "Vadena",
+      "anprId": "21525",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021106",
+      "de": "Olang",
+      "it": "Valdaora",
+      "anprId": "21528",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021107",
+      "de": "Pfitsch",
+      "it": "Val di Vizze",
+      "anprId": "10417",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021108",
+      "de": "Ahrntal",
+      "it": "Valle Aurina",
+      "anprId": "21529",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021109",
+      "de": "Gsies",
+      "it": "Valle di Casies",
+      "anprId": "10455",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021110",
+      "de": "Vintl",
+      "it": "Vandoies",
+      "anprId": "21530",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021111",
+      "de": "Vahrn",
+      "it": "Varna",
+      "anprId": "21535",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021112",
+      "de": "Vöran",
+      "it": "Verano",
+      "anprId": "21537",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021113",
+      "de": "Niederdorf",
+      "it": "Villabassa",
+      "anprId": "21539",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021114",
+      "de": "Villanders",
+      "it": "Villandro",
+      "anprId": "21542",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021115",
+      "de": "Sterzing",
+      "it": "Vipiteno",
+      "anprId": "21545",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021116",
+      "de": "Feldthurns",
+      "it": "Velturno",
+      "anprId": "21548",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021117",
+      "de": "Wengen",
+      "it": "La Valle",
+      "anprId": "21551",
+      "sourceUpdatedAt": "2016-06-17"
+    },
+    {
+      "omc": "22021118",
+      "de": "Unsere Liebe Frau im Walde-St. Felix",
+      "it": "Senale-San Felice",
+      "anprId": "9349",
+      "sourceUpdatedAt": "2016-06-17"
+    }
+  ]
+}

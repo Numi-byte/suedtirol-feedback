@@ -3,6 +3,9 @@ import Image from "next/image";
 import loginPhoto from "@/components/3e665714419485d3f8c4ee7c0026d022bef11c77.jpg";
 import { archiveBusStop, createBusStop, restoreBusStop, updateBusStop, updateStopPointType } from "./actions";
 import { StopMutationForm } from "./stop-mutation-form";
+import { MunicipalityBackfill } from "./municipality-backfill";
+import { municipalityReferenceDate } from "@/lib/municipality-reference";
+import { municipalityBackfillCopy } from "@/lib/municipality-backfill-copy";
 import { FeedbackReplyForm } from "./feedback-reply-form";
 import { LanguageSwitch } from "./language-switch";
 import { LoginForm } from "./login-form";
@@ -58,12 +61,12 @@ function pageNumbers(currentPage: number, pageCount: number) {
   return Array.from({ length: Math.min(5, pageCount) }, (_, index) => firstPage + index);
 }
 
-export default async function PortalPage({ view, searchParams }: { view: "feedback" | "stops" | "database"; searchParams: Promise<{ stop?: string; page?: string; q?: string; replies?: string; feedbackPage?: string; archivePage?: string }> }) {
+export default async function PortalPage({ view, searchParams }: { view: "feedback" | "stops" | "database"; searchParams: Promise<{ stop?: string; page?: string; q?: string; replies?: string; feedbackPage?: string; archivePage?: string; missing?: string }> }) {
   const { language, t } = await getTranslations();
   const shellCopy = portalShellCopy[language];
   const route = view === "feedback" ? "/" : `/${view}`;
   const emptyPage = { rows: [], currentPage: 1, pageCount: 1, count: 0 };
-  const { stop: selectedId, page: requestedStopPage, q, replies, feedbackPage: requestedFeedbackPage, archivePage: requestedArchivePage } = await searchParams;
+  const { stop: selectedId, page: requestedStopPage, q, replies, feedbackPage: requestedFeedbackPage, archivePage: requestedArchivePage, missing } = await searchParams;
 
   if (!hasSupabaseConfig()) {
     return (
@@ -104,15 +107,21 @@ export default async function PortalPage({ view, searchParams }: { view: "feedba
 
   const searchQuery = q?.trim() ?? "";
   const searchFilter = stopSearchFilter(searchQuery);
+  const missingOnly = missing === "1";
+  const municipalityCopy = municipalityBackfillCopy[language];
   const validSelectedId = selectedId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selectedId) ? selectedId : null;
   const stopFields = "id,name_de,name_it,name_en,municipality,municipality_de,municipality_it,stop_code,latitude,longitude,is_accessible,is_published,archived_at";
   const buildStopQuery = (head = false) => {
     let query = supabase.from("bus_stops").select(stopFields, { count: "exact", head }).is("archived_at", null);
     if (searchFilter) query = query.or(searchFilter);
+    if (missingOnly) query = query.eq("municipality_names_missing", true);
     return query.order("created_at", { ascending: false }).order("id");
   };
-  const buildArchiveQuery = (head = false) => supabase.from("bus_stops").select(stopFields, { count: "exact", head })
-    .not("archived_at", "is", null).order("archived_at", { ascending: false }).order("id");
+  const buildArchiveQuery = (head = false) => {
+    let query = supabase.from("bus_stops").select(stopFields, { count: "exact", head }).not("archived_at", "is", null);
+    if (missingOnly) query = query.eq("municipality_names_missing", true);
+    return query.order("archived_at", { ascending: false }).order("id");
+  };
   const replyFilter: ReplyFilter = replies === "replied" || replies === "unreplied" ? replies : "all";
   const feedbackSelect = "id,severity,description,overall_rating,cleanliness_rating,safety_rating,accessibility_rating,information_rating,shelter_rating,has_shelter,has_seating,has_lighting,comment,email,consent_to_contact,language,status,created_at,bus_stops(name_de,name_it,name_en,municipality,municipality_de,municipality_it),stop_points(point_number,name_de,name_it),stop_feedback_categories(category_slug,feedback_categories(label_de,label_it,label_en)),stop_feedback_photos(id,storage_path),feedback_replies!left(id,body,created_at,updated_at)";
   const buildFeedbackQuery = (head = false) => {
@@ -158,6 +167,7 @@ export default async function PortalPage({ view, searchParams }: { view: "feedba
     if (validSelectedId) params.set("stop", validSelectedId);
     if (currentPage > 1) params.set("page", String(currentPage));
     if (searchQuery) params.set("q", searchQuery);
+    if (missingOnly) params.set("missing", "1");
     if (replyFilter !== "all") params.set("replies", replyFilter);
     if (currentFeedbackPage > 1) params.set("feedbackPage", String(currentFeedbackPage));
     if (archivePage.currentPage > 1) params.set("archivePage", String(archivePage.currentPage));
@@ -214,7 +224,7 @@ export default async function PortalPage({ view, searchParams }: { view: "feedba
                 </div>
               </PortalLink>
             ))}
-            {!stops.length && <p className="empty">{searchQuery ? t.stops.emptySearch : t.stops.empty}</p>}
+            {!stops.length && <p className="empty">{missingOnly ? municipalityCopy.noMissing : searchQuery ? t.stops.emptySearch : t.stops.empty}</p>}
           </div>
           {pageCount > 1 ? <nav className="stop-pagination" aria-label={t.stops.paginationLabel}>
             {currentPage > 1
@@ -287,6 +297,11 @@ export default async function PortalPage({ view, searchParams }: { view: "feedba
         </div>
         </div> : null}
       </div> : null}
+      {view === "database" ? <section className="editor-card municipality-backfill-card">
+        <div className="card-heading"><h2>{municipalityCopy.title}</h2></div>
+        <PortalLink href={navigationHref({ missing: missingOnly ? null : "1", page: null, archivePage: null }, "stop-database")}>{missingOnly ? municipalityCopy.showAll : municipalityCopy.showMissing}</PortalLink>
+        <MunicipalityBackfill language={language} referenceDate={municipalityReferenceDate} />
+      </section> : null}
       {view === "feedback" ? <section className="feedback-card" id="feedback-inbox">
         <div className="feedback-heading-row">
           <div className="card-heading"><h1>{t.feedback.kicker}</h1><p>{t.feedback.note}</p></div>
