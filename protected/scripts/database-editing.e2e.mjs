@@ -8,6 +8,9 @@ import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { setTimeout as delay } from 'node:timers/promises';
+import { mkdtemp, writeFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const { createServerClient } = require('@supabase/ssr');
@@ -20,6 +23,16 @@ const records = Array.from({ length: 40 }, (_, i) => ({
   stop_code: String(i + 1), latitude: 46.5, longitude: 11.35, created_by: userId,
   is_accessible: false, is_published: i < 25, archived_at: i >= 25 ? '2026-01-01T00:00:00Z' : null,
 }));
+for (const [index,source] of [[0,'2553'],[1,'3217'],[3,'696'],[25,'6']]) {
+  Object.assign(records[index],{municipality_de:'',municipality_it:'',id_version:`(it:apb:StopPlace:it:22021:${source},any)`});
+}
+Object.assign(records[2],{municipality_de:'',municipality_it:'',id_version:null});
+const municipalityFeed={locations:[
+ {id:'it:22021:2553',parent:{name:'Merano',type:'locality',properties:{omc:'22021051'}}},
+ {id:'it:22021:3217',parent:{name:'Anterselva (Rasun Anterselva)',type:'locality',properties:{omc:'22021071'}}},
+ {id:'it:22021:696',parent:{name:'Termeno',type:'locality',properties:{omc:'22021098'}}},
+ {id:'it:22021:6',parent:{name:'Resia (Curon Venosta)',type:'locality',properties:{omc:'22021027'}}},
+]};
 const points = new Map();
 const writes = [];
 let staff = true;
@@ -42,12 +55,29 @@ const fixture = createServer(async (req, res) => {
       res.writeHead(status, { 'Content-Type': 'application/json', ...(count !== undefined ? { 'Content-Range': `0-0/${count}` } : {}) });
       res.end(req.method === 'HEAD' ? undefined : JSON.stringify(body));
     };
+    if (url.pathname === '/test-efa-stop-list') return reply(municipalityFeed);
     if (url.pathname === '/auth/v1/user') return reply({ ...user,id:currentUserId,user_metadata:{is_owner:true} });
     if (url.pathname === '/rest/v1/rpc/is_portal_staff') return reply(staff);
     if (url.pathname === '/rest/v1/rpc/get_portal_access') return reply(accessForCurrentUser());
     const chunks = [];
     for await (const chunk of req) chunks.push(chunk);
     const body = chunks.length ? JSON.parse(Buffer.concat(chunks).toString()) : null;
+    if (url.pathname === '/rest/v1/rpc/list_stops_missing_municipality') {
+      const rows=records.filter(x=>(!x.municipality_de.trim()||!x.municipality_it.trim())&&(!body.p_after||x.id>body.p_after)).sort((a,b)=>a.id.localeCompare(b.id));
+      return reply(rows.slice(0,Math.min(body.p_limit,2)));
+    }
+    if (url.pathname === '/rest/v1/rpc/fill_missing_stop_municipalities') {
+      let updated=0;const details=[];
+      for(const row of body.p_rows){
+        const record=records.find(x=>x.id===row.id);
+        if(!record||record.id_version!==`(it:apb:StopPlace:${row.source_id},any)`) {details.push({id:row.id,reason:'source_changed'});continue;}
+        if(record.municipality_de.trim()&&record.municipality_it.trim()){details.push({id:row.id,reason:'already_complete'});continue;}
+        if(!record.municipality_de.trim())record.municipality_de=row.municipality_de;
+        if(!record.municipality_it.trim())record.municipality_it=row.municipality_it;
+        writes.push({kind:'municipality',id:row.id});updated++;
+      }
+      return reply({updated,details});
+    }
     if (url.pathname.startsWith('/auth/v1/admin/users')) {
       assert.equal(req.headers.apikey,serverAdminKey);
       if (req.method === 'POST') {
@@ -88,6 +118,7 @@ const fixture = createServer(async (req, res) => {
         return reply(single({ id: record.id }));
       }
       let rows = records.filter(x => !eq('id') || x.id === eq('id'));
+      if (url.searchParams.get('municipality_names_missing') === 'eq.true') rows=rows.filter(x=>!x.municipality_de.trim()||!x.municipality_it.trim());
       if (url.searchParams.get('archived_at') === 'is.null') rows = rows.filter(x => !x.archived_at);
       if (url.searchParams.get('archived_at') === 'not.is.null') rows = rows.filter(x => x.archived_at);
       const count = rows.length;
@@ -121,10 +152,13 @@ const appPort = portReservation.address().port;
 await new Promise(resolve => portReservation.close(resolve));
 const appUrl = `http://127.0.0.1:${appPort}`;
 let app, browser, appLog = '';
+const hookDirectory = await mkdtemp(join(tmpdir(),'portal-efa-test-'));
+const hookPath=join(hookDirectory,'efa-fixture.cjs');
+await writeFile(hookPath,`const original=globalThis.fetch;globalThis.fetch=(input,init)=>{const url=String(input instanceof Request?input.url:input);return original(url.startsWith('https://efa.sta.bz.it/apb/XML_STOPLIST_REQUEST?')?'${fixtureUrl}/test-efa-stop-list':input,init)};`);
 try {
   app = spawn(process.execPath, [require.resolve('next/dist/bin/next'), 'dev', '--hostname', '127.0.0.1', '--port', String(appPort)], {
     cwd: appDir, detached: true,
-    env: { ...process.env, NODE_ENV: 'development', NEXT_TELEMETRY_DISABLED: '1', NEXT_PUBLIC_SUPABASE_URL: fixtureUrl, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'synthetic-public-key', SUPABASE_SERVICE_ROLE_KEY: serverAdminKey },
+    env: { ...process.env, NODE_ENV: 'development', NEXT_TELEMETRY_DISABLED: '1', NEXT_PUBLIC_SUPABASE_URL: fixtureUrl, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'synthetic-public-key', SUPABASE_SERVICE_ROLE_KEY: serverAdminKey, NODE_OPTIONS: `--require ${hookPath}` },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   for (const stream of [app.stdout, app.stderr]) stream.on('data', chunk => { appLog = (appLog + chunk).slice(-30000); });
@@ -145,6 +179,7 @@ try {
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
   await context.addCookies([...cookies.values()].map(x => ({ name: x.name, value: x.value, url: appUrl })));
   const page = await context.newPage();
+  page.setDefaultNavigationTimeout(60_000);
   const waitFor = async predicate => {
     for (let i = 0; i < 150; i++) { if (await predicate()) return; await delay(100); }
     throw new Error('Timed out waiting for browser assertion');
@@ -251,6 +286,27 @@ try {
   assert.equal(await page.evaluate(() => performance.timeOrigin), mobileTimeOrigin);
   listContext();
   console.log('PASS: legacy editor links preserve context; mobile editing has no horizontal overflow or save jump');
+  await page.goto(`${appUrl}/database?q=Bozen&page=2&archivePage=2`);
+  const fill=page.locator('.municipality-backfill');
+  assert.ok((await page.locator('main > section').last().getAttribute('class')).includes('municipality-backfill-card'));
+  const fillUrl=page.url();
+  await fill.getByRole('button',{name:'Gemeinden aus EFA ergänzen',exact:true}).click();
+  await fill.getByRole('status').filter({hasText:'Abgeschlossen.'}).waitFor();
+  assert.equal(page.url(),fillUrl);
+  assert.equal(records.find(x=>x.id===idFor(1)).municipality_de,'Meran');
+  assert.equal(records.find(x=>x.id===idFor(2)).municipality_de,'Rasen-Antholz');
+  assert.equal(records.find(x=>x.id===idFor(4)).municipality_de,'Tramin an der Weinstraße');
+  assert.equal(records.find(x=>x.id===idFor(26)).municipality_it,'Curon Venosta');
+  assert.ok(records.find(x=>x.id===idFor(26)).archived_at);
+  assert.equal(writes.filter(x=>x.kind==='municipality').length,4);
+  assert.match(await fill.getByRole('status').innerText(),/5 geprüft.*4 ergänzt.*1 zur Prüfung/);
+  await page.getByRole('link',{name:'Nur fehlende Gemeinden anzeigen',exact:true}).click();
+  await page.waitForURL(url=>url.searchParams.get('missing')==='1');
+  await page.waitForFunction(()=>document.querySelectorAll('.stop-row').length===1);
+  await fill.getByRole('button',{name:'Gemeinden aus EFA ergänzen',exact:true}).click();
+  await fill.getByRole('status').filter({hasText:'Abgeschlossen.'}).waitFor();
+  assert.equal(writes.filter(x=>x.kind==='municipality').length,4);
+  console.log('PASS: footer municipality fill scans beyond the visible page, includes archives, resolves frazioni, preserves context, filters remaining gaps and safely retries');
   await page.setViewportSize({width:1440,height:1000});
   await page.goto(`${appUrl}/users`);
   await page.getByRole('heading',{name:'Benutzerverwaltung',exact:true}).waitFor();
@@ -324,4 +380,5 @@ try {
   if (app?.pid) { try { process.kill(-app.pid, 'SIGTERM'); } catch { /* already stopped */ } }
   fixture.closeAllConnections();
   await new Promise(resolve => fixture.close(resolve));
+  await rm(hookDirectory,{recursive:true,force:true});
 }

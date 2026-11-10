@@ -397,3 +397,9 @@ button:disabled { opacity: .5; cursor: not-allowed; }
   .portal-menu-toggle svg { width: 24px; height: 24px; }
 }
 @media (max-width: 767px) { .managed-users { grid-template-columns: minmax(0,1fr); } }
+
+.municipality-backfill-card { margin-top: 24px; }
+.municipality-backfill-card > a { display: inline-block; margin-top: 16px; color: var(--blue-800); text-decoration: underline; }
+.municipality-backfill { display: grid; justify-items: start; gap: 16px; margin-top: 20px; }
+.municipality-backfill p { margin: 0; max-width: 85ch; }
+.municipality-backfill small { color: var(--muted); }

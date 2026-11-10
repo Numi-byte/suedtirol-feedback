@@ -65,6 +65,10 @@ The authenticated portal opens the feedback inbox at `/`. CSV/EFA imports are at
 
 Only Auth user `bdee91d9-c969-4bd4-b336-8f7e780ead3e` can use `/users` to create accounts, change email/password, assign independent import/database/feedback permissions and deactivate portal access. Feedback access is off by default for new accounts. Apply the new migration and configure the protected app's private server key before enabling account creation; see [deployment and permission details](docs/security/USER_MANAGEMENT.md).
 
+## Missing municipality names
+
+At the bottom of **Datenbank verwalten**, filter missing municipalities or fill them from EFA stop IDs/municipality codes and the official bilingual ANPR reference. Existing translations are preserved; frazioni resolve to their comune. Apply the new municipality migration first. See [sources, safeguards and deployment](docs/features/MUNICIPALITY_BACKFILL.md).
+
 ## Checks
 
 Run `npm run lint`, `npm run typecheck`, and `npm run build` from the repository root.
