@@ -17,7 +17,7 @@ insert into auth.users(id,email) values
  ('99999999-9999-4999-8999-999999999999','operator@example.test');
 set local role anon;
 select pg_temp.check_true(not public.is_portal_owner(),'anonymous is not owner');
-select pg_temp.check_true(public.get_portal_access() = '{"users":false,"stops":false,"database":false,"feedback":false}'::jsonb,'anonymous has no sections');
+select pg_temp.check_true(public.get_portal_access() = '{"users":false,"feedbackSettings":false,"stops":false,"database":false,"feedback":false}'::jsonb,'anonymous has no sections');
 select pg_temp.must_fail('select * from public.list_portal_users()');
 reset role;
 set local request.jwt.claim.sub='bdee91d9-c969-4bd4-b336-8f7e780ead3e';

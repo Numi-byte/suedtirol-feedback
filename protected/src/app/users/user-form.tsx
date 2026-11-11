@@ -2,8 +2,8 @@
 import { useEffect, useRef, useState, useTransition, type FormEvent, type ReactNode } from "react";
 import type { UserManagementResult } from "@/lib/user-management";
 
-type Props = { action: (form: FormData) => Promise<UserManagementResult>; children: ReactNode; resetOnSuccess?: boolean; disabled?: boolean; labels: { saving: string; saved: string; failed: string } };
-export function UserForm({ action, children, labels, resetOnSuccess = false, disabled = false }: Props) {
+type Props = { action: (form: FormData) => Promise<UserManagementResult>; children: ReactNode; resetOnSuccess?: boolean; clearUploads?:boolean; disabled?: boolean; labels: { saving: string; saved: string; failed: string } };
+export function UserForm({ action, children, labels, resetOnSuccess = false, clearUploads = false, disabled = false }: Props) {
   const [ready, setReady] = useState(false);
   useEffect(() => setReady(true), []);
   const [pending, startTransition] = useTransition();
@@ -21,6 +21,10 @@ export function UserForm({ action, children, labels, resetOnSuccess = false, dis
         const response = await action(data);
         setResult(response);
         if (response.success && resetOnSuccess) form.reset();
+        if (response.success && clearUploads) {
+          form.querySelectorAll<HTMLInputElement>('input[type="file"]').forEach(input=>{input.value="";});
+          form.querySelectorAll<HTMLInputElement>('input[name="remove_icon"]').forEach(input=>{input.checked=false;});
+        }
       } catch {
         setResult({ error: labels.failed });
       } finally {

@@ -2,32 +2,22 @@
 
 import { useLanguage } from "@/components/language-provider";
 
-const labels: Record<string, Record<string, string>> = {
-  weather_protection: { de: "Witterungsschutz fehlt", it: "Manca la protezione dalle intemperie", en: "Weather protection is missing" },
-  seating: { de: "Sitzplatz fehlt", it: "Mancano posti a sedere", en: "Seating is missing" },
-  safe_sidewalk: { de: "Sicherer Gehweg fehlt", it: "Manca un percorso pedonale sicuro", en: "Safe footpath is missing" },
-  safe_crossing: { de: "Sichere Querung fehlt", it: "Manca un attraversamento sicuro", en: "Safe road crossing is missing" },
-  passenger_information: { de: "Fahrgastinformation fehlt", it: "Mancano informazioni ai passeggeri", en: "Passenger information is missing" },
-  lighting: { de: "Beleuchtung fehlt", it: "Manca l’illuminazione", en: "Lighting is missing" },
-  accessibility: { de: "Barrierefreiheit fehlt", it: "Accessibilità insufficiente", en: "Accessibility is inadequate" },
-  shading: { de: "Beschattung fehlt", it: "Manca l’ombreggiatura", en: "Shade is missing" },
-  bicycle_parking: { de: "Fahrradabstellplatz fehlt", it: "Manca il parcheggio per biciclette", en: "Bicycle parking is missing" },
-  waste_bin: { de: "Mülleimer fehlt", it: "Manca il cestino", en: "Waste bin is missing" },
-};
+import { feedbackCategoryLabel, type FeedbackCategoryConfig } from "../../../../shared/feedback-form-config";
 
 const copy = {
-  de: { eyebrow: "Rückmeldungen", title: "Öffentliche Beiträge", intro: "Die Auswahl anderer Fahrgäste – anonym und ohne persönliche Angaben.", anonymous: "Anonymer Beitrag", reply: "Antwort des Teams", waiting: "Noch keine Antwort", empty: "Für diesen Haltepunkt gibt es noch keine Beiträge." },
-  it: { eyebrow: "Riscontri", title: "Contributi pubblici", intro: "Le selezioni di altri passeggeri, anonime e senza dati personali.", anonymous: "Contributo anonimo", reply: "Risposta del team", waiting: "Nessuna risposta per ora", empty: "Non ci sono ancora contributi per questo punto di fermata." },
-  en: { eyebrow: "Feedback", title: "Public posts", intro: "Selections from other passengers, anonymous and without personal details.", anonymous: "Anonymous post", reply: "Team reply", waiting: "No reply yet", empty: "There are no posts for this stop point yet." },
+  de: { eyebrow: "Rückmeldungen", title: "Öffentliche Beiträge", intro: "Die Auswahl anderer Fahrgäste – anonym und ohne persönliche Angaben.", anonymous: "Anonymer Beitrag", issue: "Gemeldetes Problem", reply: "Antwort des Teams", waiting: "Noch keine Antwort", empty: "Für diesen Haltepunkt gibt es noch keine Beiträge." },
+  it: { eyebrow: "Riscontri", title: "Contributi pubblici", intro: "Le selezioni di altri passeggeri, anonime e senza dati personali.", anonymous: "Contributo anonimo", issue: "Problema segnalato", reply: "Risposta del team", waiting: "Nessuna risposta per ora", empty: "Non ci sono ancora contributi per questo punto di fermata." },
+  en: { eyebrow: "Feedback", title: "Public posts", intro: "Selections from other passengers, anonymous and without personal details.", anonymous: "Anonymous post", issue: "Reported issue", reply: "Team reply", waiting: "No reply yet", empty: "There are no posts for this stop point yet." },
 } as const;
 
 type Language = keyof typeof copy;
 export type Thread = { feedback_id: string; submitted_at: string; category_slugs: string[]; reply_body: string | null; replied_at: string | null };
 
-export function FeedbackThreadsView({ threads, language }: { threads: Thread[]; language?: string }) {
+export function FeedbackThreadsView({ threads, language, categories }: { categories: FeedbackCategoryConfig[]; threads: Thread[]; language?: string }) {
   const { language: siteLanguage } = useLanguage();
   const lang: Language = language === "de" || language === "it" || language === "en" ? language : siteLanguage;
   const t = copy[lang];
+  const labels = new Map(categories.map(category=>[category.slug,feedbackCategoryLabel(category,lang)]));
   const locale = lang === "de" ? "de-DE" : lang === "it" ? "it-IT" : "en-GB";
 
   return <section className="feedback-threads" id="feedback-threads" aria-labelledby="feedback-threads-title">
@@ -37,7 +27,7 @@ export function FeedbackThreadsView({ threads, language }: { threads: Thread[]; 
         <div className="thread-post">
           <div className="anonymous-avatar" aria-hidden="true">A</div>
           <div><div className="thread-meta"><strong>{t.anonymous}</strong><time dateTime={thread.submitted_at}>{new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "Europe/Rome" }).format(new Date(thread.submitted_at))}</time></div>
-          <div className="thread-categories">{thread.category_slugs.map((slug) => <span key={slug}>{labels[slug]?.[lang] ?? slug}</span>)}</div></div>
+          <div className="thread-categories">{thread.category_slugs.map((slug) => <span key={slug}>{labels.get(slug) ?? t.issue}</span>)}</div></div>
         </div>
         {thread.reply_body ? <div className="thread-reply"><span aria-hidden="true">↳</span><div><strong>{t.reply}</strong><p>{thread.reply_body}</p>{thread.replied_at ? <time dateTime={thread.replied_at}>{new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "Europe/Rome" }).format(new Date(thread.replied_at))}</time> : null}</div></div> : <p className="thread-waiting">{t.waiting}</p>}
       </article>)}

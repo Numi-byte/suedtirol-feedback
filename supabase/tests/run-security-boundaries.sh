@@ -25,3 +25,6 @@ tail -1 "$test_log"
 
 run_sql "$repo_root/supabase/tests/municipality-backfill.sql"
 tail -1 "$test_log"
+
+run_sql "$repo_root/supabase/tests/feedback-form-settings.sql"
+tail -1 "$test_log"
