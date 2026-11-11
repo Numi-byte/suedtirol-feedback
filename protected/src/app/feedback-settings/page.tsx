@@ -129,39 +129,6 @@ export default async function FeedbackSettingsPage() {
         <header>
           <h1>{copy.title}</h1>
         </header>
-        <section className="feedback-photo-settings">
-          <SettingsDialog
-            title={copy.photos}
-            closeLabel={copy.orderClose}
-            resetLabel={copy.orderReset}
-            action={savePhotoSettings}
-            labels={copy}
-          >
-            <div className="checks">
-              <label>
-                <input
-                  name="photos_enabled"
-                  type="checkbox"
-                  defaultChecked={config.photos_enabled}
-                />
-                {copy.enabled}
-              </label>
-            </div>
-            <label>
-              {copy.limit}
-              <input
-                name="max_photo_mb"
-                type="number"
-                min={1}
-                max={10}
-                step={1}
-                required
-                defaultValue={config.max_photo_bytes / 1024 / 1024}
-              />
-            </label>
-            <button type="submit">{copy.savePhotos}</button>
-          </SettingsDialog>
-        </section>
         <section
           className="feedback-category-guidelines"
           aria-labelledby="feedback-svg-guidelines"
@@ -171,26 +138,62 @@ export default async function FeedbackSettingsPage() {
           <p>{copy.svgLimits}</p>
           <p>{copy.rules}</p>
         </section>
-        <section className="feedback-category-create">
-          <SettingsDialog
-            title={copy.add}
-            closeLabel={copy.orderClose}
-            resetLabel={copy.orderReset}
-            action={saveCategory}
-            labels={copy}
-            resetOnSuccess
-            disabled={config.categories.length >= 50}
-          >
-            {fields()}
-          </SettingsDialog>
-        </section>
         <div className="feedback-category-order-toolbar">
           <h2>{copy.categories}</h2>
-          <CategoryOrderEditor
-            categories={config.categories}
-            language={language}
-            copy={copy}
-          />
+          <div className="feedback-category-toolbar-actions">
+            <section className="feedback-photo-settings">
+              <SettingsDialog
+                title={copy.photos}
+                closeLabel={copy.orderClose}
+                resetLabel={copy.orderReset}
+                action={savePhotoSettings}
+                labels={copy}
+              >
+                <div className="checks">
+                  <label>
+                    <input
+                      name="photos_enabled"
+                      type="checkbox"
+                      defaultChecked={config.photos_enabled}
+                    />
+                    {copy.enabled}
+                  </label>
+                </div>
+                <label>
+                  {copy.limit}
+                  <input
+                    name="max_photo_mb"
+                    type="number"
+                    min={1}
+                    max={10}
+                    step={1}
+                    required
+                    defaultValue={config.max_photo_bytes / 1024 / 1024}
+                  />
+                </label>
+                <button type="submit">{copy.savePhotos}</button>
+              </SettingsDialog>
+            </section>
+            <section className="feedback-category-create">
+              <SettingsDialog
+                title={copy.add}
+                iconOnly
+                closeLabel={copy.orderClose}
+                resetLabel={copy.orderReset}
+                action={saveCategory}
+                labels={copy}
+                resetOnSuccess
+                disabled={config.categories.length >= 50}
+              >
+                {fields()}
+              </SettingsDialog>
+            </section>
+            <CategoryOrderEditor
+              categories={config.categories}
+              language={language}
+              copy={copy}
+            />
+          </div>
         </div>
         <div className="feedback-category-editors">
           {config.categories.map((category) => (

@@ -6,6 +6,7 @@ import { UserForm } from "../users/user-form";
 
 export function SettingsDialog({
   title,
+  iconOnly = false,
   closeLabel,
   resetLabel,
   action,
@@ -15,6 +16,7 @@ export function SettingsDialog({
   disabled = false,
 }: {
   title: string;
+  iconOnly?: boolean;
   closeLabel: string;
   resetLabel: string;
   action: (form: FormData) => Promise<UserManagementResult>;
@@ -61,12 +63,14 @@ export function SettingsDialog({
       <button
         ref={trigger}
         type="button"
-        className="feedback-settings-dialog-trigger"
+        className={`feedback-settings-dialog-trigger${iconOnly ? " feedback-add-category" : ""}`}
+        aria-label={title}
+        title={title}
         aria-haspopup="dialog"
         disabled={disabled}
         onClick={() => setOpen(true)}
       >
-        {title}
+        {iconOnly ? <span aria-hidden="true">+</span> : title}
       </button>
       <dialog
         ref={dialog}
