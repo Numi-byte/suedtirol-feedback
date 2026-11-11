@@ -513,3 +513,6 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .managed-user .user-credentials { margin-top: 0; }
 @media (max-width: 767px) { .managed-user > .feedback-category-disclosure > summary { top: 24px; right: 24px; } }
 @media (max-width: 480px) { .users-toolbar { gap: 12px; } .users-toolbar .users-search { min-width: 0; } }
+.feedback-permission-group { display: grid; gap: 12px; }
+.feedback-permission-group .feedback-reply-permission { margin-left: 30px; padding-left: 16px; border-left: 2px solid var(--line); }
+.feedback-reply-permission:has(input:disabled) { color: var(--muted); }

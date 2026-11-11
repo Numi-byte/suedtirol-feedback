@@ -460,3 +460,19 @@ self-escalation and revocation checks, invalid/stale reorder rejection, and
 preservation of order when editing categories. The portal browser suite covers
 mouse/touch/keyboard movement, Reset/X/Escape, saving, concurrent changes, mobile
 layout, unsaved-field retention and granting/revoking the new permission.
+
+### Reply permission under Feedback
+
+Apply `supabase/migrations/20261111160000_feedback_reply_permission.sql` after
+all preceding migrations, before deploying the updated protected app. User
+Management now nests **Reply to feedback** beneath the inbox permission.
+Only the owner may grant it; new accounts default to no reply access. Removing
+inbox access clears the reply permission, and deactivation overrides both.
+The owner retains reply access. The formerly designated responder retains it
+where an existing membership already permits inbox access.
+
+Reply controls and Server Actions query the current database permission; the
+reply RPC enforces the same requirement. Existing replies remain visible to
+inbox readers and remain published when a responder loses access. Legacy
+permission-update RPCs preserve the child grant while retaining inbox access
+and clear it when removing that parent. No additional private key is needed.

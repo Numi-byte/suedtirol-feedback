@@ -15,7 +15,7 @@ test('section checks fail closed and landing/menu use only explicitly granted se
 
 test('credentials validate lengths and email; access never defaults to feedback or owner', () => {
   assert.equal(readAccountFields(valid(),true).email,'operator@example.test');
-  assert.deepEqual(readAccessFields(valid()),{p_active:true,p_stops:true,p_database:true,p_feedback:false,p_feedback_settings:false});
+  assert.deepEqual(readAccessFields(valid()),{p_active:true,p_stops:true,p_database:true,p_feedback:false,p_feedback_settings:false,p_reply_feedback:false});
   assert.throws(()=>readAccountFields(form({email:'bad',password:'weak'}),true));
   assert.throws(()=>readAccountFields(form({email:'a@example.test',password:'short'}),true));
   assert.equal(readAccountFields(form({email:'a@example.test',password:''})).password,'');
@@ -62,7 +62,7 @@ test('owner access cannot be disabled through the application service', async ()
 
 test('feedback management must be granted explicitly and can be the only section', async () => {
  const fields=form({active:'on',feedback_settings:'on'});
- assert.deepEqual(readAccessFields(fields),{p_active:true,p_stops:false,p_database:false,p_feedback:false,p_feedback_settings:true});
+ assert.deepEqual(readAccessFields(fields),{p_active:true,p_stops:false,p_database:false,p_feedback:false,p_feedback_settings:true,p_reply_feedback:false});
  const access=await getPortalAccess({rpc:async()=>({data:{feedbackSettings:true},error:null})});
  assert.equal(portalHome(access),'/feedback-settings');
  assert.deepEqual(portalLinks(access),[{href:'/feedback-settings',section:'feedbackSettings'}]);
@@ -70,4 +70,9 @@ test('feedback management must be granted explicitly and can be the only section
  await saveUserAccess({rpc:async(_name,value)=>{args=value;return {error:null};}},form({user_id:id,active:'on',feedback_settings:'on'}));
  assert.equal(args.p_feedback_settings,true);
  assert.equal(args.p_feedback,false);
+});
+
+test('reply permission is subordinate to inbox access',()=>{
+ assert.equal(readAccessFields(form({active:'on',feedback:'on',reply_feedback:'on'})).p_reply_feedback,true);
+ assert.equal(readAccessFields(form({active:'on',stops:'on',reply_feedback:'on'})).p_reply_feedback,false);
 });
