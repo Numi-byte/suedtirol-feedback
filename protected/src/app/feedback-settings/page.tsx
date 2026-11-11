@@ -7,6 +7,7 @@ import { PortalHeader, PortalFooter } from "@/components/portal-shell";
 import { PortalNavigation } from "../portal-navigation";
 import { UserForm } from "../users/user-form";
 import { saveCategory, savePhotoSettings } from "./actions";
+import { SettingsDialog } from "./settings-dialog";
 import { CategoryOrderEditor } from "./category-order-editor";
 import {
   parseFeedbackFormConfig,
@@ -121,11 +122,15 @@ export default async function FeedbackSettingsPage() {
       <main className="portal feedback-settings-page">
         <header>
           <h1>{copy.title}</h1>
-          <p>{copy.intro}</p>
         </header>
-        <section className="editor-card feedback-photo-settings">
-          <h2>{copy.photos}</h2>
-          <UserForm action={savePhotoSettings} labels={copy}>
+        <section className="feedback-photo-settings">
+          <SettingsDialog
+            title={copy.photos}
+            closeLabel={copy.orderClose}
+            resetLabel={copy.orderReset}
+            action={savePhotoSettings}
+            labels={copy}
+          >
             <div className="checks">
               <label>
                 <input
@@ -149,7 +154,7 @@ export default async function FeedbackSettingsPage() {
               />
             </label>
             <button type="submit">{copy.savePhotos}</button>
-          </UserForm>
+          </SettingsDialog>
         </section>
         <section
           className="feedback-category-guidelines"
@@ -160,17 +165,18 @@ export default async function FeedbackSettingsPage() {
           <p>{copy.svgLimits}</p>
           <p>{copy.rules}</p>
         </section>
-        <section className="editor-card feedback-category-create">
-          <h2>{copy.add}</h2>
-          <UserForm
+        <section className="feedback-category-create">
+          <SettingsDialog
+            title={copy.add}
+            closeLabel={copy.orderClose}
+            resetLabel={copy.orderReset}
             action={saveCategory}
             labels={copy}
-            clearUploads
             resetOnSuccess
             disabled={config.categories.length >= 50}
           >
             {fields()}
-          </UserForm>
+          </SettingsDialog>
         </section>
         <div className="feedback-category-order-toolbar">
           <h2>{copy.categories}</h2>

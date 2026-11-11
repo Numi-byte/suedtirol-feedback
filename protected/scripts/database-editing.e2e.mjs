@@ -373,6 +373,7 @@ try {
   console.log('PASS: owner can deactivate/reactivate accounts and update email/password without exposing password values');
   await page.goto(`${appUrl}/feedback-settings`);
   await page.getByRole('heading',{name:'Feedback verwalten',exact:true}).waitFor();
+  await page.locator('.feedback-photo-settings > button').click();
   const photoSettings=page.locator('.feedback-photo-settings form');
   let capturedSettings;
   page.on('request',request=>{if(request.method()==='POST'&&request.headers()['next-action']&&request.url().includes('/feedback-settings')&&!capturedSettings)capturedSettings=request;});
@@ -383,7 +384,19 @@ try {
   await photoSettings.getByRole('status').filter({hasText:'Gespeichert.'}).waitFor();
   assert.equal(formConfig.photos_enabled,false);assert.equal(formConfig.max_photo_bytes,2097152);
   assert.equal(await page.evaluate(()=>performance.timeOrigin),settingsOrigin);
+  const photoDialog=page.locator('.feedback-photo-settings dialog');
+  await photoSettings.locator('[name=max_photo_mb]').fill('4');
+  await photoDialog.getByRole('button',{name:'Zurücksetzen',exact:true}).click();
+  assert.equal(await photoSettings.locator('[name=max_photo_mb]').inputValue(),'2');
+  await photoSettings.locator('[name=max_photo_mb]').fill('5');
+  await photoDialog.getByRole('button',{name:'Änderungen verwerfen und schließen',exact:true}).click();
+  assert.equal(formConfig.max_photo_bytes,2097152);
+  await page.locator('.feedback-category-create > button').click();
   const categoryCreate=page.locator('.feedback-category-create form');
+  await categoryCreate.locator('[name=slug]').fill('discarded');
+  await page.keyboard.press('Escape');
+  await page.locator('.feedback-category-create > button').click();
+  assert.equal(await categoryCreate.locator('[name=slug]').inputValue(),'');
   await categoryCreate.locator('[name=slug]').fill('custom_issue');
   await categoryCreate.locator('[name=label_de]').fill('Neues Problem');
   await categoryCreate.locator('[name=label_it]').fill('Nuovo problema');
@@ -398,10 +411,12 @@ try {
   await categoryCreate.getByRole('button',{name:'Kategorie speichern',exact:true}).click();
   await categoryCreate.getByRole('status').filter({hasText:'Gespeichert.'}).waitFor();
   const customCard=page.locator('.feedback-category-editor').filter({has:page.getByRole('heading',{name:'Neues Problem',exact:true})});
-  await customCard.waitFor();
+  await categoryCreate.getByRole('status').filter({hasText:'Gespeichert.'}).waitFor();
   assert.equal(formConfig.categories.at(-1).icon.nodes[0].attrs.fill,'currentColor');
   assert.equal(await customCard.locator('.category-icon-preview svg').getAttribute('viewBox'),'0 0 48 48');
   assert.equal(await categoryCreate.locator('[name=icon_file]').inputValue(),'');
+  await page.locator('.feedback-category-create dialog').getByRole('button',{name:'Änderungen verwerfen und schließen',exact:true}).click();
+  await customCard.waitFor();
   for(const width of [1440,1600,1920]) {
     await page.setViewportSize({width,height:1000});
     assert.ok(await page.evaluate(()=>{
@@ -415,12 +430,14 @@ try {
   await page.evaluate(()=>window.scrollTo(0,0));
   await page.screenshot({path:'/tmp/feedback-owner-settings.png',fullPage:true});
   assert.equal(await page.locator('[name=sort_order]').count(),0);
+  assert.equal(await page.getByText('Kategorien und Foto-Uploads für das öffentliche Formular verwalten. Bestehende Meldungen bleiben erhalten.',{exact:true}).count(),0);
+  assert.ok(await page.evaluate(()=>Math.abs(document.querySelector('.feedback-category-guidelines').getBoundingClientRect().width-document.querySelector('.feedback-category-editors').getBoundingClientRect().width)<2));
   assert.match(await page.locator('.feedback-category-guidelines').innerText(),/16 KiB.*64.*8/);
   assert.ok(await page.evaluate(()=>!!(document.querySelector('.feedback-category-guidelines').compareDocumentPosition(document.querySelector('.feedback-category-create'))&Node.DOCUMENT_POSITION_FOLLOWING)));
   const seatCard=page.locator('.feedback-category-editor').filter({has:page.getByRole('heading',{name:'Sitzplatz fehlt',exact:true})});
   await seatCard.locator('[name=label_de]').fill('Unsaved category label');
   const orderButton=page.locator('.category-order-trigger');
-  const orderDialog=page.locator('.category-order-dialog');
+  const orderDialog=page.locator('.category-order-dialog:not(.feedback-settings-dialog)');
   const openOrder=async()=>{await orderButton.click();await orderDialog.waitFor();await orderDialog.evaluate(el=>Promise.all(el.getAnimations().map(animation=>animation.finished)));};
   const orderSlugs=()=>orderDialog.locator('[data-category-slug]').evaluateAll(rows=>rows.map(row=>row.dataset.categorySlug));
   const savedOrder=()=>formConfig.categories.map(row=>row.slug);
@@ -541,6 +558,7 @@ try {
   await page.goto(`${appUrl}/feedback-settings`);
   await page.getByRole('heading',{name:'Feedback verwalten',exact:true}).waitFor();
   assert.equal(await page.locator('a[href="/users"]').count(),0);
+  await page.locator('.feedback-photo-settings > button').click();
   const delegatedPhoto=page.locator('.feedback-photo-settings form');
   await delegatedPhoto.locator('[name=photos_enabled]').check();
   await delegatedPhoto.getByRole('button',{name:'Foto-Einstellungen speichern',exact:true}).click();
