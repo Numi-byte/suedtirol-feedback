@@ -330,11 +330,14 @@ try {
   await page.setViewportSize({width:1440,height:1000});
   await page.goto(`${appUrl}/users`);
   await page.getByRole('heading',{name:'Benutzerverwaltung',exact:true}).waitFor();
+  assert.equal(await page.getByText('Erstelle Konten und lege fest, welche Bereiche sie verwenden dürfen.',{exact:true}).count(),0);
+  assert.equal(await page.locator('.user-create > button').innerText(),'+');
   let capturedCreate;
   page.on('request',request=>{
     if(request.method()==='POST'&&request.headers()['next-action']&&request.url().includes('/users')&&!capturedCreate) capturedCreate=request;
   });
-  const create=page.locator('.user-create');
+  await page.locator('.user-create > button').click();
+  const create=page.locator('.user-create dialog');
   assert.equal(await create.locator('[name=feedback]').isChecked(),false);
   assert.equal(await create.locator('[name=feedback_settings]').isChecked(),false);
   await create.locator('[name=email]').fill('operator@example.test');
@@ -346,11 +349,14 @@ try {
   assert.ok(created?.is_active&&created.can_manage_stops&&!created.can_manage_database&&!created.can_view_feedback);
   assert.equal(await create.locator('[name=password]').inputValue(),'');
   assert.equal(authAdminCalls.filter(x=>x.kind==='create').length,1);
+  await page.locator('.user-create dialog').getByRole('button',{name:'Änderungen verwerfen und schließen',exact:true}).click();
   let accountCard=page.locator('.managed-user').filter({has:page.getByRole('heading',{name:'operator@example.test',exact:true})});
   await accountCard.waitFor();
   assert.ok(!JSON.stringify(managementEvents).includes('Synthetic-password'));
   assert.ok(!(await page.content()).includes(serverAdminKey));
   console.log('PASS: owner creates Auth accounts with explicit permissions; feedback defaults off and password/key stay out of returned HTML');
+  assert.equal(await accountCard.locator('[name=active]').isVisible(),false);
+  await accountCard.locator('.feedback-category-disclosure > summary').click();
   const accessForm=accountCard.locator('form').first();
   await accessForm.locator('[name=active]').uncheck();
   await accessForm.getByRole('button',{name:'Berechtigungen speichern',exact:true}).click();
@@ -360,13 +366,13 @@ try {
   await accessForm.getByRole('button',{name:'Berechtigungen speichern',exact:true}).click();
   await accessForm.getByRole('status').filter({hasText:'Gespeichert.'}).waitFor();
   assert.equal(created.is_active,true);
-  await accountCard.locator('summary').click();
-  const credentials=accountCard.locator('details form');
+  await accountCard.locator('.user-credentials > summary').click();
+  const credentials=accountCard.locator('.user-credentials form');
   await credentials.locator('[name=email]').fill('changed@example.test');
   await credentials.locator('[name=password]').fill('Different-password-456');
   await credentials.getByRole('button',{name:'Zugangsdaten speichern',exact:true}).click();
   accountCard=page.locator('.managed-user').filter({has:page.getByRole('heading',{name:'changed@example.test',exact:true})});
-  await accountCard.locator('details form').getByRole('status').filter({hasText:'Gespeichert.'}).waitFor();
+  await accountCard.locator('.user-credentials form').getByRole('status').filter({hasText:'Gespeichert.'}).waitFor();
   assert.equal(created.email,'changed@example.test');
   assert.equal(authAdminCalls.at(-1).passwordChanged,true);
   assert.equal(await accountCard.locator('[name=password]').inputValue(),'');
@@ -565,6 +571,7 @@ try {
   currentUserId=userId;
   await page.goto(`${appUrl}/users`);
   const managerCard=page.locator('.managed-user').filter({has:page.getByRole('heading',{name:'changed@example.test',exact:true})});
+  await managerCard.locator('.feedback-category-disclosure > summary').click();
   const managerAccess=managerCard.locator('form').first();
   await managerAccess.locator('[name=stops]').uncheck();
   await managerAccess.locator('[name=feedback_settings]').check();

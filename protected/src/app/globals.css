@@ -501,3 +501,15 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 }
 @media (max-width: 767px) { .feedback-category-editor .feedback-category-disclosure summary { top: 24px; right: 24px; } }
 @media (max-width: 767px) { .feedback-category-order-toolbar { align-items: flex-start; flex-direction: column; } }
+
+.users-toolbar { display: flex; align-items: flex-end; gap: 20px; margin-top: 24px; }
+.users-toolbar .users-search { flex: 1; margin: 0; }
+.users-toolbar .user-create { flex: none; margin: 0; }
+.managed-user { position: relative; }
+.managed-user > .database-heading { padding-right: 60px; min-height: 48px; align-items: center; }
+.managed-user > .feedback-category-disclosure > summary { position: absolute; top: 32px; right: 32px; width: 44px; height: 48px; justify-content: center; }
+.managed-user > .feedback-category-disclosure > summary img { margin: 0; }
+.managed-user .feedback-category-disclosure-fields { padding-top: 24px; }
+.managed-user .user-credentials { margin-top: 0; }
+@media (max-width: 767px) { .managed-user > .feedback-category-disclosure > summary { top: 24px; right: 24px; } }
+@media (max-width: 480px) { .users-toolbar { gap: 12px; } .users-toolbar .users-search { min-width: 0; } }
