@@ -475,3 +475,12 @@ button:disabled { opacity: .5; cursor: not-allowed; }
  .feedback-settings-dialog-body { padding: 0 20px 20px; }
  .feedback-settings-dialog .field-grid { grid-template-columns: minmax(0,1fr); }
 }
+
+.feedback-category-disclosure summary { display: flex; align-items: center; justify-content: flex-end; min-height: 44px; cursor: pointer; list-style: none; border-radius: 16px; }
+.feedback-category-disclosure summary::-webkit-details-marker { display: none; }
+.feedback-category-disclosure summary:hover { background: var(--sky); }
+.feedback-category-disclosure summary img { margin: 12px 16px; }
+.feedback-category-disclosure .category-arrow-down { display: none; }
+.feedback-category-disclosure[open] .category-arrow-right { display: none; }
+.feedback-category-disclosure[open] .category-arrow-down { display: block; }
+.feedback-category-disclosure-fields { display: grid; gap: 20px; padding-top: 16px; }
