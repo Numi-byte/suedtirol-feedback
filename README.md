@@ -357,7 +357,7 @@ supabase/tests/run-stop-point-feedback.sh
 supabase/tests/run-feedback-test-results.sh
 ```
 
-### Owner-managed feedback form
+### Feedback form management
 
 Apply `supabase/migrations/20261111120000_manage_feedback_form.sql` in the
 Supabase SQL Editor **before deploying both apps from the same branch**.
@@ -367,7 +367,7 @@ credentials or storage buckets are needed.
 
 The designated owner (`bdee91d9-c969-4bd4-b336-8f7e780ead3e`) gets **Feedback
 verwalten / Configura feedback / Manage feedback** at `/feedback-settings`.
-The owner can:
+The owner and users explicitly granted **Manage feedback** can:
 
 - Enable/disable photo uploads and choose a maximum size of 1–10 MiB. Both the
   public form and the backend enforce the current policy. JPEG, PNG and WebP are
@@ -388,8 +388,10 @@ The owner can:
   information icon.
 
 Access is checked by the route, every Server Action, and the database RPCs.
-Other users do not inherit configuration access from stop, database or inbox
-permissions. Configuration changes are serialized and audited without passwords,
+The owner grants **Manage feedback** independently in User Management; it is
+off by default. Stop, database and inbox permissions do not imply configuration
+access. Feedback management does not grant access to private reports or user
+management. Revocation and account deactivation apply to existing sessions. Configuration changes are serialized and audited without passwords,
 report contents or SVG source. Public configuration reads expose only the
 settings and category definitions.
 
@@ -420,3 +422,41 @@ do not emulate Supabase Storage's HTTP size enforcement. The public browser test
 uses an HTTP fixture and bypasses CSP in that test browser only; application CSP
 remains unchanged. Verify an actual upload on a preview after applying the
 migration, including a file just above the chosen size limit.
+
+
+### Visual category ordering and delegated feedback management
+
+Apply `supabase/migrations/20261111143000_feedback_order_and_permissions.sql`
+**after** `20261111120000_manage_feedback_form.sql` and **before deploying the
+updated protected app**. Existing members receive no new permission by default.
+Only the fixed owner can grant **Manage feedback** through User Management,
+when creating an account or editing an existing account. It can be the user's
+only section. The owner retains all rights, including exclusive user management.
+The earlier five-argument permissions RPC is retained for older deployments and
+preserves the new permission rather than silently clearing it.
+
+Numeric category-position fields are replaced by **Adjust order**. Its popup
+uses the existing colours, typography and rounded controls. Users can drag by a
+handle with a mouse/touch, use up/down buttons, or use arrow keys, Home and End
+on the handle. Disabled categories are labelled and included so their position
+is defined when reactivated. New categories append automatically; ordinary
+label/icon edits preserve the latest saved order.
+
+- **Save** writes the whole order in one transaction and closes the popup.
+- **Reset** restores the order from when the popup opened, without a write.
+- The top-right **X**, Escape and clicking the backdrop discard unsaved moves.
+- If another person saves an order or adds a category meanwhile, the save is
+  rejected. Reopening loads the current order. Saving locks configuration edits
+  briefly, validates a complete permutation, and records one audit event.
+
+The SVG guidelines appear above the category creation and editing sections.
+They describe the enforced 16 KiB source limit, 64 shapes/groups, eight nesting
+levels, proportional 24px monochrome display, and unsupported active/external
+content. The upload sanitizer and database icon checks remain in effect for
+users with delegated access.
+
+`supabase/tests/run-security-boundaries.sh` includes permission isolation,
+self-escalation and revocation checks, invalid/stale reorder rejection, and
+preservation of order when editing categories. The portal browser suite covers
+mouse/touch/keyboard movement, Reset/X/Escape, saving, concurrent changes, mobile
+layout, unsaved-field retention and granting/revoking the new permission.

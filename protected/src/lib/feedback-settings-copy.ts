@@ -1,5 +1,23 @@
 export const feedbackSettingsCopy = {
   de: {
+    categories: "Kategorien",
+    orderTitle: "Reihenfolge anpassen",
+    orderHelp:
+      "Ziehe die Kategorien am Griff an die gewünschte Stelle. Du kannst auch die Pfeile oder die Pfeiltasten verwenden. Erst Speichern übernimmt die neue Reihenfolge.",
+    orderSave: "Speichern",
+    orderReset: "Zurücksetzen",
+    orderClose: "Änderungen verwerfen und schließen",
+    orderInactive: "Für neue Rückmeldungen deaktiviert",
+    orderDrag: "Kategorie verschieben: {category}",
+    orderUp: "Nach oben: {category}",
+    orderDown: "Nach unten: {category}",
+    orderMoved: "Reihenfolge geändert, noch nicht gespeichert.",
+    orderChanged:
+      "Die Kategorien wurden inzwischen geändert. Schließe das Fenster und öffne es erneut, um die aktuelle Reihenfolge zu laden.",
+    orderDenied: "Du hast keinen Zugriff mehr auf die Feedback-Verwaltung.",
+    svgTitle: "Hinweise für SVG-Icons",
+    svgLimits:
+      "Maximal 16 KiB, 64 Formen oder Gruppen und 8 Verschachtelungsebenen. Nutze einen passenden viewBox und wandle Text in Pfade um. Icons werden proportional in 24 × 24 px und einfarbig dargestellt; Farben werden vereinheitlicht. DTDs und XML-Entities sind nicht erlaubt.",
     title: "Feedback verwalten",
     intro:
       "Kategorien und Foto-Uploads für das öffentliche Formular verwalten. Bestehende Meldungen bleiben erhalten.",
@@ -13,7 +31,6 @@ export const feedbackSettingsCopy = {
     it: "Bezeichnung auf Italienisch",
     en: "Bezeichnung auf Englisch",
     active: "Für neue Rückmeldungen aktiv",
-    position: "Position",
     icon: "Kategorie-Icon (.svg, bis 16 KiB)",
     remove: "Hochgeladenes Icon entfernen",
     save: "Kategorie speichern",
@@ -27,6 +44,24 @@ export const feedbackSettingsCopy = {
     loadError: "Konfiguration nicht verfügbar. Bitte versuche es erneut.",
   },
   it: {
+    categories: "Categorie",
+    orderTitle: "Modifica ordine",
+    orderHelp:
+      "Trascina le categorie dalla maniglia nella posizione desiderata, oppure usa le frecce o i tasti freccia. Il nuovo ordine viene applicato solo con Salva.",
+    orderSave: "Salva",
+    orderReset: "Ripristina",
+    orderClose: "Annulla le modifiche e chiudi",
+    orderInactive: "Disattivata per nuove segnalazioni",
+    orderDrag: "Sposta categoria: {category}",
+    orderUp: "Sposta in alto: {category}",
+    orderDown: "Sposta in basso: {category}",
+    orderMoved: "Ordine modificato, non ancora salvato.",
+    orderChanged:
+      "Le categorie sono cambiate. Chiudi e riapri la finestra per caricare l’ordine aggiornato.",
+    orderDenied: "Non hai più accesso alla gestione dei feedback.",
+    svgTitle: "Indicazioni per le icone SVG",
+    svgLimits:
+      "Massimo 16 KiB, 64 forme o gruppi e 8 livelli di annidamento. Usa un viewBox adatto e converti il testo in tracciati. Le icone vengono adattate proporzionalmente a 24 × 24 px in un solo colore; i colori vengono uniformati. DTD ed entità XML non sono ammessi.",
     title: "Configura feedback",
     intro:
       "Gestisci categorie e foto del modulo pubblico. Le segnalazioni esistenti vengono conservate.",
@@ -40,7 +75,6 @@ export const feedbackSettingsCopy = {
     it: "Etichetta italiana",
     en: "Etichetta inglese",
     active: "Attiva per nuove segnalazioni",
-    position: "Posizione",
     icon: "Icona categoria (.svg, fino a 16 KiB)",
     remove: "Rimuovi icona caricata",
     save: "Salva categoria",
@@ -54,6 +88,24 @@ export const feedbackSettingsCopy = {
     loadError: "Configurazione non disponibile. Riprova.",
   },
   en: {
+    categories: "Categories",
+    orderTitle: "Adjust order",
+    orderHelp:
+      "Drag categories by their handles into place, or use the arrows or arrow keys. The new order takes effect only when you press Save.",
+    orderSave: "Save",
+    orderReset: "Reset",
+    orderClose: "Discard changes and close",
+    orderInactive: "Disabled for new reports",
+    orderDrag: "Move category: {category}",
+    orderUp: "Move up: {category}",
+    orderDown: "Move down: {category}",
+    orderMoved: "Order changed, not yet saved.",
+    orderChanged:
+      "The categories have changed. Close and reopen this window to load the current order.",
+    orderDenied: "You no longer have access to manage feedback.",
+    svgTitle: "SVG icon guidelines",
+    svgLimits:
+      "Maximum 16 KiB, 64 shapes or groups and 8 nesting levels. Use a suitable viewBox and convert text to paths. Icons fit proportionally within 24 × 24 px in one colour; colours are standardized. DTDs and XML entities are not allowed.",
     title: "Manage feedback",
     intro:
       "Manage categories and photo uploads for the public form. Existing reports are retained.",
@@ -67,7 +119,6 @@ export const feedbackSettingsCopy = {
     it: "Italian label",
     en: "English label",
     active: "Available for new reports",
-    position: "Position",
     icon: "Category icon (.svg, up to 16 KiB)",
     remove: "Remove uploaded icon",
     save: "Save category",

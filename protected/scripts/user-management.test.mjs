@@ -15,7 +15,7 @@ test('section checks fail closed and landing/menu use only explicitly granted se
 
 test('credentials validate lengths and email; access never defaults to feedback or owner', () => {
   assert.equal(readAccountFields(valid(),true).email,'operator@example.test');
-  assert.deepEqual(readAccessFields(valid()),{p_active:true,p_stops:true,p_database:true,p_feedback:false});
+  assert.deepEqual(readAccessFields(valid()),{p_active:true,p_stops:true,p_database:true,p_feedback:false,p_feedback_settings:false});
   assert.throws(()=>readAccountFields(form({email:'bad',password:'weak'}),true));
   assert.throws(()=>readAccountFields(form({email:'a@example.test',password:'short'}),true));
   assert.equal(readAccountFields(form({email:'a@example.test',password:''})).password,'');
@@ -58,4 +58,16 @@ test('owner access cannot be disabled through the application service', async ()
   let called=false;
   await assert.rejects(saveUserAccess({rpc:async()=>{called=true;}},form({user_id:PORTAL_OWNER_ID})),/Owner access/);
   assert.equal(called,false);
+});
+
+test('feedback management must be granted explicitly and can be the only section', async () => {
+ const fields=form({active:'on',feedback_settings:'on'});
+ assert.deepEqual(readAccessFields(fields),{p_active:true,p_stops:false,p_database:false,p_feedback:false,p_feedback_settings:true});
+ const access=await getPortalAccess({rpc:async()=>({data:{feedbackSettings:true},error:null})});
+ assert.equal(portalHome(access),'/feedback-settings');
+ assert.deepEqual(portalLinks(access),[{href:'/feedback-settings',section:'feedbackSettings'}]);
+ let args;
+ await saveUserAccess({rpc:async(_name,value)=>{args=value;return {error:null};}},form({user_id:id,active:'on',feedback_settings:'on'}));
+ assert.equal(args.p_feedback_settings,true);
+ assert.equal(args.p_feedback,false);
 });
