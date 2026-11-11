@@ -484,3 +484,20 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .feedback-category-disclosure[open] .category-arrow-right { display: none; }
 .feedback-category-disclosure[open] .category-arrow-down { display: block; }
 .feedback-category-disclosure-fields { display: grid; gap: 20px; padding-top: 16px; }
+
+.feedback-category-editor { position: relative; }
+.feedback-category-editor h2 { padding-right: 60px; min-height: 48px; }
+.feedback-category-editor .feedback-category-disclosure summary { position: absolute; top: 32px; right: 32px; width: 44px; height: 48px; justify-content: center; }
+.feedback-category-editor .feedback-category-disclosure summary img { margin: 0; }
+.feedback-category-order-toolbar > h2 { font-size: 22px; }
+.feedback-category-toolbar-actions { display: flex; align-items: center; gap: 12px; }
+.feedback-category-toolbar-actions .feedback-photo-settings, .feedback-category-toolbar-actions .feedback-category-create { margin: 0; max-width: none; }
+.feedback-add-category { display: grid; place-items: center; width: 48px; height: 48px; min-height: 48px; padding: 0; font-size: 30px; font-weight: 400; }
+@media (max-width: 600px) {
+ .feedback-category-toolbar-actions { gap: 8px; width: 100%; }
+ .feedback-category-toolbar-actions > .category-order-trigger, .feedback-category-toolbar-actions .feedback-settings-dialog-trigger:not(.feedback-add-category) { font-size: 12px; padding: 12px; gap: 6px; white-space: nowrap; }
+ .feedback-category-toolbar-actions .category-order-trigger svg { width: 16px; height: 16px; }
+ .feedback-category-toolbar-actions .feedback-add-category { width: 44px; }
+}
+@media (max-width: 767px) { .feedback-category-editor .feedback-category-disclosure summary { top: 24px; right: 24px; } }
+@media (max-width: 767px) { .feedback-category-order-toolbar { align-items: flex-start; flex-direction: column; } }

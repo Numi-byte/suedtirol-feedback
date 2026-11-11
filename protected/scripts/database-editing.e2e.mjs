@@ -430,6 +430,14 @@ try {
   await page.evaluate(()=>window.scrollTo(0,0));
   await page.screenshot({path:'/tmp/feedback-owner-settings.png',fullPage:true});
   assert.equal(await page.locator('[name=sort_order]').count(),0);
+  assert.equal(await page.locator('.feedback-category-create > button').innerText(),'+');
+  const checkCategoryLayout=async()=>assert.ok(await page.evaluate(()=>{
+    const buttons=[...document.querySelectorAll('.feedback-category-toolbar-actions > .category-order-trigger, .feedback-category-toolbar-actions section > button')].map(el=>el.getBoundingClientRect());
+    const card=document.querySelector('.feedback-category-editor');
+    const heading=card.querySelector('h2').getBoundingClientRect(),arrow=card.querySelector('summary').getBoundingClientRect();
+    return buttons.length===3&&Math.max(...buttons.map(b=>b.y+b.height/2))-Math.min(...buttons.map(b=>b.y+b.height/2))<2&&Math.abs(heading.y+heading.height/2-arrow.y-arrow.height/2)<2&&getComputedStyle(document.querySelector('.feedback-category-order-toolbar > h2')).fontSize===getComputedStyle(card.querySelector('h2')).fontSize;
+  }));
+  await checkCategoryLayout();
   assert.equal(await page.getByText('Kategorien und Foto-Uploads für das öffentliche Formular verwalten. Bestehende Meldungen bleiben erhalten.',{exact:true}).count(),0);
   assert.ok(await page.evaluate(()=>Math.abs(document.querySelector('.feedback-category-guidelines').getBoundingClientRect().width-document.querySelector('.feedback-category-editors').getBoundingClientRect().width)<2));
   assert.match(await page.locator('.feedback-category-guidelines').innerText(),/16 KiB.*64.*8/);
@@ -523,6 +531,7 @@ try {
   assert.equal(formConfig.categories.find(x=>x.slug==='custom_issue').is_active,false);
   assert.equal(formConfig.categories.find(x=>x.slug==='custom_issue').icon,null);
   await page.setViewportSize({width:390,height:844});
+  await checkCategoryLayout();
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth));
   await page.setViewportSize({width:1440,height:1000});
   console.log('PASS: owner settings save inline; unsafe SVG rejected before RPC; normalized icon assignment, retirement and removal work on mobile');
