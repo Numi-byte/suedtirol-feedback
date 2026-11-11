@@ -10,7 +10,7 @@ import { createUser, updateAccess, updateCredentials } from "./actions";
 import { UserForm } from "./user-form";
 
 export const dynamic = "force-dynamic";
-type ManagedUser = { user_id: string; email: string | null; is_active: boolean; can_manage_stops: boolean; can_manage_database: boolean; can_view_feedback: boolean; is_owner: boolean };
+type ManagedUser = { user_id: string; email: string | null; is_active: boolean; can_manage_stops: boolean; can_manage_database: boolean; can_view_feedback: boolean; can_manage_feedback: boolean; is_owner: boolean };
 export default async function UsersPage({ searchParams }: { searchParams: Promise<{ page?: string; q?: string }> }) {
   const client = await createClient();
   const { data: { user } } = await client.auth.getUser();
@@ -31,6 +31,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
     <label><input type="checkbox" name="stops" defaultChecked={values?.can_manage_stops ?? true} />{copy.stops}</label>
     <label><input type="checkbox" name="database" defaultChecked={values?.can_manage_database ?? true} />{copy.database}</label>
     <label><input type="checkbox" name="feedback" defaultChecked={values?.can_view_feedback ?? false} />{copy.feedback}</label>
+    <label><input type="checkbox" name="feedback_settings" defaultChecked={values?.can_manage_feedback ?? false} />{copy.feedbackSettings}</label>
   </div>;
   return <PortalNavigation loadingLabel={copy.saving}>
     <PortalHeader language={language} email={user.email ?? ""} access={access} />

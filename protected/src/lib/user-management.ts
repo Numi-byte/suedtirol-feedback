@@ -15,8 +15,8 @@ export function readUserId(form: FormData) {
   return id;
 }
 export function readAccessFields(form: FormData) {
-  const flags = { p_active: form.get("active") === "on", p_stops: form.get("stops") === "on", p_database: form.get("database") === "on", p_feedback: form.get("feedback") === "on" };
-  if (flags.p_active && !flags.p_stops && !flags.p_database && !flags.p_feedback) throw new Error("Choose at least one section for an active account.");
+  const flags = { p_active: form.get("active") === "on", p_stops: form.get("stops") === "on", p_database: form.get("database") === "on", p_feedback: form.get("feedback") === "on", p_feedback_settings: form.get("feedback_settings") === "on" };
+  if (flags.p_active && !flags.p_stops && !flags.p_database && !flags.p_feedback && !flags.p_feedback_settings) throw new Error("Choose at least one section for an active account.");
   return flags;
 }
 

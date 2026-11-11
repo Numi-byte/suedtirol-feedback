@@ -1,16 +1,13 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getTranslations } from "@/lib/language";
-import {
-  getPortalAccess,
-  portalHome,
-  PORTAL_OWNER_ID,
-} from "@/lib/portal-access";
+import { getPortalAccess, portalHome } from "@/lib/portal-access";
 import { feedbackSettingsCopy } from "@/lib/feedback-settings-copy";
 import { PortalHeader, PortalFooter } from "@/components/portal-shell";
 import { PortalNavigation } from "../portal-navigation";
 import { UserForm } from "../users/user-form";
 import { saveCategory, savePhotoSettings } from "./actions";
+import { CategoryOrderEditor } from "./category-order-editor";
 import {
   parseFeedbackFormConfig,
   type FeedbackCategoryConfig,
@@ -23,8 +20,7 @@ export default async function FeedbackSettingsPage() {
     data: { user },
   } = await client.auth.getUser();
   const access = await getPortalAccess(client);
-  if (user?.id !== PORTAL_OWNER_ID || !access.feedbackSettings)
-    redirect(portalHome(access) ?? "/");
+  if (!user || !access.feedbackSettings) redirect(portalHome(access) ?? "/");
   const { language } = await getTranslations();
   const copy = feedbackSettingsCopy[language];
   const { data, error } = await client.rpc("get_feedback_form_config");
@@ -90,19 +86,6 @@ export default async function FeedbackSettingsPage() {
           />
         </label>
       </div>
-      <label>
-        {copy.position}
-        <input
-          name="sort_order"
-          type="number"
-          min={1}
-          max={Math.min(50, config.categories.length + (category ? 0 : 1))}
-          required
-          defaultValue={
-            category?.sort_order ?? Math.min(50, config.categories.length + 1)
-          }
-        />
-      </label>
       <div className="checks">
         <label>
           <input
@@ -168,8 +151,15 @@ export default async function FeedbackSettingsPage() {
             <button type="submit">{copy.savePhotos}</button>
           </UserForm>
         </section>
-        <p>{copy.rules}</p>
-        <p>{copy.svgRules}</p>
+        <section
+          className="feedback-category-guidelines"
+          aria-labelledby="feedback-svg-guidelines"
+        >
+          <h2 id="feedback-svg-guidelines">{copy.svgTitle}</h2>
+          <p>{copy.svgRules}</p>
+          <p>{copy.svgLimits}</p>
+          <p>{copy.rules}</p>
+        </section>
         <section className="editor-card feedback-category-create">
           <h2>{copy.add}</h2>
           <UserForm
@@ -182,6 +172,14 @@ export default async function FeedbackSettingsPage() {
             {fields()}
           </UserForm>
         </section>
+        <div className="feedback-category-order-toolbar">
+          <h2>{copy.categories}</h2>
+          <CategoryOrderEditor
+            categories={config.categories}
+            language={language}
+            copy={copy}
+          />
+        </div>
         <div className="feedback-category-editors">
           {config.categories.map((category) => (
             <section

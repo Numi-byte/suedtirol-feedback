@@ -47,7 +47,7 @@ function accessForCurrentUser() {
   if (!staff) return { feedback:false,stops:false,database:false,users:false,feedbackSettings:false };
   if (currentUserId === userId) return { feedback:true,stops:true,database:true,users:true,feedbackSettings:true };
   const account=accounts.find(x=>x.user_id===currentUserId);
-  return { users:false,feedbackSettings:false,stops:!!(account?.is_active&&account.can_manage_stops),database:!!(account?.is_active&&account.can_manage_database),feedback:!!(account?.is_active&&account.can_view_feedback) };
+  return { users:false,feedbackSettings:!!(account?.is_active&&account.can_manage_feedback),stops:!!(account?.is_active&&account.can_manage_stops),database:!!(account?.is_active&&account.can_manage_database),feedback:!!(account?.is_active&&account.can_view_feedback) };
 }
 const user = { id: userId, email: 'staff@example.test', aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {} };
 const fixture = createServer(async (req, res) => {
@@ -65,14 +65,19 @@ const fixture = createServer(async (req, res) => {
     for await (const chunk of req) chunks.push(chunk);
     const body = chunks.length ? JSON.parse(Buffer.concat(chunks).toString()) : null;
     if(url.pathname==='/rest/v1/rpc/get_feedback_form_config') return reply(formConfig);
-    if(['/rest/v1/rpc/set_feedback_photo_settings','/rest/v1/rpc/save_feedback_category'].includes(url.pathname)) {
-      if(currentUserId!==userId) return reply({message:'Owner access required',code:'42501'},403);
+    if(['/rest/v1/rpc/set_feedback_photo_settings','/rest/v1/rpc/save_feedback_category','/rest/v1/rpc/reorder_feedback_categories'].includes(url.pathname)) {
+      if(!accessForCurrentUser().feedbackSettings) return reply({message:'Feedback management access required',code:'42501'},403);
+      if(url.pathname.endsWith('reorder_feedback_categories')) {
+        if(JSON.stringify(body.p_expected_slugs)!==JSON.stringify(formConfig.categories.map(x=>x.slug)))return reply({message:'Categories changed',code:'40001'},409);
+        for(const [index,slug] of body.p_slugs.entries())formConfig.categories.find(x=>x.slug===slug).sort_order=index+1;
+        formConfig.categories.sort((a,b)=>a.sort_order-b.sort_order);configWrites.push(body);return reply(null);
+      }
       configWrites.push(body);
       if(url.pathname.endsWith('set_feedback_photo_settings')) Object.assign(formConfig,{photos_enabled:body.p_enabled,max_photo_bytes:body.p_max_bytes});
       else {
         let category=formConfig.categories.find(x=>x.slug===body.p_slug);
-        if(!category){category={slug:body.p_slug,icon:null};formConfig.categories.push(category);}
-        Object.assign(category,{label_de:body.p_label_de,label_it:body.p_label_it,label_en:body.p_label_en,is_active:body.p_active,sort_order:body.p_position});
+        if(!category){category={slug:body.p_slug,icon:null,sort_order:formConfig.categories.length+1};formConfig.categories.push(category);}
+        Object.assign(category,{label_de:body.p_label_de,label_it:body.p_label_it,label_en:body.p_label_en,is_active:body.p_active,sort_order:body.p_position??category.sort_order});
         if(body.p_replace_icon) category.icon=body.p_icon;
       }
       return reply(null);
@@ -97,7 +102,7 @@ const fixture = createServer(async (req, res) => {
       assert.equal(req.headers.apikey,serverAdminKey);
       if (req.method === 'POST') {
         if(accounts.some(x=>x.email===body.email)) return reply({msg:'This email is already registered.'},422);
-        const account={user_id:idFor(1000+accounts.length),email:body.email,is_active:false,can_manage_stops:false,can_manage_database:false,can_view_feedback:false,is_owner:false};
+        const account={user_id:idFor(1000+accounts.length),email:body.email,is_active:false,can_manage_stops:false,can_manage_database:false,can_view_feedback:false,can_manage_feedback:false,is_owner:false};
         accounts.push(account);authAdminCalls.push({kind:'create',id:account.user_id});
         return reply({id:account.user_id,email:account.email});
       }
@@ -112,7 +117,7 @@ const fixture = createServer(async (req, res) => {
       if(url.pathname.endsWith('/record_portal_user_event')) { managementEvents.push(body);return reply(null); }
       const account=accounts.find(x=>x.user_id===body.p_user_id);
       assert.ok(account);assert.notEqual(account.user_id,userId);
-      Object.assign(account,{is_active:body.p_active,can_manage_stops:body.p_stops,can_manage_database:body.p_database,can_view_feedback:body.p_feedback});
+      Object.assign(account,{is_active:body.p_active,can_manage_stops:body.p_stops,can_manage_database:body.p_database,can_view_feedback:body.p_feedback,can_manage_feedback:body.p_feedback_settings??account.can_manage_feedback??false});
       return reply(null);
     }
     const eq = key => url.searchParams.get(key)?.replace(/^eq\./, '');
@@ -331,6 +336,7 @@ try {
   });
   const create=page.locator('.user-create');
   assert.equal(await create.locator('[name=feedback]').isChecked(),false);
+  assert.equal(await create.locator('[name=feedback_settings]').isChecked(),false);
   await create.locator('[name=email]').fill('operator@example.test');
   await create.locator('[name=password]').fill('Synthetic-password-123');
   await create.locator('[name=database]').uncheck();
@@ -408,12 +414,89 @@ try {
   await page.setViewportSize({width:1440,height:1000});
   await page.evaluate(()=>window.scrollTo(0,0));
   await page.screenshot({path:'/tmp/feedback-owner-settings.png',fullPage:true});
+  assert.equal(await page.locator('[name=sort_order]').count(),0);
+  assert.match(await page.locator('.feedback-category-guidelines').innerText(),/16 KiB.*64.*8/);
+  assert.ok(await page.evaluate(()=>!!(document.querySelector('.feedback-category-guidelines').compareDocumentPosition(document.querySelector('.feedback-category-create'))&Node.DOCUMENT_POSITION_FOLLOWING)));
+  const seatCard=page.locator('.feedback-category-editor').filter({has:page.getByRole('heading',{name:'Sitzplatz fehlt',exact:true})});
+  await seatCard.locator('[name=label_de]').fill('Unsaved category label');
+  const orderButton=page.locator('.category-order-trigger');
+  const orderDialog=page.locator('.category-order-dialog');
+  const openOrder=async()=>{await orderButton.click();await orderDialog.waitFor();await orderDialog.evaluate(el=>Promise.all(el.getAnimations().map(animation=>animation.finished)));};
+  const orderSlugs=()=>orderDialog.locator('[data-category-slug]').evaluateAll(rows=>rows.map(row=>row.dataset.categorySlug));
+  const savedOrder=()=>formConfig.categories.map(row=>row.slug);
+  const orderOrigin=await page.evaluate(()=>performance.timeOrigin);
+  const beforeOrder=configWrites.length;
+  await openOrder();await orderDialog.waitFor();
+  assert.equal(await orderDialog.getByRole('button',{name:'Speichern',exact:true}).isDisabled(),true);
+  const source=await orderDialog.locator('[data-category-slug=seating] .category-drag-handle').boundingBox();
+  const destination=await orderDialog.locator('[data-category-slug=custom_issue]').boundingBox();
+  await page.mouse.move(source.x+source.width/2,source.y+source.height/2);await page.mouse.down();
+  await page.mouse.move(source.x+source.width/2,destination.y+destination.height/2,{steps:10});await page.mouse.up();
+  assert.deepEqual(await orderSlugs(),['custom_issue','seating']);
+  assert.equal(configWrites.length,beforeOrder);
+  await orderDialog.getByRole('button',{name:'Zurücksetzen',exact:true}).click();
+  assert.deepEqual(await orderSlugs(),['seating','custom_issue']);
+  await orderDialog.getByRole('button',{name:'Nach unten: Sitzplatz fehlt',exact:true}).click();
+  await orderDialog.getByRole('button',{name:'Änderungen verwerfen und schließen',exact:true}).click();
+  await orderDialog.waitFor({state:'hidden'});assert.deepEqual(savedOrder(),['seating','custom_issue']);
+  await openOrder();
+  await orderDialog.getByRole('button',{name:'Kategorie verschieben: Sitzplatz fehlt',exact:true}).focus();
+  await page.keyboard.press('ArrowDown');assert.deepEqual(await orderSlugs(),['custom_issue','seating']);
+  await page.keyboard.press('Escape');await orderDialog.waitFor({state:'hidden'});
+  await openOrder();assert.deepEqual(await orderSlugs(),['seating','custom_issue']);
+  await orderDialog.getByRole('button',{name:'Nach oben: Neues Problem',exact:true}).click();
+  await page.screenshot({path:'/tmp/feedback-order-desktop.png'});
+  await orderDialog.getByRole('button',{name:'Speichern',exact:true}).click();
+  await orderDialog.waitFor({state:'hidden'});
+  assert.deepEqual(savedOrder(),['custom_issue','seating']);assert.equal(configWrites.length,beforeOrder+1);
+  assert.equal(await page.evaluate(()=>performance.timeOrigin),orderOrigin);
+  assert.equal(await seatCard.locator('[name=label_de]').inputValue(),'Unsaved category label');
+  await seatCard.locator('[name=label_de]').fill('Sitzplatz fehlt');
+  await page.setViewportSize({width:390,height:844});
+  await openOrder();
+  assert.ok(await orderDialog.evaluate(el=>el.scrollWidth<=el.clientWidth));
+  await page.screenshot({path:'/tmp/feedback-order-mobile.png'});
+  const touch=await context.newCDPSession(page);
+  await touch.send('Emulation.setTouchEmulationEnabled',{enabled:true});
+  const mobileSource=await orderDialog.locator('[data-category-slug=custom_issue] .category-drag-handle').boundingBox();
+  const mobileTarget=await orderDialog.locator('[data-category-slug=seating]').boundingBox();
+  const x=mobileSource.x+mobileSource.width/2,y=mobileSource.y+mobileSource.height/2;
+  await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
+  for(let step=1;step<=10;step++)await touch.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:y+(mobileTarget.y+mobileTarget.height/2-y)*step/10}]});
+  await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  assert.deepEqual(await orderSlugs(),['seating','custom_issue']);
+  await orderDialog.getByRole('button',{name:'Zurücksetzen',exact:true}).click();
+  assert.deepEqual(await orderSlugs(),['custom_issue','seating']);
+  await orderDialog.getByRole('button',{name:'Änderungen verwerfen und schließen',exact:true}).click();
+  await touch.detach();await page.setViewportSize({width:1440,height:1000});
+  await openOrder();
+  await orderDialog.getByRole('button',{name:'Nach unten: Neues Problem',exact:true}).click();
+  // Another manager saved an order while this dialog was open.
+  formConfig.categories.reverse();formConfig.categories.forEach((row,index)=>{row.sort_order=index+1;});
+  await orderDialog.getByRole('button',{name:'Speichern',exact:true}).click();
+  await orderDialog.getByRole('alert').filter({hasText:'inzwischen geändert'}).waitFor();
+  assert.equal(configWrites.length,beforeOrder+1);
+  await orderDialog.getByRole('button',{name:'Änderungen verwerfen und schließen',exact:true}).click();
+  await openOrder();assert.deepEqual(await orderSlugs(),savedOrder());
+  await page.keyboard.press('Escape');
+  // A longer list must support dragging past more than one row in one gesture.
+  formConfig.categories.push({slug:'lighting',label_de:'Beleuchtung fehlt',label_it:'Manca illuminazione',label_en:'Lighting missing',sort_order:3,is_active:true,icon:null});
+  await page.reload();await page.getByRole('heading',{name:'Feedback verwalten',exact:true}).waitFor();
+  await openOrder();
+  const longSource=await orderDialog.locator('[data-category-slug=seating] .category-drag-handle').boundingBox();
+  const longTarget=await orderDialog.locator('[data-category-slug=lighting]').boundingBox();
+  await page.mouse.move(longSource.x+longSource.width/2,longSource.y+longSource.height/2);await page.mouse.down();
+  await page.mouse.move(longSource.x+longSource.width/2,longTarget.y+longTarget.height/2,{steps:20});await page.mouse.up();
+  assert.deepEqual(await orderSlugs(),['custom_issue','lighting','seating']);
+  await page.screenshot({path:'/tmp/feedback-order-desktop.png'});
+  await page.keyboard.press('Escape');
+  console.log('PASS: numeric positions removed; drag/touch/keyboard ordering, Reset, X/Escape, atomic Save, unsaved-field retention, stale-order recovery and SVG guidelines');
   await customCard.locator('[name=is_active]').uncheck();
   await customCard.locator('[name=remove_icon]').check();
   await customCard.getByRole('button',{name:'Kategorie speichern',exact:true}).click();
   await customCard.getByRole('status').filter({hasText:'Gespeichert.'}).waitFor();
-  assert.equal(formConfig.categories.at(-1).is_active,false);
-  assert.equal(formConfig.categories.at(-1).icon,null);
+  assert.equal(formConfig.categories.find(x=>x.slug==='custom_issue').is_active,false);
+  assert.equal(formConfig.categories.find(x=>x.slug==='custom_issue').icon,null);
   await page.setViewportSize({width:390,height:844});
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth));
   await page.setViewportSize({width:1440,height:1000});
@@ -426,7 +509,7 @@ try {
   const settingsHeaders=capturedSettings.headers();
   const configCount=configWrites.length;
   const deniedSettings=await context.request.post(`${appUrl}/feedback-settings`,{headers:{'next-action':settingsHeaders['next-action'],'content-type':settingsHeaders['content-type'],origin:appUrl},data:capturedSettings.postDataBuffer()});
-  assert.ok((await deniedSettings.text()).includes('Only the owner'));
+  assert.ok((await deniedSettings.text()).includes('Feedback management access required'));
   assert.equal(configWrites.length,configCount);
   console.log('PASS: non-owner route access and replayed settings action are denied before configuration RPC');
   await page.goto(`${appUrl}/users`);
@@ -445,6 +528,32 @@ try {
   assert.equal(authAdminCalls.length,beforeAttack);
   assert.ok((await denied.text()).includes('designated owner'));
   console.log('PASS: non-owner cannot see user management or forbidden sections; replayed owner action is denied before Auth Admin access');
+  currentUserId=userId;
+  await page.goto(`${appUrl}/users`);
+  const managerCard=page.locator('.managed-user').filter({has:page.getByRole('heading',{name:'changed@example.test',exact:true})});
+  const managerAccess=managerCard.locator('form').first();
+  await managerAccess.locator('[name=stops]').uncheck();
+  await managerAccess.locator('[name=feedback_settings]').check();
+  await managerAccess.getByRole('button',{name:'Berechtigungen speichern',exact:true}).click();
+  await managerAccess.getByRole('status').filter({hasText:'Gespeichert.'}).waitFor();
+  assert.equal(created.can_manage_feedback,true);assert.equal(created.can_view_feedback,false);
+  currentUserId=created.user_id;
+  await page.goto(`${appUrl}/feedback-settings`);
+  await page.getByRole('heading',{name:'Feedback verwalten',exact:true}).waitFor();
+  assert.equal(await page.locator('a[href="/users"]').count(),0);
+  const delegatedPhoto=page.locator('.feedback-photo-settings form');
+  await delegatedPhoto.locator('[name=photos_enabled]').check();
+  await delegatedPhoto.getByRole('button',{name:'Foto-Einstellungen speichern',exact:true}).click();
+  await delegatedPhoto.getByRole('status').filter({hasText:'Gespeichert.'}).waitFor();
+  assert.equal(formConfig.photos_enabled,true);
+  // The owner revokes the right while the manager's already-open page remains.
+  created.can_manage_feedback=false;
+  const writesBeforeRevocation=configWrites.length;
+  await delegatedPhoto.locator('[name=photos_enabled]').uncheck();
+  await delegatedPhoto.getByRole('button',{name:'Foto-Einstellungen speichern',exact:true}).click();
+  await delegatedPhoto.getByRole('alert').filter({hasText:'Feedback management access required'}).waitFor();
+  assert.equal(configWrites.length,writesBeforeRevocation);
+  console.log('PASS: owner grants config-only access through User Management; manager can save but cannot manage users, and revocation blocks an open page');
   staff = false;
   await page.goto(`${appUrl}/database?q=Bozen&page=2`);
   await page.locator('.login-form').waitFor();
