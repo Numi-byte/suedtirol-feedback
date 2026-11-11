@@ -20,7 +20,7 @@ export function PortalHeader({ language, email, access }: { language: Language; 
     if (!open || !dialog.current) return;
     const current = dialog.current; current.showModal(); close.current?.focus();
     const overflow = document.body.style.overflow; document.body.style.overflow = "hidden";
-    const desktop = window.matchMedia("(min-width: 1280px)"); const resized = () => { if (desktop.matches) setOpen(false); }; desktop.addEventListener("change", resized);
+    const desktop = window.matchMedia("(min-width: 1440px)"); const resized = () => { if (desktop.matches) setOpen(false); }; desktop.addEventListener("change", resized);
     return () => { current.close(); document.body.style.overflow = overflow; desktop.removeEventListener("change", resized); };
   }, [open]);
 

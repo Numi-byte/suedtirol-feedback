@@ -356,3 +356,67 @@ node --test shared/municipality.test.mjs protected/scripts/portal-pagination.tes
 supabase/tests/run-stop-point-feedback.sh
 supabase/tests/run-feedback-test-results.sh
 ```
+
+### Owner-managed feedback form
+
+Apply `supabase/migrations/20261111120000_manage_feedback_form.sql` in the
+Supabase SQL Editor **before deploying both apps from the same branch**.
+It depends on the preceding migrations. No existing report or photo is deleted;
+photos initially remain enabled with the existing 10 MiB limit. No new
+credentials or storage buckets are needed.
+
+The designated owner (`bdee91d9-c969-4bd4-b336-8f7e780ead3e`) gets **Feedback
+verwalten / Configura feedback / Manage feedback** at `/feedback-settings`.
+The owner can:
+
+- Enable/disable photo uploads and choose a maximum size of 1–10 MiB. Both the
+  public form and the backend enforce the current policy. JPEG, PNG and WebP are
+  allowed; existing photos remain readable to authorized feedback staff.
+- Add/edit categories with required German, Italian and English labels, change
+  their order, and deactivate/reactivate them. Keys are permanent. Deactivation
+  removes a category from new submissions without breaking historical reports.
+  At least one category must remain active; there are at most 30 active and 50
+  total definitions, including retired ones. Category labels, including retired
+  labels, remain public for anonymous discussion history; they are not drafts.
+- Assign or remove an SVG icon. Source files are limited to 16 KiB, basic paths
+  and shapes, 64 shapes/groups and eight nesting levels. Colours are normalized
+  to `currentColor` and the viewBox fits the same 24px icon layout. Scripts,
+  event handlers, CSS, text, HTML, images, external references, filters,
+  animation and DTD/entities are rejected. Only validated shape JSON is saved
+  and rendered, never raw SVG markup or a publicly served uploaded SVG file.
+  Categories without an upload use an existing built-in icon or a neutral
+  information icon.
+
+Access is checked by the route, every Server Action, and the database RPCs.
+Other users do not inherit configuration access from stop, database or inbox
+permissions. Configuration changes are serialized and audited without passwords,
+report contents or SVG source. Public configuration reads expose only the
+settings and category definitions.
+
+The form rechecks configuration before sending. If a selected category has been
+retired or an attached photo no longer meets policy, it retains the rest of the
+form and asks the passenger to review and send again. Database checks also reject
+outdated direct API calls. A policy change during the subsequent photo upload
+can reject that photo; the saved report is retained and the acknowledgement
+shows the existing upload warning. Submission-time test snapshots keep their
+original category labels; portal/public history and acknowledgement text use
+current configured labels.
+
+Local verification (never writes to the hosted database):
+
+```sh
+node --test protected/scripts/*.test.mjs shared/*.test.mjs client/scripts/*.test.mjs
+supabase/tests/run-security-boundaries.sh
+DOCKER_HOST=unix:///var/run/docker.sock supabase/tests/run-stop-point-feedback.sh
+DOCKER_HOST=unix:///var/run/docker.sock supabase/tests/run-feedback-test-results.sh
+CHROMIUM_PATH=/usr/bin/chromium node protected/scripts/database-editing.e2e.mjs
+CHROMIUM_PATH=/usr/bin/chromium node client/scripts/feedback-settings.e2e.mjs
+npm --prefix client run build
+npm --prefix protected run build
+```
+
+The PostgreSQL tests check Storage bucket limits and registration metadata; they
+do not emulate Supabase Storage's HTTP size enforcement. The public browser test
+uses an HTTP fixture and bypasses CSP in that test browser only; application CSP
+remains unchanged. Verify an actual upload on a preview after applying the
+migration, including a file just above the chosen size limit.

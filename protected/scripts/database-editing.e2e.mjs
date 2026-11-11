@@ -39,13 +39,15 @@ let staff = true;
 let currentUserId = userId;
 const serverAdminKey = 'synthetic-server-admin-key-not-for-browser';
 const accounts = [{ user_id:userId,email:'staff@example.test',is_active:true,can_manage_stops:true,can_manage_database:true,can_view_feedback:true,is_owner:true }];
+const formConfig={photos_enabled:true,max_photo_bytes:10485760,categories:[{slug:'seating',label_de:'Sitzplatz fehlt',label_it:'Mancano posti a sedere',label_en:'Seating is missing',is_active:true,sort_order:1,icon:null}]};
+const configWrites=[];
 const authAdminCalls = [];
 const managementEvents = [];
 function accessForCurrentUser() {
-  if (!staff) return { feedback:false,stops:false,database:false,users:false };
-  if (currentUserId === userId) return { feedback:true,stops:true,database:true,users:true };
+  if (!staff) return { feedback:false,stops:false,database:false,users:false,feedbackSettings:false };
+  if (currentUserId === userId) return { feedback:true,stops:true,database:true,users:true,feedbackSettings:true };
   const account=accounts.find(x=>x.user_id===currentUserId);
-  return { users:false,stops:!!(account?.is_active&&account.can_manage_stops),database:!!(account?.is_active&&account.can_manage_database),feedback:!!(account?.is_active&&account.can_view_feedback) };
+  return { users:false,feedbackSettings:false,stops:!!(account?.is_active&&account.can_manage_stops),database:!!(account?.is_active&&account.can_manage_database),feedback:!!(account?.is_active&&account.can_view_feedback) };
 }
 const user = { id: userId, email: 'staff@example.test', aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {} };
 const fixture = createServer(async (req, res) => {
@@ -62,6 +64,19 @@ const fixture = createServer(async (req, res) => {
     const chunks = [];
     for await (const chunk of req) chunks.push(chunk);
     const body = chunks.length ? JSON.parse(Buffer.concat(chunks).toString()) : null;
+    if(url.pathname==='/rest/v1/rpc/get_feedback_form_config') return reply(formConfig);
+    if(['/rest/v1/rpc/set_feedback_photo_settings','/rest/v1/rpc/save_feedback_category'].includes(url.pathname)) {
+      if(currentUserId!==userId) return reply({message:'Owner access required',code:'42501'},403);
+      configWrites.push(body);
+      if(url.pathname.endsWith('set_feedback_photo_settings')) Object.assign(formConfig,{photos_enabled:body.p_enabled,max_photo_bytes:body.p_max_bytes});
+      else {
+        let category=formConfig.categories.find(x=>x.slug===body.p_slug);
+        if(!category){category={slug:body.p_slug,icon:null};formConfig.categories.push(category);}
+        Object.assign(category,{label_de:body.p_label_de,label_it:body.p_label_it,label_en:body.p_label_en,is_active:body.p_active,sort_order:body.p_position});
+        if(body.p_replace_icon) category.icon=body.p_icon;
+      }
+      return reply(null);
+    }
     if (url.pathname === '/rest/v1/rpc/list_stops_missing_municipality') {
       const rows=records.filter(x=>(!x.municipality_de.trim()||!x.municipality_it.trim())&&(!body.p_after||x.id>body.p_after)).sort((a,b)=>a.id.localeCompare(b.id));
       return reply(rows.slice(0,Math.min(body.p_limit,2)));
@@ -350,7 +365,70 @@ try {
   assert.equal(authAdminCalls.at(-1).passwordChanged,true);
   assert.equal(await accountCard.locator('[name=password]').inputValue(),'');
   console.log('PASS: owner can deactivate/reactivate accounts and update email/password without exposing password values');
+  await page.goto(`${appUrl}/feedback-settings`);
+  await page.getByRole('heading',{name:'Feedback verwalten',exact:true}).waitFor();
+  const photoSettings=page.locator('.feedback-photo-settings form');
+  let capturedSettings;
+  page.on('request',request=>{if(request.method()==='POST'&&request.headers()['next-action']&&request.url().includes('/feedback-settings')&&!capturedSettings)capturedSettings=request;});
+  const settingsOrigin=await page.evaluate(()=>performance.timeOrigin);
+  await photoSettings.locator('[name=photos_enabled]').uncheck();
+  await photoSettings.locator('[name=max_photo_mb]').fill('2');
+  await photoSettings.getByRole('button',{name:'Foto-Einstellungen speichern',exact:true}).click();
+  await photoSettings.getByRole('status').filter({hasText:'Gespeichert.'}).waitFor();
+  assert.equal(formConfig.photos_enabled,false);assert.equal(formConfig.max_photo_bytes,2097152);
+  assert.equal(await page.evaluate(()=>performance.timeOrigin),settingsOrigin);
+  const categoryCreate=page.locator('.feedback-category-create form');
+  await categoryCreate.locator('[name=slug]').fill('custom_issue');
+  await categoryCreate.locator('[name=label_de]').fill('Neues Problem');
+  await categoryCreate.locator('[name=label_it]').fill('Nuovo problema');
+  await categoryCreate.locator('[name=label_en]').fill('New issue');
+  await categoryCreate.locator('[name=icon_file]').setInputFiles({name:'unsafe.svg',mimeType:'image/svg+xml',buffer:Buffer.from('<svg><script>alert(1)</script></svg>')});
+  const writesBefore=configWrites.length;
+  await categoryCreate.getByRole('button',{name:'Kategorie speichern',exact:true}).click();
+  await categoryCreate.getByRole('alert').waitFor();
+  assert.equal(configWrites.length,writesBefore);
+  assert.equal(await categoryCreate.locator('[name=label_it]').inputValue(),'Nuovo problema');
+  await categoryCreate.locator('[name=icon_file]').setInputFiles({name:'safe.svg',mimeType:'image/svg+xml',buffer:Buffer.from('<svg viewBox="0 0 48 48"><path fill="#ff0000" d="M2 2L40 2L40 40Z"/></svg>')});
+  await categoryCreate.getByRole('button',{name:'Kategorie speichern',exact:true}).click();
+  await categoryCreate.getByRole('status').filter({hasText:'Gespeichert.'}).waitFor();
+  const customCard=page.locator('.feedback-category-editor').filter({has:page.getByRole('heading',{name:'Neues Problem',exact:true})});
+  await customCard.waitFor();
+  assert.equal(formConfig.categories.at(-1).icon.nodes[0].attrs.fill,'currentColor');
+  assert.equal(await customCard.locator('.category-icon-preview svg').getAttribute('viewBox'),'0 0 48 48');
+  assert.equal(await categoryCreate.locator('[name=icon_file]').inputValue(),'');
+  for(const width of [1440,1600,1920]) {
+    await page.setViewportSize({width,height:1000});
+    assert.ok(await page.evaluate(()=>{
+      const brand=document.querySelector('.portal-brand').getBoundingClientRect();
+      const nav=document.querySelector('.portal-desktop-nav').getBoundingClientRect();
+      const signout=document.querySelector('.portal-desktop-signout').getBoundingClientRect();
+      return brand.right<=nav.left&&nav.right<=signout.left;
+    }),`desktop navigation must fit at ${width}px`);
+  }
+  await page.setViewportSize({width:1440,height:1000});
+  await page.evaluate(()=>window.scrollTo(0,0));
+  await page.screenshot({path:'/tmp/feedback-owner-settings.png',fullPage:true});
+  await customCard.locator('[name=is_active]').uncheck();
+  await customCard.locator('[name=remove_icon]').check();
+  await customCard.getByRole('button',{name:'Kategorie speichern',exact:true}).click();
+  await customCard.getByRole('status').filter({hasText:'Gespeichert.'}).waitFor();
+  assert.equal(formConfig.categories.at(-1).is_active,false);
+  assert.equal(formConfig.categories.at(-1).icon,null);
+  await page.setViewportSize({width:390,height:844});
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth));
+  await page.setViewportSize({width:1440,height:1000});
+  console.log('PASS: owner settings save inline; unsafe SVG rejected before RPC; normalized icon assignment, retirement and removal work on mobile');
   currentUserId=created.user_id;
+  await page.goto(`${appUrl}/feedback-settings`);
+  await page.waitForURL(url=>url.pathname==='/stops');
+  assert.equal(await page.locator('a[href="/feedback-settings"]').count(),0);
+  assert.ok(capturedSettings);
+  const settingsHeaders=capturedSettings.headers();
+  const configCount=configWrites.length;
+  const deniedSettings=await context.request.post(`${appUrl}/feedback-settings`,{headers:{'next-action':settingsHeaders['next-action'],'content-type':settingsHeaders['content-type'],origin:appUrl},data:capturedSettings.postDataBuffer()});
+  assert.ok((await deniedSettings.text()).includes('Only the owner'));
+  assert.equal(configWrites.length,configCount);
+  console.log('PASS: non-owner route access and replayed settings action are denied before configuration RPC');
   await page.goto(`${appUrl}/users`);
   await page.waitForURL(url=>url.pathname==='/stops');
   await page.waitForLoadState('networkidle');

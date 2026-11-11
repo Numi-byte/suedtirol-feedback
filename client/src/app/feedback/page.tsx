@@ -1,6 +1,7 @@
 import { municipalityName } from "../../../../shared/municipality";
 import { notFound, redirect } from "next/navigation";
 import { FeedbackForm } from "./feedback-form";
+import { getFeedbackConfig } from "@/lib/feedback-config";
 import { FeedbackThreads } from "./feedback-threads";
 import { createClient } from "@/lib/supabase/server";
 import { translations, type Language } from "@/lib/i18n";
@@ -27,10 +28,11 @@ export default async function FeedbackPage({ searchParams }: {
   const { data: point, error } = await supabase.rpc("get_published_stop_point", { p_stop_point_id: params.point }).returns<PublishedPoint[]>().maybeSingle();
   if (error) throw new Error("Stop point could not be loaded.");
   if (!point) notFound();
+  const configuration = await getFeedbackConfig();
   const placeName = point[`place_name_${language}`] || point.place_name_it || point.place_name_de;
   const name = `${placeName} · ${stopPointName(point, language)} · ${translations[language].map.pointLabel} ${point.point_number}`;
   return <main className="feedback-page">
-    <FeedbackForm placeId={point.stop_place_id} pointId={point.id} stopName={name} stopLocation={municipalityName(point, language)} transportType={point.transport_type} language={language} />
-    <FeedbackThreads pointId={point.id} language={language} />
+    <FeedbackForm configuration={configuration} placeId={point.stop_place_id} pointId={point.id} stopName={name} stopLocation={municipalityName(point, language)} transportType={point.transport_type} language={language} />
+    <FeedbackThreads categories={configuration.categories} pointId={point.id} language={language} />
   </main>;
 }

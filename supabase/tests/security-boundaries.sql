@@ -41,7 +41,7 @@ select public.register_feedback_photo(:'report_id', :'report_id' || '/12345678-1
 select pg_temp.check_true(not public.feedback_upload_path_is_valid(:'report_id' || '/12345678-1234-4234-8234-123456789abc.jpg'), 'registered report cannot accept another object');
 select pg_temp.check_true((select count(*)=0 from storage.objects), 'anonymous cannot read private storage');
 select pg_temp.must_fail(format('select public.register_feedback_photo(%L, %L)', :'report_id', :'report_id' || '/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa.jpg'));
-select pg_temp.must_fail($q$select public.create_stop_point_feedback('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',array_fill('seating'::text,array[11]),'low')$q$, 'P0001');
+select pg_temp.must_fail($q$select public.create_stop_point_feedback('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',array_fill('seating'::text,array[31]),'low')$q$, 'P0001');
 select pg_temp.must_fail($q$select public.create_stop_point_feedback('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',array['seating'],'low',repeat('x',501))$q$, 'P0001');
 select pg_temp.must_fail($q$select public.create_stop_point_feedback('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',array['seating'],'low',p_photo_extension=>'svg')$q$, 'P0001');
 reset role;
