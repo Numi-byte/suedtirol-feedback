@@ -117,7 +117,7 @@ const fixture = createServer(async (req, res) => {
       if(url.pathname.endsWith('/record_portal_user_event')) { managementEvents.push(body);return reply(null); }
       const account=accounts.find(x=>x.user_id===body.p_user_id);
       assert.ok(account);assert.notEqual(account.user_id,userId);
-      Object.assign(account,{is_active:body.p_active,can_manage_stops:body.p_stops,can_manage_database:body.p_database,can_view_feedback:body.p_feedback,can_manage_feedback:body.p_feedback_settings??account.can_manage_feedback??false});
+      Object.assign(account,{is_active:body.p_active,can_manage_stops:body.p_stops,can_manage_database:body.p_database,can_view_feedback:body.p_feedback,can_manage_feedback:body.p_feedback_settings??account.can_manage_feedback??false,can_reply_feedback:body.p_reply_feedback??false});
       return reply(null);
     }
     const eq = key => url.searchParams.get(key)?.replace(/^eq\./, '');
@@ -340,6 +340,12 @@ try {
   const create=page.locator('.user-create dialog');
   assert.equal(await create.locator('[name=feedback]').isChecked(),false);
   assert.equal(await create.locator('[name=feedback_settings]').isChecked(),false);
+  assert.equal(await create.locator('[name=reply_feedback]').isDisabled(),true);
+  await create.locator('[name=feedback]').check();
+  await create.locator('[name=reply_feedback]').check();
+  await create.locator('[name=feedback]').uncheck();
+  assert.equal(await create.locator('[name=reply_feedback]').isChecked(),false);
+  assert.equal(await create.locator('[name=reply_feedback]').isDisabled(),true);
   await create.locator('[name=email]').fill('operator@example.test');
   await create.locator('[name=password]').fill('Synthetic-password-123');
   await create.locator('[name=database]').uncheck();
@@ -366,6 +372,16 @@ try {
   await accessForm.getByRole('button',{name:'Berechtigungen speichern',exact:true}).click();
   await accessForm.getByRole('status').filter({hasText:'Gespeichert.'}).waitFor();
   assert.equal(created.is_active,true);
+  await accessForm.locator('[name=feedback]').check();
+  await accessForm.locator('[name=reply_feedback]').check();
+  await accessForm.getByRole('button',{name:'Berechtigungen speichern',exact:true}).click();
+  await accessForm.getByRole('status').filter({hasText:'Gespeichert.'}).waitFor();
+  assert.equal(created.can_reply_feedback,true);
+  await accessForm.locator('[name=feedback]').uncheck();
+  assert.equal(await accessForm.locator('[name=reply_feedback]').isDisabled(),true);
+  await accessForm.getByRole('button',{name:'Berechtigungen speichern',exact:true}).click();
+  await accessForm.getByRole('status').filter({hasText:'Gespeichert.'}).waitFor();
+  assert.equal(created.can_reply_feedback,false);
   await accountCard.locator('.user-credentials > summary').click();
   const credentials=accountCard.locator('.user-credentials form');
   await credentials.locator('[name=email]').fill('changed@example.test');
@@ -515,6 +531,7 @@ try {
   await orderDialog.getByRole('alert').filter({hasText:'inzwischen geändert'}).waitFor();
   assert.equal(configWrites.length,beforeOrder+1);
   await orderDialog.getByRole('button',{name:'Änderungen verwerfen und schließen',exact:true}).click();
+  await waitFor(async()=>JSON.stringify(await page.locator('.feedback-category-editor [name=slug]').evaluateAll(inputs=>inputs.map(input=>input.value)))===JSON.stringify(savedOrder()));
   await openOrder();assert.deepEqual(await orderSlugs(),savedOrder());
   await page.keyboard.press('Escape');
   // A longer list must support dragging past more than one row in one gesture.

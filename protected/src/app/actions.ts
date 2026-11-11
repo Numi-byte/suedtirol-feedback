@@ -115,8 +115,8 @@ async function requireUser(section: PortalSection) {
 export type FeedbackReplyState = { error?: string; success?: boolean };
 
 export async function replyToFeedback(_state: FeedbackReplyState, formData: FormData): Promise<FeedbackReplyState> {
-  const { supabase, user } = await requireUser("feedback");
-  if (!canReplyToFeedback(user.id)) return { error: "You are not authorized to reply to public feedback." };
+  const { supabase } = await requireUser("feedback");
+  if (!(await canReplyToFeedback(supabase))) return { error: "You are not authorized to reply to public feedback." };
   const feedbackId = String(formData.get("feedback_id") ?? "");
   const body = String(formData.get("body") ?? "").trim();
   if (!feedbackId) return { error: "A feedback id is required." };

@@ -1,8 +1,10 @@
-const FEEDBACK_REPLY_USER_IDS = new Set([
-  "bdee91d9-c969-4bd4-b336-8f7e780ead3e",
-  "bcd1c5c0-8bee-430b-ba38-75530e2b8a30",
-]);
-
-export function canReplyToFeedback(userId: string | undefined): boolean {
-  return userId !== undefined && FEEDBACK_REPLY_USER_IDS.has(userId);
+type ReplyAccessClient = {
+  rpc(name: string): PromiseLike<{ data: unknown; error: unknown }>;
+};
+/** Resolve current database rights, including parent access and deactivation. */
+export async function canReplyToFeedback(
+  client: ReplyAccessClient,
+): Promise<boolean> {
+  const { data, error } = await client.rpc("can_reply_to_feedback");
+  return !error && data === true;
 }

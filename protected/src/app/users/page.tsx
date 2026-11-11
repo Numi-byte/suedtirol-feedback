@@ -14,6 +14,7 @@ import { createUser, updateAccess, updateCredentials } from "./actions";
 import { SettingsDialog } from "../feedback-settings/settings-dialog";
 import { CategoryDisclosure } from "../feedback-settings/category-disclosure";
 import { feedbackSettingsCopy } from "@/lib/feedback-settings-copy";
+import { FeedbackPermissions } from "./feedback-permissions";
 import { UserForm } from "./user-form";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +26,7 @@ type ManagedUser = {
   can_manage_database: boolean;
   can_view_feedback: boolean;
   can_manage_feedback: boolean;
+  can_reply_feedback: boolean;
   is_owner: boolean;
 };
 export default async function UsersPage({
@@ -83,14 +85,12 @@ export default async function UsersPage({
         />
         {copy.database}
       </label>
-      <label>
-        <input
-          type="checkbox"
-          name="feedback"
-          defaultChecked={values?.can_view_feedback ?? false}
-        />
-        {copy.feedback}
-      </label>
+      <FeedbackPermissions
+        feedback={values?.can_view_feedback ?? false}
+        reply={values?.can_reply_feedback ?? false}
+        feedbackLabel={copy.feedback}
+        replyLabel={copy.replyFeedback}
+      />
       <label>
         <input
           type="checkbox"

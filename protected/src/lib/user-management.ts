@@ -16,8 +16,9 @@ export function readUserId(form: FormData) {
 }
 export function readAccessFields(form: FormData) {
   const flags = { p_active: form.get("active") === "on", p_stops: form.get("stops") === "on", p_database: form.get("database") === "on", p_feedback: form.get("feedback") === "on", p_feedback_settings: form.get("feedback_settings") === "on" };
+  const reply = flags.p_feedback && form.get("reply_feedback") === "on";
   if (flags.p_active && !flags.p_stops && !flags.p_database && !flags.p_feedback && !flags.p_feedback_settings) throw new Error("Choose at least one section for an active account.");
-  return flags;
+  return { ...flags, p_reply_feedback: reply };
 }
 
 export async function saveUserAccess(client: SupabaseClient, form: FormData): Promise<UserManagementResult> {

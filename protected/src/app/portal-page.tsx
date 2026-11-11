@@ -191,7 +191,7 @@ export default async function PortalPage({ view, searchParams }: { view: "feedba
   const photoUrls = new Map<string, string>((signedPhotos ?? []).flatMap((photo, index) =>
     photo.signedUrl && photoPaths[index] ? [[photoPaths[index], photo.signedUrl]] : [],
   ));
-  const canReply = canReplyToFeedback(user.id);
+  const canReply = view === "feedback" && await canReplyToFeedback(supabase);
 
   return (
     <PortalNavigation loadingLabel={t.portal.loading}>
