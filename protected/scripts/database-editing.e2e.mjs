@@ -435,7 +435,14 @@ try {
   assert.match(await page.locator('.feedback-category-guidelines').innerText(),/16 KiB.*64.*8/);
   assert.ok(await page.evaluate(()=>!!(document.querySelector('.feedback-category-guidelines').compareDocumentPosition(document.querySelector('.feedback-category-create'))&Node.DOCUMENT_POSITION_FOLLOWING)));
   const seatCard=page.locator('.feedback-category-editor').filter({has:page.getByRole('heading',{name:'Sitzplatz fehlt',exact:true})});
+  assert.equal(await seatCard.locator('[name=slug]').isVisible(),true);
+  assert.equal(await seatCard.locator('[name=label_de]').isVisible(),false);
+  await seatCard.locator('summary').click();
   await seatCard.locator('[name=label_de]').fill('Unsaved category label');
+  await seatCard.locator('summary').click();
+  assert.equal(await seatCard.locator('[name=label_de]').isVisible(),false);
+  await seatCard.locator('summary').focus();await page.keyboard.press('Enter');
+  assert.equal(await seatCard.locator('[name=label_de]').inputValue(),'Unsaved category label');
   const orderButton=page.locator('.category-order-trigger');
   const orderDialog=page.locator('.category-order-dialog:not(.feedback-settings-dialog)');
   const openOrder=async()=>{await orderButton.click();await orderDialog.waitFor();await orderDialog.evaluate(el=>Promise.all(el.getAnimations().map(animation=>animation.finished)));};
@@ -508,6 +515,7 @@ try {
   await page.screenshot({path:'/tmp/feedback-order-desktop.png'});
   await page.keyboard.press('Escape');
   console.log('PASS: numeric positions removed; drag/touch/keyboard ordering, Reset, X/Escape, atomic Save, unsaved-field retention, stale-order recovery and SVG guidelines');
+  await customCard.locator('summary').click();
   await customCard.locator('[name=is_active]').uncheck();
   await customCard.locator('[name=remove_icon]').check();
   await customCard.getByRole('button',{name:'Kategorie speichern',exact:true}).click();

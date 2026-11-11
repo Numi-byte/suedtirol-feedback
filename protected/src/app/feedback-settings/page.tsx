@@ -8,6 +8,7 @@ import { PortalNavigation } from "../portal-navigation";
 import { UserForm } from "../users/user-form";
 import { saveCategory, savePhotoSettings } from "./actions";
 import { SettingsDialog } from "./settings-dialog";
+import { CategoryDisclosure } from "./category-disclosure";
 import { CategoryOrderEditor } from "./category-order-editor";
 import {
   parseFeedbackFormConfig,
@@ -58,58 +59,63 @@ export default async function FeedbackSettingsPage() {
           defaultValue={category?.slug ?? ""}
         />
       </label>
-      <div className="field-grid">
-        <label>
-          {copy.de}
-          <input
-            name="label_de"
-            required
-            maxLength={160}
-            defaultValue={category?.label_de ?? ""}
-          />
-        </label>
-        <label>
-          {copy.it}
-          <input
-            name="label_it"
-            required
-            maxLength={160}
-            defaultValue={category?.label_it ?? ""}
-          />
-        </label>
-        <label>
-          {copy.en}
-          <input
-            name="label_en"
-            required
-            maxLength={160}
-            defaultValue={category?.label_en ?? ""}
-          />
-        </label>
-      </div>
-      <div className="checks">
-        <label>
-          <input
-            name="is_active"
-            type="checkbox"
-            defaultChecked={category?.is_active ?? true}
-          />
-          {copy.active}
-        </label>
-      </div>
-      <label>
-        {copy.icon}
-        <input name="icon_file" type="file" accept=".svg,image/svg+xml" />
-      </label>
-      {category?.icon ? (
-        <div className="checks">
+      <CategoryDisclosure
+        enabled={!!category}
+        label={`${copy.editCategory}: ${category?.[`label_${language}`] ?? ""}`}
+      >
+        <div className="field-grid">
           <label>
-            <input name="remove_icon" type="checkbox" />
-            {copy.remove}
+            {copy.de}
+            <input
+              name="label_de"
+              required
+              maxLength={160}
+              defaultValue={category?.label_de ?? ""}
+            />
+          </label>
+          <label>
+            {copy.it}
+            <input
+              name="label_it"
+              required
+              maxLength={160}
+              defaultValue={category?.label_it ?? ""}
+            />
+          </label>
+          <label>
+            {copy.en}
+            <input
+              name="label_en"
+              required
+              maxLength={160}
+              defaultValue={category?.label_en ?? ""}
+            />
           </label>
         </div>
-      ) : null}
-      <button type="submit">{copy.save}</button>
+        <div className="checks">
+          <label>
+            <input
+              name="is_active"
+              type="checkbox"
+              defaultChecked={category?.is_active ?? true}
+            />
+            {copy.active}
+          </label>
+        </div>
+        <label>
+          {copy.icon}
+          <input name="icon_file" type="file" accept=".svg,image/svg+xml" />
+        </label>
+        {category?.icon ? (
+          <div className="checks">
+            <label>
+              <input name="remove_icon" type="checkbox" />
+              {copy.remove}
+            </label>
+          </div>
+        ) : null}
+        <button type="submit">{copy.save}</button>
+      </CategoryDisclosure>
     </>
   );
   return (

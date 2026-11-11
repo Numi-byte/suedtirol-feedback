@@ -1,5 +1,6 @@
 export const feedbackSettingsCopy = {
   de: {
+    editCategory: "Kategorie bearbeiten",
     categories: "Kategorien",
     orderTitle: "Reihenfolge anpassen",
     orderHelp:
@@ -44,6 +45,7 @@ export const feedbackSettingsCopy = {
     loadError: "Konfiguration nicht verfügbar. Bitte versuche es erneut.",
   },
   it: {
+    editCategory: "Modifica categoria",
     categories: "Categorie",
     orderTitle: "Modifica ordine",
     orderHelp:
@@ -88,6 +90,7 @@ export const feedbackSettingsCopy = {
     loadError: "Configurazione non disponibile. Riprova.",
   },
   en: {
+    editCategory: "Edit category",
     categories: "Categories",
     orderTitle: "Adjust order",
     orderHelp:
