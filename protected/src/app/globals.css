@@ -516,3 +516,11 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .feedback-permission-group { display: grid; gap: 12px; }
 .feedback-permission-group .feedback-reply-permission { margin-left: 30px; padding-left: 16px; border-left: 2px solid var(--line); }
 .feedback-reply-permission:has(input:disabled) { color: var(--muted); }
+.password-card { max-width: 720px; }
+.password-card > p { color: var(--muted); overflow-wrap: anywhere; }
+.portal-desktop-signout { display: flex; align-items: center; gap: 8px; }
+.portal-password-link { display: grid; place-items: center; width: 40px; height: 44px; flex: none; border-radius: 50%; color: var(--blue-800); }
+.portal-password-link:hover { background: var(--sky); }
+@media (max-width: 1439px) { .portal-desktop-signout { display: none; } }
+.portal-menu-password { display: flex; padding: 12px; min-height: 44px; border-radius: 16px; }
+.portal-menu-password:hover { background: var(--sky); }
