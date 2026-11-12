@@ -476,3 +476,17 @@ reply RPC enforces the same requirement. Existing replies remain visible to
 inbox readers and remain published when a responder loses access. Legacy
 permission-update RPCs preserve the child grant while retaining inbox access
 and clear it when removing that parent. No additional private key is needed.
+
+### Change your own password
+
+Every active portal account can open `/account/password` through the header's
+password icon, the mobile menu or the footer, without User Management access.
+The page follows the portal design and supports German, Italian and English.
+It requires the current password, a different new password (12–1024 characters)
+and confirmation. A separate non-persistent Supabase Auth client verifies the
+current password and matching user ID, then discards its temporary session.
+The existing signed-in client updates only its own password. No Auth Admin key,
+user-ID form parameter, migration or email recovery redirect is used. All
+password inputs are cleared after an attempt; errors never echo credentials.
+This is a signed-in password-change flow; forgotten-password assistance remains
+available through the account owner.

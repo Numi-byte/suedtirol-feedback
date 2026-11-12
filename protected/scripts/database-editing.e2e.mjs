@@ -41,6 +41,7 @@ const serverAdminKey = 'synthetic-server-admin-key-not-for-browser';
 const accounts = [{ user_id:userId,email:'staff@example.test',is_active:true,can_manage_stops:true,can_manage_database:true,can_view_feedback:true,is_owner:true }];
 const formConfig={photos_enabled:true,max_photo_bytes:10485760,categories:[{slug:'seating',label_de:'Sitzplatz fehlt',label_it:'Mancano posti a sedere',label_en:'Seating is missing',is_active:true,sort_order:1,icon:null}]};
 const configWrites=[];
+const passwordUpdates=[];
 const authAdminCalls = [];
 const managementEvents = [];
 function accessForCurrentUser() {
@@ -58,12 +59,23 @@ const fixture = createServer(async (req, res) => {
       res.end(req.method === 'HEAD' ? undefined : JSON.stringify(body));
     };
     if (url.pathname === '/test-efa-stop-list') return reply(municipalityFeed);
-    if (url.pathname === '/auth/v1/user') return reply({ ...user,id:currentUserId,user_metadata:{is_owner:true} });
+    if (url.pathname === '/auth/v1/user' && req.method==='GET') return reply({ ...user,id:currentUserId,user_metadata:{is_owner:true} });
     if (url.pathname === '/rest/v1/rpc/is_portal_staff') return reply(staff);
     if (url.pathname === '/rest/v1/rpc/get_portal_access') return reply(accessForCurrentUser());
     const chunks = [];
     for await (const chunk of req) chunks.push(chunk);
     const body = chunks.length ? JSON.parse(Buffer.concat(chunks).toString()) : null;
+    if(url.pathname==='/auth/v1/token') {
+      if(body.password!=='Current-password-123')return reply({message:'Invalid credentials',code:'invalid_credentials'},400);
+      const encode=value=>Buffer.from(JSON.stringify(value)).toString('base64url');
+      return reply({access_token:`${encode({alg:'HS256'})}.${encode({sub:currentUserId,exp:Math.floor(Date.now()/1000)+3600})}.synthetic`,refresh_token:'synthetic-check',expires_in:3600,token_type:'bearer',user:{...user,id:currentUserId}});
+    }
+    if(url.pathname==='/auth/v1/logout')return reply(null);
+    if(url.pathname==='/auth/v1/user'&&req.method==='PUT') {
+      if(body.current_password!=='Current-password-123')return reply({message:'Invalid credentials',code:'invalid_credentials'},400);
+      assert.deepEqual(Object.keys(body).filter(key=>!['code_challenge','code_challenge_method'].includes(key)).sort(),['current_password','password']);
+      passwordUpdates.push(currentUserId);return reply({...user,id:currentUserId});
+    }
     if(url.pathname==='/rest/v1/rpc/get_feedback_form_config') return reply(formConfig);
     if(['/rest/v1/rpc/set_feedback_photo_settings','/rest/v1/rpc/save_feedback_category','/rest/v1/rpc/reorder_feedback_categories'].includes(url.pathname)) {
       if(!accessForCurrentUser().feedbackSettings) return reply({message:'Feedback management access required',code:'42501'},403);
@@ -585,6 +597,32 @@ try {
   assert.equal(authAdminCalls.length,beforeAttack);
   assert.ok((await denied.text()).includes('designated owner'));
   console.log('PASS: non-owner cannot see user management or forbidden sections; replayed owner action is denied before Auth Admin access');
+  await page.goto(`${appUrl}/account/password`);
+  await page.getByRole('heading',{name:'Passwort ändern',exact:true}).waitFor();
+  const passwordForm=page.locator('.password-card form');
+  await passwordForm.locator('[name=current_password]').fill('Wrong-password-123');
+  await passwordForm.locator('[name=password]').fill('New-password-456');
+  await passwordForm.locator('[name=confirm_password]').fill('Other-password-456');
+  await passwordForm.getByRole('button',{name:'Passwort speichern',exact:true}).click();
+  await passwordForm.getByRole('alert').filter({hasText:'nicht überein'}).waitFor();
+  assert.equal(passwordUpdates.length,0);
+  await passwordForm.locator('[name=current_password]').fill('Wrong-password-123');
+  await passwordForm.locator('[name=password]').fill('New-password-456');
+  await passwordForm.locator('[name=confirm_password]').fill('New-password-456');
+  await passwordForm.getByRole('button',{name:'Passwort speichern',exact:true}).click();
+  await passwordForm.getByRole('alert').filter({hasText:'aktuelles Passwort'}).waitFor();
+  assert.equal(passwordUpdates.length,0);
+  await passwordForm.locator('[name=current_password]').fill('Current-password-123');
+  await passwordForm.locator('[name=password]').fill('New-password-456');
+  await passwordForm.locator('[name=confirm_password]').fill('New-password-456');
+  await passwordForm.getByRole('button',{name:'Passwort speichern',exact:true}).click();
+  await passwordForm.getByRole('status').filter({hasText:'Passwort geändert.'}).waitFor();
+  assert.deepEqual(passwordUpdates,[created.user_id]);
+  assert.equal(await passwordForm.locator('[name=password]').inputValue(),'');
+  await page.setViewportSize({width:390,height:844});
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth));
+  await page.setViewportSize({width:1440,height:1000});
+  console.log('PASS: non-owner can change own password; mismatch/current-password checks, cleared secrets and mobile layout');
   currentUserId=userId;
   await page.goto(`${appUrl}/users`);
   const managerCard=page.locator('.managed-user').filter({has:page.getByRole('heading',{name:'changed@example.test',exact:true})});
@@ -614,6 +652,9 @@ try {
   assert.equal(configWrites.length,writesBeforeRevocation);
   console.log('PASS: owner grants config-only access through User Management; manager can save but cannot manage users, and revocation blocks an open page');
   staff = false;
+  await page.goto(`${appUrl}/account/password`);
+  await page.waitForURL(url=>url.pathname==='/');
+  assert.equal(await page.locator('.password-card').count(),0);
   await page.goto(`${appUrl}/database?q=Bozen&page=2`);
   await page.locator('.login-form').waitFor();
   assert.equal(await page.locator('.database-workspace').count(), 0);
