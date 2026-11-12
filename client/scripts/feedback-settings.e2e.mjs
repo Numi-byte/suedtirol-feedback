@@ -188,6 +188,33 @@ try {
           .width >= 0,
     );
   };
+  // Stop data deliberately arrives after Leaflet; external map tiles remain blocked.
+  let releaseStops;
+  const stopsGate=new Promise(resolve=>{releaseStops=resolve;});
+  let stopsMode='delayed';
+  const stop={id:placeId,name_de:'Test',name_it:'Test',name_en:'Test',municipality:'Bolzano',latitude:46.5,longitude:11.35,is_accessible:false,feedback_count:0};
+  await page.route(`${appUrl}/api/stops`,async route=>{
+    if(stopsMode==='delayed')await stopsGate;
+    await route.fulfill({status:stopsMode==='error'?503:200,contentType:'application/json',body:JSON.stringify(stopsMode==='empty'?[]:stopsMode==='error'?{error:'Synthetic failure'}:[stop])});
+  });
+  await page.goto(appUrl);
+  await page.locator('.map-loading .loading-spinner').waitFor();
+  await page.locator('.map-surface.leaflet-container').waitFor();
+  assert.equal(await page.locator('.map-loading').isVisible(),true);
+  releaseStops();stopsMode='ready';
+  await page.locator('.map-loading').waitFor({state:'hidden'});
+  await page.locator('.map-surface .stop-marker').first().waitFor();
+  stopsMode='error';await page.reload();
+  await page.locator('.map-loading.error').waitFor();
+  assert.equal(await page.locator('.map-loading .loading-spinner').count(),0);
+  stopsMode='ready';await page.locator('.map-loading button').click();
+  await page.locator('.map-loading').waitFor({state:'hidden'});
+  await page.locator('.map-surface .stop-marker').first().waitFor();
+  stopsMode='empty';await page.reload();
+  await page.locator('.map-loading button').waitFor();
+  assert.equal(await page.locator('.map-loading .loading-spinner').count(),0);
+  assert.match(await page.locator('.map-loading').innerText(),/veröffentlicht|published|pubblicate/);
+  console.log('PASS: loader remains until stop markers render, succeeds without tiles, handles failed requests/retry and empty data');
   await open();
   assert.equal(await page.locator(".category-list input").count(), 2);
   assert.equal(
