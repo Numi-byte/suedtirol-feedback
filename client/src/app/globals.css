@@ -974,3 +974,6 @@ h1, h2, h3 { color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
 .feedback-location-points button { min-width: 44px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 20px; background: #fff; color: var(--gray-800); text-align: center; font-size: 14px; line-height: 20px; }
 .feedback-location-points button[aria-pressed="true"] { border-color: #007eb5; background: var(--blue-50); color: #005980; font-weight: 700; }
 @media (max-width: 767px) { .feedback-location-canvas { height: 220px; } .feedback-location-frame { border-radius: 16px; } }
+
+/* Keep the initial stop-loading screen above map panels until markers are drawn. */
+.map-canvas > .map-loading { z-index: 2000; padding: 24px; text-align: center; }
