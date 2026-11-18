@@ -10,8 +10,8 @@ import arrowDown from "@/components/vectorarrowdown.svg";
 import { useMemo, useRef, useState } from "react";
 import { useLanguage } from "@/components/language-provider";
 import { stopName, useStops } from "@/lib/stops";
-import type { BusStop } from "@/lib/stops";
 import { StopPointList } from "@/components/stop-point-list";
+import { buildStopSearch, searchStopIndex } from "@/lib/stop-search";
 import { useStopPoints } from "@/lib/stop-points";
 
 const PAGE_SIZE = 12;
@@ -23,16 +23,10 @@ const SearchIcon = () => (
   </svg>
 );
 
-function StopPoints({ placeId }: { placeId: string }) {
+function StopPoints({ placeId, query }: { placeId: string; query: string }) {
   const { language, t } = useLanguage();
   const { points, status } = useStopPoints(placeId);
-  return <StopPointList placeId={placeId} points={points} status={status} language={language} labels={t.map} showMapLinks />;
-}
-
-/** Search every name and both municipality translations, regardless of UI language. */
-function matches(stop: BusStop, query: string) {
-  const haystack = [stop.name_de, stop.name_it, stop.name_en, stop.municipality_de, stop.municipality_it, stop.municipality].join(" ").toLowerCase();
-  return query.split(/\s+/).every((term) => haystack.includes(term));
+  return <StopPointList query={query} placeId={placeId} points={points} status={status} language={language} labels={t.map} showMapLinks />;
 }
 
 export default function StopsPage() {
@@ -45,10 +39,8 @@ export default function StopsPage() {
   const resultsRef = useRef<HTMLElement>(null);
 
   const sortedStops = useMemo(() => [...stops].sort((a, b) => stopName(a, language).localeCompare(stopName(b, language))), [stops, language]);
-  const results = useMemo(() => {
-    const trimmed = query.trim().toLowerCase();
-    return trimmed ? sortedStops.filter(stop => matches(stop, trimmed)) : sortedStops;
-  }, [sortedStops, query]);
+  const searchIndex = useMemo(() => buildStopSearch(sortedStops, language), [sortedStops, language]);
+  const results = useMemo(() => searchStopIndex(searchIndex, query), [searchIndex, query]);
   const pageCount = Math.max(1, Math.ceil(results.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
   const visibleStops = results.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
@@ -136,7 +128,7 @@ export default function StopsPage() {
                   </div>
                 </div>
                 <div id={`stop-points-${stop.id}`} className="stop-card-points" hidden={expandedPlaceId !== stop.id}>
-                  {expandedPlaceId === stop.id ? <StopPoints placeId={stop.id} /> : null}
+                  {expandedPlaceId === stop.id ? <StopPoints placeId={stop.id} query={query} /> : null}
                 </div>
               </article>
             </li>

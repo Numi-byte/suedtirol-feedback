@@ -34,3 +34,6 @@ tail -1 "$test_log"
 
 run_sql "$repo_root/supabase/tests/feedback-reply-permissions.sql"
 tail -1 "$test_log"
+
+run_sql "$repo_root/supabase/tests/public-stop-search.sql"
+tail -1 "$test_log"
