@@ -9,6 +9,7 @@ begin
   raise exception 'Expected municipality constraint failure: %', statement;
 end; $$;
 insert into auth.users(id) values ('bdee91d9-c969-4bd4-b336-8f7e780ead3e') on conflict do nothing;
+insert into public.portal_staff(user_id) values ('bdee91d9-c969-4bd4-b336-8f7e780ead3e') on conflict do nothing;
 insert into public.bus_stops(id, name_de, name_it, name_en, municipality, latitude, longitude, created_by, is_published, id_version, stop_code)
 values ('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', 'Ort', 'Luogo', 'Place', 'Legacy name', 46.5, 11.35,
   'bdee91d9-c969-4bd4-b336-8f7e780ead3e', true, '(it:apb:StopPlace:it:22021:99999,any)', 'muni-99999');

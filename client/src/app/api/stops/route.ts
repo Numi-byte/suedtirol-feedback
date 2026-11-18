@@ -1,16 +1,12 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { loadPublishedStopPages } from "@/lib/published-stop-pages";
+import { publicStopSnapshot } from "@/lib/public-stop-snapshot";
 
 export async function GET() {
-  const supabase = await createClient();
   try {
-    const stops = await loadPublishedStopPages((from, to) => supabase
-      .rpc("list_published_stops_with_feedback_count", {}, { count: "exact" })
-      .order("id").range(from, to));
+    const stops = await publicStopSnapshot();
     return NextResponse.json(stops, { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } });
-  } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Could not load published stops." },
-      { status: 500, headers: { "Cache-Control": "no-store" } });
+  } catch {
+    return NextResponse.json({ error: "Published stops are temporarily unavailable." },
+      { status: 503, headers: { "Cache-Control": "no-store", "Retry-After": "10" } });
   }
 }

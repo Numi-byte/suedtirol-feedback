@@ -12,15 +12,18 @@ import type { StopPointImportRow } from "@/lib/stop-point-csv";
 import { stopPointIdentity } from "@/lib/stop-point-csv";
 import { EFA_STOP_LIST_URL, readEfaStopPlaces } from "@/lib/efa-stop-places";
 import { importEfaBatches } from "@/lib/efa-import-batches";
+import { getPortalAccess, portalHome, type PortalSection } from "@/lib/portal-access";
+import { limitedJson } from "../../../shared/limited-json";
+import type { StopMutationResult } from "@/lib/database-navigation";
 
 export async function importEfaStopPlaces(): Promise<{ message: string; error?: boolean; details: string[] }> {
   let imported = 0;
   const details: string[] = [];
   try {
-    const { supabase } = await requireUser();
+    const { supabase } = await requireUser("stops");
     const response = await fetch(EFA_STOP_LIST_URL, { cache: "no-store", signal: AbortSignal.timeout(60000) });
     if (!response.ok) throw new Error(`EFA returned HTTP ${response.status}.`);
-    const { rows, errors, excluded, duplicates, received, matching } = readEfaStopPlaces(await response.json());
+    const { rows, errors, excluded, duplicates, received, matching } = readEfaStopPlaces(await limitedJson(response, 20 * 1024 * 1024));
     details.push(...errors);
     if (!rows.length) throw new Error("EFA returned no valid South Tyrol stop places. See the import report for details.");
     await importEfaBatches(rows, async batch => {
@@ -32,7 +35,7 @@ export async function importEfaStopPlaces(): Promise<{ message: string; error?: 
   } catch (error) {
     return { error: true, details, message: `${imported} stop places saved before the import stopped. ${error instanceof Error ? error.message : "The EFA import failed."} Retrying is safe.` };
   } finally {
-    if (imported) revalidatePath("/");
+    if (imported) revalidatePath("/", "layout");
   }
 }
 
@@ -51,13 +54,20 @@ export async function signIn(_state: AuthState, formData: FormData): Promise<Aut
   const password = String(formData.get("password") ?? "");
   const { t } = await getTranslations();
   if (!email || !password) return { error: t.login.errorEmpty };
+  if (email.length > 320 || password.length > 1024) return { error: t.login.errorInvalid };
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error: t.login.errorInvalid };
+  const access = await getPortalAccess(supabase);
+  const home = portalHome(access);
+  if (!home) {
+    await supabase.auth.signOut();
+    return { error: t.login.errorInvalid };
+  }
 
   revalidatePath("/", "layout");
-  redirect("/");
+  redirect(home);
 }
 
 export async function signOut() {
@@ -94,18 +104,19 @@ function readStopFields(formData: FormData): StopFields {
   };
 }
 
-async function requireUser() {
+async function requireUser(section: PortalSection) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("You must be authenticated to manage bus stops.");
+  if (!(await getPortalAccess(supabase))[section]) throw new Error("You do not have access to this section.");
   return { supabase, user };
 }
 
 export type FeedbackReplyState = { error?: string; success?: boolean };
 
 export async function replyToFeedback(_state: FeedbackReplyState, formData: FormData): Promise<FeedbackReplyState> {
-  const { supabase, user } = await requireUser();
-  if (!canReplyToFeedback(user.id)) return { error: "You are not authorized to reply to public feedback." };
+  const { supabase } = await requireUser("feedback");
+  if (!(await canReplyToFeedback(supabase))) return { error: "You are not authorized to reply to public feedback." };
   const feedbackId = String(formData.get("feedback_id") ?? "");
   const body = String(formData.get("body") ?? "").trim();
   if (!feedbackId) return { error: "A feedback id is required." };
@@ -113,77 +124,79 @@ export async function replyToFeedback(_state: FeedbackReplyState, formData: Form
 
   const { error } = await supabase.rpc("reply_to_feedback", { p_feedback_id: feedbackId, p_body: body });
   if (error) return { error: error.message };
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   return { success: true };
 }
 
-export async function createBusStop(formData: FormData) {
-  const { supabase, user } = await requireUser();
-  const { error } = await supabase.from("bus_stops").insert({ ...readStopFields(formData), created_by: user.id });
-  if (error) throw new Error(error.message);
-  revalidatePath("/");
+/** All edits retain server-side staff checks and return inline feedback. */
+async function mutateStop(operation: (context: Awaited<ReturnType<typeof requireUser>>) => Promise<StopMutationResult>): Promise<StopMutationResult> {
+  try {
+    const result = await operation(await requireUser("database"));
+    revalidatePath("/database");
+    return { ...result, success: true };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "The change could not be saved." };
+  }
 }
 
-export async function updateBusStop(formData: FormData) {
-  const { supabase } = await requireUser();
-  const id = String(formData.get("id") ?? "");
-  if (!id) throw new Error("A bus stop id is required.");
-
-  const { error } = await supabase
-    .from("bus_stops")
-    .update({ ...readStopFields(formData), updated_at: new Date().toISOString() })
-    .eq("id", id);
-  if (error) throw new Error(error.message);
-  revalidatePath("/");
-  redirect("/");
+export async function createBusStop(formData: FormData): Promise<StopMutationResult> {
+  return mutateStop(async ({ supabase, user }) => {
+    const { data, error } = await supabase.from("bus_stops")
+      .insert({ ...readStopFields(formData), created_by: user.id }).select("id").single();
+    if (error) throw new Error(error.message);
+    return { createdId: data.id };
+  });
 }
 
-export async function updateStopPointType(formData: FormData) {
-  const { supabase } = await requireUser();
-  const id = String(formData.get("point_id") ?? "");
-  const placeId = String(formData.get("place_id") ?? "");
-  const transportType = String(formData.get("transport_type") ?? "");
-  if (!id || !placeId || !["bus", "train", "cable_car"].includes(transportType)) throw new Error("Invalid stop point or transport type.");
-  const { error } = await supabase.from("stop_points")
-    .update({ transport_type: transportType, updated_at: new Date().toISOString() })
-    .eq("id", id).eq("stop_place_id", placeId).select("id").single();
-  if (error) throw new Error(error.message);
-  revalidatePath("/");
-  redirect(`/?stop=${encodeURIComponent(placeId)}#stop-points-editor`);
+export async function updateBusStop(formData: FormData): Promise<StopMutationResult> {
+  return mutateStop(async ({ supabase }) => {
+    const id = String(formData.get("id") ?? "");
+    if (!id) throw new Error("A bus stop id is required.");
+    const { error } = await supabase.from("bus_stops")
+      .update({ ...readStopFields(formData), updated_at: new Date().toISOString() })
+      .eq("id", id).select("id").single();
+    if (error) throw new Error(error.message);
+    return {};
+  });
 }
 
-/**
- * Retiring a stop is a soft delete. stop_feedback references bus_stops with
- * "on delete restrict", so removing the row outright would either be refused by
- * the database or, without that constraint, destroy the reports. Archiving
- * takes the stop off the public map and out of the active list while every
- * report it carries keeps a valid reference to it.
- */
-export async function archiveBusStop(formData: FormData) {
-  const { supabase } = await requireUser();
-  const id = String(formData.get("id") ?? "");
-  if (!id) throw new Error("A bus stop id is required.");
-
-  const { error } = await supabase
-    .from("bus_stops")
-    .update({ archived_at: new Date().toISOString(), is_published: false, updated_at: new Date().toISOString() })
-    .eq("id", id);
-  if (error) throw new Error(error.message);
-  revalidatePath("/");
-  redirect("/");
+export async function updateStopPointType(formData: FormData): Promise<StopMutationResult> {
+  return mutateStop(async ({ supabase }) => {
+    const id = String(formData.get("point_id") ?? "");
+    const placeId = String(formData.get("place_id") ?? "");
+    const transportType = String(formData.get("transport_type") ?? "");
+    if (!id || !placeId || !["bus", "train", "cable_car"].includes(transportType)) throw new Error("Invalid stop point or transport type.");
+    const { error } = await supabase.from("stop_points")
+      .update({ transport_type: transportType, updated_at: new Date().toISOString() })
+      .eq("id", id).eq("stop_place_id", placeId).select("id").single();
+    if (error) throw new Error(error.message);
+    return {};
+  });
 }
 
-export async function restoreBusStop(formData: FormData) {
-  const { supabase } = await requireUser();
-  const id = String(formData.get("id") ?? "");
-  if (!id) throw new Error("A bus stop id is required.");
+/** Soft-delete stops so reports and their original references remain intact. */
+export async function archiveBusStop(formData: FormData): Promise<StopMutationResult> {
+  return mutateStop(async ({ supabase }) => {
+    const id = String(formData.get("id") ?? "");
+    if (!id) throw new Error("A bus stop id is required.");
+    const { error } = await supabase.from("bus_stops")
+      .update({ archived_at: new Date().toISOString(), is_published: false, updated_at: new Date().toISOString() })
+      .eq("id", id).select("id").single();
+    if (error) throw new Error(error.message);
+    return { archivedId: id };
+  });
+}
 
-  const { error } = await supabase
-    .from("bus_stops")
-    .update({ archived_at: null, updated_at: new Date().toISOString() })
-    .eq("id", id);
-  if (error) throw new Error(error.message);
-  revalidatePath("/");
+export async function restoreBusStop(formData: FormData): Promise<StopMutationResult> {
+  return mutateStop(async ({ supabase }) => {
+    const id = String(formData.get("id") ?? "");
+    if (!id) throw new Error("A bus stop id is required.");
+    const { error } = await supabase.from("bus_stops")
+      .update({ archived_at: null, updated_at: new Date().toISOString() })
+      .eq("id", id).select("id").single();
+    if (error) throw new Error(error.message);
+    return {};
+  });
 }
 
 export type StopPlaceBatchRow = StopPlaceImportRow;
@@ -197,7 +210,7 @@ export type ImportBatchResult = { imported: number; skipped: number; errors: str
  */
 export async function importStopPlaceBatch(rows: StopPlaceBatchRow[], published: boolean): Promise<ImportBatchResult> {
   try {
-    const { supabase } = await requireUser();
+    const { supabase } = await requireUser("stops");
     if (!Array.isArray(rows) || !rows.length || rows.length > 250) throw new Error("An import batch must contain between 1 and 250 stops.");
     rows.forEach((row) => {
       if (!row.nameDe?.trim() || !row.nameIt?.trim() || !row.nameEn?.trim() || !row.stopCode?.trim() ||
@@ -223,7 +236,7 @@ export async function importStopPlaceBatch(rows: StopPlaceBatchRow[], published:
     if (!Number.isInteger(data) || data < 0 || data > rows.length) {
       throw new Error("The database returned an invalid import count.");
     }
-    revalidatePath("/");
+    revalidatePath("/", "layout");
     revalidatePath("/api/stops");
     return { imported: data, skipped: rows.length - data, errors: [] };
   } catch (error) {
@@ -234,7 +247,7 @@ export async function importStopPlaceBatch(rows: StopPlaceBatchRow[], published:
 export type StopPointBatchResult = { imported: number; unmatched: number; errors: string[] };
 
 export async function importStopPointBatch(rows: StopPointImportRow[]): Promise<StopPointBatchResult> {
-  const { supabase } = await requireUser();
+  const { supabase } = await requireUser("stops");
   if (!Array.isArray(rows) || rows.length < 1 || rows.length > 250) throw new Error("An import batch must contain between 1 and 250 points.");
   for (const row of rows) {
     if (!stopPointIdentity(row.idVersion) || !row.pointNumber?.trim() || !row.nameDe?.trim() || !row.nameIt?.trim() ||
@@ -255,6 +268,6 @@ export async function importStopPointBatch(rows: StopPointImportRow[]): Promise<
     !Array.isArray(data.errors) || !data.errors.every((message: unknown) => typeof message === "string")) {
     throw new Error("The database returned an invalid stop-point import result.");
   }
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   return data as StopPointBatchResult;
 }

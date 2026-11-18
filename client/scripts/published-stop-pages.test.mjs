@@ -50,3 +50,24 @@ test("without a total count, a short capped page does not end pagination", async
     data: stops.slice(from, from + 100), error: null, count: null,
   })), stops);
 });
+
+test("a nonterminating upstream is stopped by the page budget", async () => {
+  let calls = 0;
+  await assert.rejects(() => loadPublishedStopPages(async () => {
+    calls++;
+    return { data: [{ id: "repeated" }], error: null, count: null };
+  }), /page limit/);
+  assert.equal(calls, 1000);
+});
+
+test("an oversized response fails instead of exhausting server memory", async () => {
+  await assert.rejects(() => loadPublishedStopPages(async () => ({
+    data: Array(100_001).fill({ id: "stop" }), error: null, count: 100_001,
+  })), /result limit/);
+});
+
+test("an unexpectedly empty page is not returned as a complete map", async () => {
+  await assert.rejects(() => loadPublishedStopPages(async () => ({
+    data: [], error: null, count: 100,
+  })), /incomplete/);
+});

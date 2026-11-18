@@ -53,9 +53,9 @@ function markerImage(selected: boolean) {
   return `<img src="${busIcon.src}" alt="" aria-hidden="true" class="${selected ? "is-selected" : ""}" />`;
 }
 
-type StopMapProps = { stops: BusStop[]; language: "de" | "it" | "en"; labels: MapLabels };
+type StopMapProps = { stopsLoading: boolean; stopsError: boolean; onRetry: () => void; retryLabel: string; stops: BusStop[]; language: "de" | "it" | "en"; labels: MapLabels };
 
-export function StopMap({ stops, language, labels }: StopMapProps) {
+export function StopMap({ stops, language, labels, stopsLoading, stopsError, onRetry, retryLabel }: StopMapProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
@@ -70,6 +70,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
   const [searchExpanded, setSearchExpanded] = useState(true);
   const sheetGestureRef = useRef<{ startY: number; swiped: boolean } | null>(null);
   const [mapStatus, setMapStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [renderedStops, setRenderedStops] = useState<BusStop[] | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const pointMarkersRef = useRef<Map<string, CircleMarker>>(new Map());
   const selectedPointId = searchParams.get("point");
@@ -199,9 +200,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
         updateWhenIdle: true,
         keepBuffer: 1,
       });
-      tiles.once("load", () => {
-        if (!cancelled) setMapStatus("ready");
-      });
+
       tiles.addTo(map);
       L.control.zoom({ position: "bottomright" }).addTo(map);
       map.attributionControl.setPrefix(false);
@@ -243,6 +242,7 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
   useEffect(() => {
     let cancelled = false;
     let dispose: (() => void) | undefined;
+    let readyFrame: number | undefined;
 
     (async () => {
       const L = (await import("leaflet")).default;
@@ -357,14 +357,19 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
         }
       }
       render();
-    })();
+      // Reveal the map only after the stop/cluster layers have reached a frame.
+      readyFrame = requestAnimationFrame(() => {
+        if (!cancelled) { setRenderedStops(stops); setMapStatus("ready"); }
+      });
+    })().catch(() => { if (!cancelled) setMapStatus("error"); });
 
     return () => {
       cancelled = true;
+      if (readyFrame !== undefined) cancelAnimationFrame(readyFrame);
       dispose?.();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clusterIndex, language, mapReady]);
+  }, [clusterIndex, language, mapReady, stops]);
 
   useEffect(() => {
     selectedIdRef.current = selectedId;
@@ -496,13 +501,18 @@ export function StopMap({ stops, language, labels }: StopMapProps) {
     map?.stop().setView([stop.latitude, stop.longitude], Math.max(map.getZoom(), 15), { animate: false });
   };
 
+  const failed = stopsError || mapStatus === "error";
+  const waiting = !failed && (stopsLoading || !mapReady || renderedStops !== stops || mapStatus === "loading");
+  const empty = !waiting && !failed && stops.length === 0;
+
   return (
     <div ref={canvasRef} className={`map-canvas${selected ? " has-selected-stop" : ""}${searchExpanded ? " search-expanded" : " search-collapsed"}`}>
-      <div className="map-surface" ref={containerRef} role="application" aria-label={labels.title} aria-busy={mapStatus === "loading"} />
-      {mapStatus !== "ready" ? (
-        <div className={`map-loading ${mapStatus === "error" ? "error" : ""}`} role="status" aria-live="polite">
-          {mapStatus === "loading" ? <span className="loading-spinner" aria-hidden="true" /> : null}
-          <p>{mapStatus === "error" ? labels.loadError : labels.loading}</p>
+      <div className="map-surface" ref={containerRef} role="application" aria-label={labels.title} aria-busy={waiting} />
+      {waiting || failed || empty ? (
+        <div className={`map-loading ${failed ? "error" : ""}`} role={failed ? "alert" : "status"} aria-live="polite">
+          {waiting ? <span className="loading-spinner" aria-hidden="true" /> : null}
+          <p>{failed ? labels.loadError : empty ? labels.noStops : labels.loading}</p>
+          {!waiting ? <button type="button" onClick={onRetry}>{retryLabel}</button> : null}
         </div>
       ) : null}
 

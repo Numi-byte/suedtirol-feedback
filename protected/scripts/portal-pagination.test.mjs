@@ -35,10 +35,10 @@ test('empty results stay empty, and database/auth errors never become a false em
   for (const value of ['-1', 'NaN', 'Infinity', '2.5', '99999999999999999999']) assert.equal(requestedPage(value), 1);
 });
 
-test('every built-in issue uses the exact public form wording in all three languages', () => {
+test('built-in issues use configured labels, with canonical wording only as a fallback', () => {
   for (const language of ['de', 'it', 'en']) for (const [slug, label] of Object.entries(feedbackCategoryLabels[language])) {
     assert.equal(reportedIssueLabel({ category_slug: slug, feedback_categories: null }, language, 'Issue'), label);
-    assert.equal(reportedIssueLabel({ category_slug: slug, feedback_categories: { label_de: 'old', label_it: 'old', label_en: 'old' } }, language, 'Issue'), label);
+    assert.equal(reportedIssueLabel({ category_slug: slug, feedback_categories: { label_de: 'Edited label', label_it: 'Edited label', label_en: 'Edited label' } }, language, 'Issue'), 'Edited label');
   }
 });
 

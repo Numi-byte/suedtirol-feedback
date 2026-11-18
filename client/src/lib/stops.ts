@@ -35,7 +35,7 @@ export function useStops() {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch("/api/stops", { signal: controller.signal })
+    fetch("/api/stops", { signal: AbortSignal.any([controller.signal, AbortSignal.timeout(30_000)]) })
       .then(async response => {
         if (!response.ok) throw new Error("Could not load stops");
         const data: BusStop[] = await response.json();

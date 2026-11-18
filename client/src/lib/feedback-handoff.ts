@@ -51,11 +51,11 @@ const SUMMARY_LABELS: Record<Language, { stop: string; categories: string; sever
 export type Handoff = { stop: string; categories: string[]; severity: string; description: string };
 
 /** The submitted details as one block of text, ready to paste into any form. */
-export function composeSummary(handoff: Handoff, language: Language) {
+export function composeSummary(handoff: Handoff, language: Language, categoryLabels: Record<string,string> = {}) {
   const labels = SUMMARY_LABELS[language];
   const lines = [`${labels.stop}: ${handoff.stop}`];
   if (handoff.categories.length) {
-    lines.push(`${labels.categories}: ${handoff.categories.map((slug) => CATEGORY_LABELS[slug]?.[language] ?? slug).join(", ")}`);
+    lines.push(`${labels.categories}: ${handoff.categories.map((slug) => categoryLabels[slug] ?? CATEGORY_LABELS[slug]?.[language] ?? SUMMARY_LABELS[language].categories).join(", ")}`);
   }
   if (handoff.severity) lines.push(`${labels.severity}: ${SEVERITY_LABELS[handoff.severity]?.[language] ?? handoff.severity}`);
   if (handoff.description) lines.push(`${labels.description}: ${handoff.description}`);
@@ -66,11 +66,11 @@ export function feedbackFormSubject(handoff: Handoff, language: Language) {
   return `${SUMMARY_LABELS[language].subject}: ${handoff.stop}`;
 }
 
-export function buildFeedbackFormUrl(handoff: Handoff | null, language: Language) {
+export function buildFeedbackFormUrl(handoff: Handoff | null, language: Language, categoryLabels: Record<string,string> = {}) {
   const url = new URL(FEEDBACK_FORM_URL[language]);
   if (handoff) {
     if (FEEDBACK_FORM_PARAMS.subject) url.searchParams.set(FEEDBACK_FORM_PARAMS.subject, feedbackFormSubject(handoff, language));
-    if (FEEDBACK_FORM_PARAMS.message) url.searchParams.set(FEEDBACK_FORM_PARAMS.message, composeSummary(handoff, language));
+    if (FEEDBACK_FORM_PARAMS.message) url.searchParams.set(FEEDBACK_FORM_PARAMS.message, composeSummary(handoff, language, categoryLabels));
   }
   return url.toString();
 }

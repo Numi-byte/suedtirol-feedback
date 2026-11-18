@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition, type FormEvent } from "react";
+import { FeedbackPointMap } from "@/components/feedback-point-map";
 import Link from "next/link";
 import Image from "next/image";
 import { LanguageSelector } from "@/components/language-selector";
@@ -12,7 +13,8 @@ import type { FeedbackFormCopy } from "@/lib/feedback-form-copy";
 import type { Language } from "@/lib/i18n";
 import { getSupabaseConfig } from "@/lib/supabase/config";
 
-const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+import { FeedbackCategoryIcon } from "@/components/feedback-category-icon";
+import { parseFeedbackFormConfig, feedbackCategoryLabel, validFeedbackPhoto, type FeedbackFormConfig } from "../../../../shared/feedback-form-config";
 const photoExtensions = new Map([
   ["image/jpeg", "jpg"],
   ["image/png", "png"],
@@ -31,42 +33,11 @@ async function publicRequest(url: string, publishableKey: string, init: RequestI
   });
 }
 
-const categoryDefinitions = [
-  { slug: "weather_protection", icon: "shelter" },
-  { slug: "seating", icon: "seat" },
-  { slug: "safe_sidewalk", icon: "walk" },
-  { slug: "safe_crossing", icon: "crossing" },
-  { slug: "passenger_information", icon: "information" },
-  { slug: "lighting", icon: "light" },
-  { slug: "accessibility", icon: "accessible" },
-  { slug: "shading", icon: "sun" },
-  { slug: "bicycle_parking", icon: "bike" },
-  { slug: "waste_bin", icon: "bin" },
-] as const;
-
 const severityDefinitions = [
   { value: "low", color: "#37a85a" },
   { value: "medium", color: "#efa51b" },
   { value: "high", color: "#e64a46" },
 ] as const;
-
-type IconName = typeof categoryDefinitions[number]["icon"];
-
-function CategoryIcon({ name }: { name: IconName }) {
-  const paths: Record<IconName, ReactNode> = {
-    shelter: <><path d="M4 19V8l8-4 8 4v11" /><path d="M7 19v-8h10v8M9 14h6" /></>,
-    seat: <><path d="M6 5v8h11V8M6 10h11M8 13v6M17 13v6" /></>,
-    walk: <><circle cx="12" cy="4.5" r="2" /><path d="m10 9 3-2 2.5 3M12.5 8.2l-1 5.3-4 5M11.5 13.5l4.5 5" /></>,
-    crossing: <><path d="M4 18h16M6 14h3M11 14h3M16 14h2M5 10h3M10 10h3M15 10h4M4 6h16" /></>,
-    information: <><circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7.5v.5" /></>,
-    light: <><path d="M9 18h6M10 21h4M8.5 14.5A6 6 0 1 1 15.5 14.5L14 17h-4Z" /></>,
-    accessible: <><circle cx="11" cy="4" r="2" /><path d="M10 7.5 9 13h6l3 6M10 10h5l2 3M9.5 12.5a5 5 0 1 0 5.5 6" /></>,
-    sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>,
-    bike: <><circle cx="6" cy="17" r="4" /><circle cx="18" cy="17" r="4" /><path d="m6 17 4-8 4 8M8 13h8l-3-6h3M9 7h3" /></>,
-    bin: <><path d="M5 7h14M9 7V4h6v3M7 7l1 14h8l1-14M10 11v6M14 11v6" /></>,
-  };
-  return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>;
-}
 
 function SubmitButton({ disabled, pending, copy }: { disabled: boolean; pending: boolean; copy: FeedbackFormCopy }) {
   return (
@@ -77,15 +48,20 @@ function SubmitButton({ disabled, pending, copy }: { disabled: boolean; pending:
   );
 }
 
-export function FeedbackForm({ pointId, stopName, stopLocation, transportType, language: requestedLanguage }: { pointId: string; transportType: TransportType; stopName: string; stopLocation: string; language?: string }) {
+export function FeedbackForm({ placeId, pointId, stopName, stopLocation, transportType, language: requestedLanguage, configuration }: { configuration: FeedbackFormConfig; placeId: string; pointId: string; transportType: TransportType; stopName: string; stopLocation: string; language?: string }) {
   const router = useRouter();
+  const [changingPoint, startPointChange] = useTransition();
   const { language: siteLanguage, setLanguage } = useLanguage();
   const language: Language = requestedLanguage === "de" || requestedLanguage === "it" || requestedLanguage === "en" ? requestedLanguage : siteLanguage;
   useEffect(() => {
     if (requestedLanguage === "de" || requestedLanguage === "it" || requestedLanguage === "en") setLanguage(requestedLanguage);
   }, [requestedLanguage, setLanguage]);
   const copy = feedbackFormCopy[language];
-  const categories = categoryDefinitions.map(item => ({ ...item, label: copy[item.slug] }));
+  const [config,setConfig] = useState(configuration);
+  const categories = config.categories.filter(item=>item.is_active).map(item=>({...item,label:feedbackCategoryLabel(item,language)}));
+  const photoLimit = (config.max_photo_bytes/1024/1024).toLocaleString(language);
+  const photoTypes = copy.photoTypes.replace("10",photoLimit);
+  const photoErrorMessage = copy.photoError.replace("10",photoLimit);
   const severity = severityDefinitions.map(item => ({ ...item, label: copy[item.value] }));
   const [step, setStep] = useState(1);
   const wizardRef = useRef<HTMLFormElement>(null);
@@ -104,8 +80,9 @@ export function FeedbackForm({ pointId, stopName, stopLocation, transportType, l
   const [contact, setContact] = useState(false);
   const [email, setEmail] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
+  const photoInput = useRef<HTMLInputElement>(null);
   const [photoError, setPhotoError] = useState<"photoError" | null>(null);
-  const [submitError, setSubmitError] = useState<"categoryError" | "emailError" | "photoError" | "sendError" | null>(null);
+  const [submitError, setSubmitError] = useState<"categoryError" | "emailError" | "photoError" | "sendError" | "configurationChanged" | null>(null);
   const [showCategoryError, setShowCategoryError] = useState(false);
   const [showEmailError, setShowEmailError] = useState(false);
   const [pending, setPending] = useState(false);
@@ -138,8 +115,9 @@ export function FeedbackForm({ pointId, stopName, stopLocation, transportType, l
   }
 
   function selectPhoto(file: File | null) {
-    if (file && (!photoExtensions.has(file.type) || file.size > MAX_PHOTO_BYTES)) {
+    if (file && (!validFeedbackPhoto(file,config))) {
       setPhoto(null);
+      if (photoInput.current) photoInput.current.value = "";
       setPhotoError("photoError");
       return;
     }
@@ -149,7 +127,7 @@ export function FeedbackForm({ pointId, stopName, stopLocation, transportType, l
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (submissionStarted.current || pending) return;
+    if (submissionStarted.current || pending || changingPoint) return;
 
     if (!pointId || selected.length === 0) {
       setShowCategoryError(true);
@@ -163,7 +141,7 @@ export function FeedbackForm({ pointId, stopName, stopLocation, transportType, l
       setSubmitError("emailError");
       return;
     }
-    if (photo && (!photoExtensions.has(photo.type) || photo.size > MAX_PHOTO_BYTES)) {
+    if (photo && (!validFeedbackPhoto(photo,config))) {
       setSubmitError("photoError");
       return;
     }
@@ -171,9 +149,29 @@ export function FeedbackForm({ pointId, stopName, stopLocation, transportType, l
     submissionStarted.current = true;
     setPending(true);
     setSubmitError(null);
+    let submitted = false;
 
     try {
       const { url, publishableKey } = getSupabaseConfig();
+      const configResponse = await publicRequest(`${url}/rest/v1/rpc/get_feedback_form_config`,publishableKey,{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"});
+      if(!configResponse.ok) throw new Error("config");
+      const fresh = parseFeedbackFormConfig(await configResponse.json());
+      setConfig(fresh);
+      const allowed=new Set(fresh.categories.filter(c=>c.is_active).map(c=>c.slug));
+      if(selected.some(slug=>!allowed.has(slug)) || (photo&&!validFeedbackPhoto(photo,fresh))){
+        setSelected(current=>current.filter(slug=>allowed.has(slug)));
+        if(photo&&!validFeedbackPhoto(photo,fresh)) {
+          setPhoto(null);
+          if(photoInput.current)photoInput.current.value="";
+        }
+        setStep(selected.some(slug=>!allowed.has(slug))?1:2);
+        setSubmitError("configurationChanged");
+        return;
+      }
+
+      // The report ID is public; an independent capability authorizes its one photo.
+      const uploadToken = photo ? crypto.randomUUID() : null;
+      const extension = photo ? photoExtensions.get(photo.type) : null;
       const reportResponse = await publicRequest(`${url}/rest/v1/rpc/create_stop_point_feedback`, publishableKey, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -185,6 +183,8 @@ export function FeedbackForm({ pointId, stopName, stopLocation, transportType, l
           p_email: contact ? email.trim() : null,
           p_consent_to_contact: contact,
           p_language: language,
+          p_upload_token: uploadToken,
+          p_photo_extension: extension,
         }),
       });
       if (!reportResponse.ok) throw new Error("report");
@@ -194,8 +194,7 @@ export function FeedbackForm({ pointId, stopName, stopLocation, transportType, l
       let photoUploadFailed = false;
       if (photo) {
         try {
-          const extension = photoExtensions.get(photo.type);
-          const path = `${feedbackId}/${crypto.randomUUID()}.${extension}`;
+          const path = `${feedbackId}/${uploadToken}.${extension}`;
           const uploadResponse = await publicRequest(`${url}/storage/v1/object/feedback-photos/${path}`, publishableKey, {
             method: "POST",
             headers: { "Content-Type": photo.type, "x-upsert": "false" },
@@ -220,11 +219,15 @@ export function FeedbackForm({ pointId, stopName, stopLocation, transportType, l
       handoff.set("sev", level);
       if (description.trim()) handoff.set("msg", description.trim().slice(0, 500));
       if (photoUploadFailed) handoff.set("photo", "failed");
+      submitted = true;
       router.push(`/feedback/thanks?${handoff.toString()}`);
     } catch {
-      submissionStarted.current = false;
-      setPending(false);
       setSubmitError("sendError");
+    } finally {
+      if (!submitted) {
+        submissionStarted.current = false;
+        setPending(false);
+      }
     }
   }
 
@@ -246,9 +249,18 @@ export function FeedbackForm({ pointId, stopName, stopLocation, transportType, l
           }} />
           <Link className="feedback-close" href="/" aria-label={copy.close}><Image src="/icons/close.svg" width={12} height={12} alt="" aria-hidden="true" /></Link>
         </div>
+        <FeedbackPointMap placeId={placeId} selectedId={pointId} language={language}
+          disabled={pending || changingPoint} onSelect={id => {
+            if (submissionStarted.current || pending || changingPoint || id === pointId) return;
+            const url = new URL(window.location.href);
+            url.searchParams.set("point", id);
+            url.searchParams.set("lang", language);
+            startPointChange(() => router.replace(`${url.pathname}${url.search}${url.hash}`, { scroll: false }));
+          }} />
         <p className="heading-required"><span>*</span> {copy.required}</p>
       </header>
 
+      {submitError === "configurationChanged" ? <p className="form-error" role="alert">{copy.configurationChanged}</p> : null}
       <form ref={wizardRef} className="feedback-wizard" onSubmit={handleSubmit} noValidate>
         <input type="hidden" name="point_id" value={pointId} />
         <input type="hidden" name="stop_name" value={stopName} />
@@ -261,7 +273,7 @@ export function FeedbackForm({ pointId, stopName, stopLocation, transportType, l
           <div className="category-list">
             {categories.map((item) => <label key={item.slug} className={selected.includes(item.slug) ? "checked" : ""}>
               <input type="checkbox" name="categories" value={item.slug} checked={selected.includes(item.slug)} onChange={() => toggleCategory(item.slug)} />
-              <i><CategoryIcon name={item.icon} /></i><span>{item.label}</span>
+              <i><FeedbackCategoryIcon slug={item.slug} icon={item.icon} /></i><span>{item.label}</span>
             </label>)}
           </div>
           {showCategoryError && <p id="category-error" className="field-error" role="alert">{copy.categoryError}</p>}
@@ -281,15 +293,18 @@ export function FeedbackForm({ pointId, stopName, stopLocation, transportType, l
           <label className="field-label" htmlFor="description">{copy.description}</label>
           <textarea id="description" name="description" maxLength={500} rows={5} value={description} onChange={(event) => setDescription(event.target.value)} />
           <span className="character-count">{description.length} / 500</span>
+          {config.photos_enabled ? <>
           <label className="field-label" htmlFor="photo">{copy.addPhoto} <em>{copy.optional}</em></label>
           <label className="photo-upload" htmlFor="photo">
-            <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => selectPhoto(event.target.files?.[0] ?? null)} />
-            {preview ? <Image src={preview} width={240} height={135} unoptimized alt={copy.photoPreview} /> : <><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M7 18H5a4 4 0 0 1-.4-8A7 7 0 0 1 18 8a5 5 0 0 1 1 9.9H17" /><path d="m9 13 3-3 3 3M12 10v10" /></svg><span><b>{copy.photoDrop}</b><small>{copy.photoTypes}</small></span></>}
+            <input ref={photoInput} id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => selectPhoto(event.target.files?.[0] ?? null)} />
+            {preview ? <Image src={preview} width={240} height={135} unoptimized alt={copy.photoPreview} /> : <><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M7 18H5a4 4 0 0 1-.4-8A7 7 0 0 1 18 8a5 5 0 0 1 1 9.9H17" /><path d="m9 13 3-3 3 3M12 10v10" /></svg><span><b>{copy.photoDrop}</b><small>{photoTypes}</small></span></>}
           </label>
-          {photoError && <p className="form-error" role="alert">{copy[photoError]}</p>}
+          {photoError && <p className="form-error" role="alert">{photoErrorMessage}</p>}
+          {photo ? <button type="button" onClick={()=>{setPhoto(null);if(photoInput.current)photoInput.current.value="";}}>{copy.removePhoto}</button> : null}
+          </> : null}
           <label className="contact-toggle"><span>{copy.contactToggle} <em>{copy.optional}</em></span><input type="checkbox" name="consent_to_contact" checked={contact} onChange={(event) => { setContact(event.target.checked); setShowEmailError(false); }} /></label>
           {contact && <div className={`email-field ${showEmailError ? "field-invalid" : ""}`}><label className="field-label" htmlFor="email">{copy.email} <b className="required-mark" aria-label={copy.required}>*</b></label><input id="email" name="email" type="email" maxLength={320} required aria-invalid={showEmailError} aria-describedby={showEmailError ? "email-error" : undefined} value={email} onChange={(event) => { setEmail(event.target.value); setShowEmailError(false); }} />{showEmailError && <p id="email-error" className="field-error" role="alert">{copy.emailError}</p>}</div>}
-          <p className="privacy-note"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 3 4 6v5c0 5 3.3 8.5 8 10 4.7-1.5 8-5 8-10V6Z" /></svg><span>{copy.privacy} <Link href="/about">{copy.privacyLink}</Link></span></p>
+          <p className="privacy-note"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 3 4 6v5c0 5 3.3 8.5 8 10 4.7-1.5 8-5 8-10V6Z" /></svg><span>{copy.privacy} <a href="https://www.suedtirolmobil.info/de/service-und-kontakt/privacy">{copy.privacyLink}</a></span></p>
           <p className="required-note"><span>*</span> {copy.required}</p>
           <div className="mobile-actions"><button type="button" onClick={() => setStep(1)}>{copy.back}</button><button type="button" onClick={goToReview}>{copy.next}</button></div>
         </fieldset>
@@ -299,20 +314,20 @@ export function FeedbackForm({ pointId, stopName, stopLocation, transportType, l
           <p>{copy.reviewIntro}</p>
           <div className="review-card">
             <h3>{copy.selectedCategories}</h3>
-            {activeCategories.length ? activeCategories.map((item) => <div className="review-category" key={item.slug}><i><CategoryIcon name={item.icon} /></i>{item.label}</div>) : <p className="review-empty">{copy.noCategory}</p>}
+            {activeCategories.length ? activeCategories.map((item) => <div className="review-category" key={item.slug}><i><FeedbackCategoryIcon slug={item.slug} icon={item.icon} /></i>{item.label}</div>) : <p className="review-empty">{copy.noCategory}</p>}
             <h3>{copy.severity}</h3><p><b className={`severity-dot ${level}`} />{severity.find((item) => item.value === level)?.label}</p>
             <h3>{copy.yourDescription}</h3><p>{description || copy.noDescription}</p>
-            {preview && <><h3>{copy.photo}</h3><Image className="review-photo" src={preview} width={88} height={60} unoptimized alt={copy.selectedPhoto} /></>}
+            {preview && config.photos_enabled && <><h3>{copy.photo}</h3><Image className="review-photo" src={preview} width={88} height={60} unoptimized alt={copy.selectedPhoto} /></>}
             <h3>{copy.contact}</h3><p>{contact ? <>{copy.contactYes}<br />{email}</> : copy.contactNo}</p>
           </div>
           <aside><span>i</span><p>{copy.thanksHint}</p></aside>
-          {submitError && <p className="form-error" role="alert">{copy[submitError]}</p>}
-          <div className="submit-actions"><button type="button" disabled={pending} onClick={() => setStep(2)}>{copy.back}</button><SubmitButton disabled={!pointId} pending={pending} copy={copy} /></div>
+          {submitError && submitError !== "configurationChanged" && <p className="form-error" role="alert">{submitError === "photoError" ? photoErrorMessage : copy[submitError]}</p>}
+          <div className="submit-actions"><button type="button" disabled={pending} onClick={() => setStep(2)}>{copy.back}</button><SubmitButton disabled={!pointId || changingPoint} pending={pending} copy={copy} /></div>
         </fieldset>
       </form>
       <footer className="feedback-dialog-footer">
         <span><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M12 3 4 6v5c0 5 3.3 8.5 8 10 4.7-1.5 8-5 8-10V6Z" /><path d="m9 12 2 2 4-4" /></svg> {copy.tagline}</span>
-        <span>{copy.questions} <Link href="/about">{copy.customerService}</Link></span>
+        <span>{copy.questions} <a href="https://www.suedtirolmobil.info/de/service-und-kontakt">{copy.customerService}</a></span>
       </footer>
     </section>
   );

@@ -6,6 +6,10 @@ Two independent Next.js applications backed by the same hosted Supabase Cloud pr
 - `protected/` — internal administration portal on port 3001
 - `supabase/` — versioned database assets (migrations are planned for Phase 2)
 
+## Security
+
+See [the security review and deployment checklist](docs/security/REVIEW.md) before deploying the hardened applications. The staff/photo-access migration must be applied first; production anti-abuse controls and capacity validation remain required.
+
 ## Requirements
 
 - Node.js 20 or newer
@@ -55,9 +59,27 @@ Or start them independently with `npm run dev:client` and `npm run dev:protected
 | Public client | http://localhost:3000 |
 | Protected portal | http://localhost:3001 |
 
+The authenticated portal opens the feedback inbox at `/`. CSV/EFA imports are at `/stops`. Stop creation, the searchable database, archived stops, and stop/stop-point editing are together at `/database`. Selecting a result keeps its search and page numbers in the URL while opening the editor beside the list (below it on smaller screens). Saves report success or errors inline without redirecting or clearing fields, including unsaved changes in the other editor. Creating a stop selects the new record so the next save updates it. Archive/restore preserve the list context; old `/stops?stop=<id>` links redirect to the database editor. All three routes enforce staff authorization and load only the data for their section.
+
+## User management
+
+Only Auth user `bdee91d9-c969-4bd4-b336-8f7e780ead3e` can use `/users` to create accounts, change email/password, assign independent import/database/feedback permissions and deactivate portal access. Feedback access is off by default for new accounts. Apply the new migration and configure the protected app's private server key before enabling account creation; see [deployment and permission details](docs/security/USER_MANAGEMENT.md).
+
+## Missing municipality names
+
+At the bottom of **Datenbank verwalten**, filter missing municipalities or fill them from EFA stop IDs/municipality codes and the official bilingual ANPR reference. Existing translations are preserved; frazioni resolve to their comune. Apply the new municipality migration first. See [sources, safeguards and deployment](docs/features/MUNICIPALITY_BACKFILL.md).
+
 ## Checks
 
 Run `npm run lint`, `npm run typecheck`, and `npm run build` from the repository root.
+
+The editing browser regression runs Next.js against a synthetic local Supabase fixture; it never writes to the hosted project. With Playwright available to Node and Chromium installed, run:
+
+```bash
+CHROMIUM_PATH=/usr/bin/chromium node protected/scripts/database-editing.e2e.mjs
+```
+
+It checks create/edit, search and pagination retention, unsaved fields, failure/retry, archive confirmation/restore, legacy links, mobile scrolling, and denied non-staff access. Stop development servers before running a production build because they share `.next` outputs.
 
 The public map API pages through all published, unarchived stops using a stable
 ID order, so Supabase's response row limit cannot truncate the map. Only the
@@ -334,3 +356,137 @@ node --test shared/municipality.test.mjs protected/scripts/portal-pagination.tes
 supabase/tests/run-stop-point-feedback.sh
 supabase/tests/run-feedback-test-results.sh
 ```
+
+### Feedback form management
+
+Apply `supabase/migrations/20261111120000_manage_feedback_form.sql` in the
+Supabase SQL Editor **before deploying both apps from the same branch**.
+It depends on the preceding migrations. No existing report or photo is deleted;
+photos initially remain enabled with the existing 10 MiB limit. No new
+credentials or storage buckets are needed.
+
+The designated owner (`bdee91d9-c969-4bd4-b336-8f7e780ead3e`) gets **Feedback
+verwalten / Configura feedback / Manage feedback** at `/feedback-settings`.
+The owner and users explicitly granted **Manage feedback** can:
+
+- Enable/disable photo uploads and choose a maximum size of 1–10 MiB. Both the
+  public form and the backend enforce the current policy. JPEG, PNG and WebP are
+  allowed; existing photos remain readable to authorized feedback staff.
+- Add/edit categories with required German, Italian and English labels, change
+  their order, and deactivate/reactivate them. Keys are permanent. Deactivation
+  removes a category from new submissions without breaking historical reports.
+  At least one category must remain active; there are at most 30 active and 50
+  total definitions, including retired ones. Category labels, including retired
+  labels, remain public for anonymous discussion history; they are not drafts.
+- Assign or remove an SVG icon. Source files are limited to 16 KiB, basic paths
+  and shapes, 64 shapes/groups and eight nesting levels. Colours are normalized
+  to `currentColor` and the viewBox fits the same 24px icon layout. Scripts,
+  event handlers, CSS, text, HTML, images, external references, filters,
+  animation and DTD/entities are rejected. Only validated shape JSON is saved
+  and rendered, never raw SVG markup or a publicly served uploaded SVG file.
+  Categories without an upload use an existing built-in icon or a neutral
+  information icon.
+
+Access is checked by the route, every Server Action, and the database RPCs.
+The owner grants **Manage feedback** independently in User Management; it is
+off by default. Stop, database and inbox permissions do not imply configuration
+access. Feedback management does not grant access to private reports or user
+management. Revocation and account deactivation apply to existing sessions. Configuration changes are serialized and audited without passwords,
+report contents or SVG source. Public configuration reads expose only the
+settings and category definitions.
+
+The form rechecks configuration before sending. If a selected category has been
+retired or an attached photo no longer meets policy, it retains the rest of the
+form and asks the passenger to review and send again. Database checks also reject
+outdated direct API calls. A policy change during the subsequent photo upload
+can reject that photo; the saved report is retained and the acknowledgement
+shows the existing upload warning. Submission-time test snapshots keep their
+original category labels; portal/public history and acknowledgement text use
+current configured labels.
+
+Local verification (never writes to the hosted database):
+
+```sh
+node --test protected/scripts/*.test.mjs shared/*.test.mjs client/scripts/*.test.mjs
+supabase/tests/run-security-boundaries.sh
+DOCKER_HOST=unix:///var/run/docker.sock supabase/tests/run-stop-point-feedback.sh
+DOCKER_HOST=unix:///var/run/docker.sock supabase/tests/run-feedback-test-results.sh
+CHROMIUM_PATH=/usr/bin/chromium node protected/scripts/database-editing.e2e.mjs
+CHROMIUM_PATH=/usr/bin/chromium node client/scripts/feedback-settings.e2e.mjs
+npm --prefix client run build
+npm --prefix protected run build
+```
+
+The PostgreSQL tests check Storage bucket limits and registration metadata; they
+do not emulate Supabase Storage's HTTP size enforcement. The public browser test
+uses an HTTP fixture and bypasses CSP in that test browser only; application CSP
+remains unchanged. Verify an actual upload on a preview after applying the
+migration, including a file just above the chosen size limit.
+
+
+### Visual category ordering and delegated feedback management
+
+Apply `supabase/migrations/20261111143000_feedback_order_and_permissions.sql`
+**after** `20261111120000_manage_feedback_form.sql` and **before deploying the
+updated protected app**. Existing members receive no new permission by default.
+Only the fixed owner can grant **Manage feedback** through User Management,
+when creating an account or editing an existing account. It can be the user's
+only section. The owner retains all rights, including exclusive user management.
+The earlier five-argument permissions RPC is retained for older deployments and
+preserves the new permission rather than silently clearing it.
+
+Numeric category-position fields are replaced by **Adjust order**. Its popup
+uses the existing colours, typography and rounded controls. Users can drag by a
+handle with a mouse/touch, use up/down buttons, or use arrow keys, Home and End
+on the handle. Disabled categories are labelled and included so their position
+is defined when reactivated. New categories append automatically; ordinary
+label/icon edits preserve the latest saved order.
+
+- **Save** writes the whole order in one transaction and closes the popup.
+- **Reset** restores the order from when the popup opened, without a write.
+- The top-right **X**, Escape and clicking the backdrop discard unsaved moves.
+- If another person saves an order or adds a category meanwhile, the save is
+  rejected. Reopening loads the current order. Saving locks configuration edits
+  briefly, validates a complete permutation, and records one audit event.
+
+The SVG guidelines appear above the category creation and editing sections.
+They describe the enforced 16 KiB source limit, 64 shapes/groups, eight nesting
+levels, proportional 24px monochrome display, and unsupported active/external
+content. The upload sanitizer and database icon checks remain in effect for
+users with delegated access.
+
+`supabase/tests/run-security-boundaries.sh` includes permission isolation,
+self-escalation and revocation checks, invalid/stale reorder rejection, and
+preservation of order when editing categories. The portal browser suite covers
+mouse/touch/keyboard movement, Reset/X/Escape, saving, concurrent changes, mobile
+layout, unsaved-field retention and granting/revoking the new permission.
+
+### Reply permission under Feedback
+
+Apply `supabase/migrations/20261111160000_feedback_reply_permission.sql` after
+all preceding migrations, before deploying the updated protected app. User
+Management now nests **Reply to feedback** beneath the inbox permission.
+Only the owner may grant it; new accounts default to no reply access. Removing
+inbox access clears the reply permission, and deactivation overrides both.
+The owner retains reply access. The formerly designated responder retains it
+where an existing membership already permits inbox access.
+
+Reply controls and Server Actions query the current database permission; the
+reply RPC enforces the same requirement. Existing replies remain visible to
+inbox readers and remain published when a responder loses access. Legacy
+permission-update RPCs preserve the child grant while retaining inbox access
+and clear it when removing that parent. No additional private key is needed.
+
+### Change your own password
+
+Every active portal account can open `/account/password` through the header's
+password icon, the mobile menu or the footer, without User Management access.
+The page follows the portal design and supports German, Italian and English.
+It requires the current password, a different new password (12–1024 characters)
+and confirmation. A separate non-persistent Supabase Auth client verifies the
+current password and matching user ID, then discards its temporary session.
+The existing signed-in client updates only its own password. No Auth Admin key,
+user-ID form parameter, migration or email recovery redirect is used. All
+password inputs are cleared after an attempt; errors never echo credentials.
+This is a signed-in password-change flow; forgotten-password assistance remains
+available through the account owner.

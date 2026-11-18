@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { getFeedbackConfig } from "@/lib/feedback-config";
+import { feedbackCategoryLabel } from "../../../../../shared/feedback-form-config";
 import { CopySummary } from "../copy-summary";
 import type { Language } from "@/lib/i18n";
 import { buildFeedbackFormUrl, composeSummary } from "@/lib/feedback-handoff";
@@ -66,7 +68,9 @@ export default async function ThanksPage({
         description: params.msg ?? "",
       }
     : null;
-  const summary = handoff ? composeSummary(handoff, language) : "";
+  let categoryLabels:Record<string,string>={};
+  try { categoryLabels=Object.fromEntries((await getFeedbackConfig()).categories.map(c=>[c.slug,feedbackCategoryLabel(c,language)])); } catch { /* A saved report still gets its acknowledgement if config reads fail. */ }
+  const summary = handoff ? composeSummary(handoff, language, categoryLabels) : "";
 
   return (
     <main className="feedback-page">
@@ -78,7 +82,7 @@ export default async function ThanksPage({
         {params.photo === "failed" ? <p className="form-error" role="status">{t.photoWarning}</p> : null}
         <p>
           {t.contactBefore}
-          <a href={buildFeedbackFormUrl(handoff, language)} target="_blank" rel="noreferrer">{t.contactLink}</a>
+          <a href={buildFeedbackFormUrl(handoff, language, categoryLabels)} target="_blank" rel="noreferrer">{t.contactLink}</a>
           {t.contactAfter}
         </p>
 
