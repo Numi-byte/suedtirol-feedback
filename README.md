@@ -549,3 +549,14 @@ return an error rather than truncating. Prepared chunks are streamed to avoid
 Vercel's buffered-response size limit. Concurrent data edits can be reflected
 between read pages; this is not a transactionally frozen snapshot. No migration
 is required.
+
+## Isolated feedback environments and campaigns
+
+Feedback Management now includes environment-bound dataset/form versions, test
+campaigns, evaluation exports with separate exclusions, owner-authorized cleanup,
+and production moderation. Activation is staged and requires separate Supabase
+projects and deployment bindings. Existing records are preserved and historical
+evaluation provenance remains unassigned. See the [rollout and preservation
+guide](docs/features/feedback-environments.md) before applying the new migrations
+or initializing an environment. No hosted infrastructure or scheduler is
+configured automatically.

@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getPortalAccess } from "@/lib/portal-access";
 import { stopSearchFilter } from "@/lib/portal-pagination";
 import { csvLine, flattenExport } from "@/lib/csv-export";
+import { getFeedbackEnvironmentHeaders } from "@/lib/supabase/config";
+import { feedbackUuid } from "../../../../shared/feedback-environment";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 const parent =
@@ -37,6 +39,13 @@ export async function GET(request: Request) {
         { error: "Section access required." },
         { status: 403, headers },
       );
+    const boundEnvironment = getFeedbackEnvironmentHeaders()["x-feedback-environment"];
+    const selectedEnvironment = url.searchParams.get("environment");
+    if (selectedEnvironment && selectedEnvironment !== boundEnvironment)
+      return NextResponse.json({ error: "Environment does not match this deployment." }, { status: 403, headers });
+    const campaign = url.searchParams.get("campaign");
+    if (campaign && !feedbackUuid.test(campaign))
+      return NextResponse.json({ error: "Invalid campaign." }, { status: 400, headers });
     const place = url.searchParams.get("place");
     if (
       place &&
@@ -103,6 +112,7 @@ export async function GET(request: Request) {
         query = query.not("feedback_replies", "is", null);
       if (table === "feedback" && reply === "unreplied")
         query = query.is("feedback_replies", null);
+      if (table === "feedback" && campaign) query = query.eq("campaign_id", campaign);
       if (cursor) query = query.gt("id", cursor);
       const result: { data: Record<string, unknown>[] | null; error: unknown } =
         await query.order("id").limit(500).returns<Record<string, unknown>[]>();
@@ -138,6 +148,10 @@ export async function GET(request: Request) {
                 ],
         ),
       );
+    if (boundEnvironment) {
+      const audit = await client.rpc("record_feedback_operational_export", { p_environment: boundEnvironment, p_table: table, p_rows: rows });
+      if (audit.error) throw Error("audit");
+    }
     // All rows are validated before offering a file, so query failures cannot
     // silently turn into a truncated CSV. Stream the prepared chunks on Vercel.
     let chunkIndex = 0;

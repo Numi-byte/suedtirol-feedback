@@ -17,3 +17,7 @@ test('point exports include parent context and stop-place exports preserve every
  assert.equal(flattenExport(raw,'points').place_name_it,'Merano');
  assert.deepEqual(flattenExport(raw,'places'),raw);
 });
+test('operational CSV distinguishes a reply draft from its approved public body',()=>{
+ const row=flattenExport({id:'r',feedback_replies:{body:'New draft',public_body:'Approved reply',public_updated_at:'2026-11-18T10:00:00Z'}},'feedback');
+ assert.equal(row.reply_body,'New draft');assert.equal(row.reply_public_body,'Approved reply');assert.equal(row.reply_public_updated_at,'2026-11-18T10:00:00Z');
+});

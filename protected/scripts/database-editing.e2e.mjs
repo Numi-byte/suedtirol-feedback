@@ -39,12 +39,20 @@ let exportFailure=false;
 let staff = true;
 let currentUserId = userId;
 const serverAdminKey = 'synthetic-server-admin-key-not-for-browser';
+const cleanupSecret='synthetic-cron-secret-for-local-testing-only';
+let workerScenario='none',workerClaimed=false,workerPhotosDeleted=false;const workerCalls=[];
 const accounts = [{ user_id:userId,email:'staff@example.test',is_active:true,can_manage_stops:true,can_manage_database:true,can_view_feedback:true,is_owner:true }];
 const formConfig={photos_enabled:true,max_photo_bytes:10485760,categories:[{slug:'seating',label_de:'Sitzplatz fehlt',label_it:'Mancano posti a sedere',label_en:'Seating is missing',is_active:true,sort_order:1,icon:null}]};
 const configWrites=[];
 const passwordUpdates=[];
 const authAdminCalls = [];
 const managementEvents = [];
+const environmentId=idFor(9000);
+const runtime={environment_id:environmentId,kind:'unconfigured',label:'Local fixture',project_ref:'local-fixture',campaign_id:null,campaign_name:null,dataset_version_id:null,form_version_id:null,accepting_submissions:true};
+const datasetVersions=[];const campaignVersions=[];const campaignWrites=[];const evaluationExports=[];
+let evaluationFailure=false;
+const moderationWrites=[];const moderationOverrides=new Map();
+const evaluationRows=Array.from({length:5},(_,i)=>({feedback_id:idFor(10000+i),campaign_id:null,environment_id:null,dataset_version_id:null,form_version_id:null,submitted_at:'2026-11-18T10:00:00Z',stop_place_name_de:'Test Ort',stop_point_name_de:'Test Nord',category_labels_de:['Sitzplatz fehlt'],severity:'low',feedback_evaluation_exclusions:null}));
 function accessForCurrentUser() {
   if (!staff) return { feedback:false,stops:false,database:false,users:false,feedbackSettings:false };
   if (currentUserId === userId) return { feedback:true,stops:true,database:true,users:true,feedbackSettings:true };
@@ -78,6 +86,47 @@ const fixture = createServer(async (req, res) => {
       passwordUpdates.push(currentUserId);return reply({...user,id:currentUserId});
     }
     if(url.pathname==='/rest/v1/rpc/get_feedback_form_config') return reply(formConfig);
+    if(url.pathname==='/rest/v1/rpc/get_feedback_runtime_context')return reply(runtime);
+    if(url.pathname==='/rest/v1/rpc/can_reply_to_feedback')return reply(accessForCurrentUser().feedback&&(currentUserId===userId||accounts.find(x=>x.user_id===currentUserId)?.can_reply_feedback));
+    if(url.pathname==='/rest/v1/rpc/moderate_feedback'){
+      assert.equal(body.p_environment,environmentId);assert.equal(req.headers['x-feedback-environment'],environmentId);
+      if(!accessForCurrentUser().feedback||(runtime.kind==='production'&&body.p_visibility==='published'&&currentUserId!==userId))return reply({message:'Owner publication required',code:'42501'},403);
+      moderationWrites.push(body);const previous=moderationOverrides.get(body.p_feedback)??{};
+      moderationOverrides.set(body.p_feedback,{...previous,status:body.p_status,resolution_notes:body.p_notes,public_visibility:body.p_visibility??previous.public_visibility??'pending'});return reply(null);
+    }
+    if(url.pathname==='/rest/v1/rpc/record_feedback_operational_export')return reply(null);
+    if(url.pathname==='/rest/v1/rpc/record_feedback_dataset_export')return reply(null);
+    if(['/rest/v1/rpc/claim_feedback_cleanup','/rest/v1/rpc/list_feedback_cleanup_photos','/rest/v1/rpc/complete_feedback_cleanup','/rest/v1/rpc/fail_feedback_cleanup'].includes(url.pathname)){
+      assert.equal(req.headers.apikey,serverAdminKey);assert.equal(req.headers['x-feedback-environment'],environmentId);assert.equal(body.p_environment,environmentId);workerCalls.push(url.pathname);
+      if(url.pathname.endsWith('claim_feedback_cleanup')){if(workerScenario==='none'||workerClaimed)return reply(null);workerClaimed=true;return reply({id:idFor(12000),lease_token:idFor(12001),blocked:workerScenario==='blocked',waiting:workerScenario==='waiting'});}
+      assert.equal(body.p_job,idFor(12000));assert.equal(body.p_token,idFor(12001));
+      if(url.pathname.endsWith('list_feedback_cleanup_photos'))return reply(workerPhotosDeleted?[]:[{name:`${idFor(12002)}/${idFor(12003)}.jpg`}]);
+      if(url.pathname.endsWith('complete_feedback_cleanup')){assert.ok(workerPhotosDeleted);return reply(1);}
+      return reply(null);
+    }
+    if(url.pathname==='/storage/v1/object/feedback-photos'&&req.method==='DELETE'){
+      assert.equal(req.headers.apikey,serverAdminKey);assert.deepEqual(body.prefixes,[`${idFor(12002)}/${idFor(12003)}.jpg`]);workerCalls.push('storage.remove');
+      if(workerScenario==='storage_failure')return reply({message:'Synthetic Storage outage',statusCode:'503'},503);
+      workerPhotosDeleted=true;return reply([]);
+    }
+    if(url.pathname==='/rest/v1/rpc/begin_feedback_evaluation_export'){
+      const receipt={id:idFor(11000+evaluationExports.length),result_count:5,status:'pending'};evaluationExports.push(receipt);return reply(receipt);
+    }
+    if(url.pathname==='/rest/v1/rpc/finish_feedback_evaluation_export'){
+      const receipt=evaluationExports.find(x=>x.id===body.p_export);assert.ok(receipt);receipt.status=body.p_success?'completed':'failed';return reply(!!body.p_success);
+    }
+    if(['/rest/v1/rpc/snapshot_feedback_stop_dataset','/rest/v1/rpc/create_feedback_campaign','/rest/v1/rpc/transition_feedback_campaign','/rest/v1/rpc/publish_feedback_production','/rest/v1/rpc/set_feedback_evaluation_exclusion'].includes(url.pathname)){
+      assert.equal(req.headers['x-feedback-environment'],environmentId);assert.equal(req.headers['x-feedback-project'],'local-fixture');
+      if(!accessForCurrentUser().feedbackSettings)return reply({message:'Feedback management access required',code:'42501'},403);
+      if(body.p_environment!==environmentId)return reply({message:'Environment mismatch',code:'42501'},403);
+      campaignWrites.push({path:url.pathname,body});
+      if(url.pathname.endsWith('snapshot_feedback_stop_dataset')){const dataset={id:idFor(9100+datasetVersions.length),label:body.p_label,content_hash:'a'.repeat(64),created_at:new Date().toISOString()};datasetVersions.unshift(dataset);return reply(dataset.id);}
+      if(url.pathname.endsWith('create_feedback_campaign')){const c={id:idFor(9200+campaignVersions.length),name:body.p_name,purpose:body.p_purpose,state:'draft',dataset_id:body.p_dataset,form_version_id:idFor(9300),starts_at:body.p_starts_at,ends_at:body.p_ends_at,created_at:new Date().toISOString()};campaignVersions.unshift(c);return reply(c.id);}
+      if(url.pathname.endsWith('transition_feedback_campaign')){const c=campaignVersions.find(x=>x.id===body.p_campaign);assert.ok(c);c.state=body.p_state;Object.assign(runtime,{campaign_id:c.state==='active'?c.id:null,campaign_name:c.state==='active'?c.name:null,dataset_version_id:c.state==='active'?c.dataset_id:null,form_version_id:c.state==='active'?c.form_version_id:null,accepting_submissions:c.state==='active'});return reply(null);}
+      if(url.pathname.endsWith('set_feedback_evaluation_exclusion')){const r=evaluationRows.find(x=>x.feedback_id===body.p_feedback);r.feedback_evaluation_exclusions={excluded:body.p_excluded,reason:body.p_reason};return reply(null);}
+      return reply(null);
+    }
+    if(url.pathname==='/rest/v1/rpc/get_feedback_cleanup_preview')return reply({reports:5,replies:1,photos:0,upload_permissions:0,preserved_results:5,blocker:'The latest required evaluation export is missing, pending or failed'});
     if(['/rest/v1/rpc/set_feedback_photo_settings','/rest/v1/rpc/save_feedback_category','/rest/v1/rpc/reorder_feedback_categories'].includes(url.pathname)) {
       if(!accessForCurrentUser().feedbackSettings) return reply({message:'Feedback management access required',code:'42501'},403);
       if(url.pathname.endsWith('reorder_feedback_categories')) {
@@ -135,6 +184,17 @@ const fixture = createServer(async (req, res) => {
     }
     const eq = key => url.searchParams.get(key)?.startsWith('eq.') ? url.searchParams.get(key).slice(3) : undefined;
     const single = value => req.headers.accept?.includes('vnd.pgrst.object') ? value : [value];
+    if(url.pathname==='/rest/v1/feedback_stop_datasets')return reply(datasetVersions.filter(x=>!eq('id')||x.id===eq('id')));
+    if(url.pathname==='/rest/v1/feedback_dataset_places')return reply(!url.searchParams.get('id')?[{id:idFor(1),data:{id:idFor(1),name_de:'Snapshot place'}}]:[]);
+    if(url.pathname==='/rest/v1/feedback_dataset_points')return reply(!url.searchParams.get('id')?[{id:idFor(2),data:{id:idFor(2),stop_place_id:idFor(1),name_de:'Snapshot point'}}]:[]);
+    if(url.pathname==='/rest/v1/feedback_campaigns')return reply(campaignVersions.filter(x=>!eq('id')||x.id===eq('id')));
+    if(['/rest/v1/feedback_management_audit','/rest/v1/feedback_evaluation_exports','/rest/v1/feedback_cleanup_jobs'].includes(url.pathname))return reply([]);
+    if(url.pathname==='/rest/v1/feedback_test_results'){
+      if(evaluationFailure&&url.searchParams.get('feedback_id')?.startsWith('gt.'))return reply({message:'Synthetic snapshot failure'},503);
+      let rows=evaluationRows.filter(x=>!eq('campaign_id')||x.campaign_id===eq('campaign_id'));
+      if(url.searchParams.get('feedback_id')?.startsWith('gt.'))rows=rows.filter(x=>x.feedback_id>url.searchParams.get('feedback_id').slice(3));
+      return reply(rows.slice(Number(url.searchParams.get('offset')??0),Number(url.searchParams.get('offset')??0)+Math.min(2,Number(url.searchParams.get('limit')??500))),200,rows.length);
+    }
     if (url.pathname === '/rest/v1/bus_stops') {
       if (req.method === 'POST') {
         const record = { ...body, id: idFor(100 + writes.length), archived_at: null };
@@ -176,11 +236,12 @@ const fixture = createServer(async (req, res) => {
       return reply([points.get(place)].filter(x=>!url.searchParams.get('id')||x.id>url.searchParams.get('id').slice(3)), 200, 1);
     }
     if(url.pathname==='/rest/v1/stop_feedback') {
-      let rows=Array.from({length:7},(_,i)=>({id:idFor(3000+i),bus_stop_id:records[0].id,description:'Private report '+i,email:'private@example.test',bus_stops:{name_it:'Bolzano'},stop_points:{name_it:'Nord',point_number:'1'},stop_feedback_categories:[],stop_feedback_photos:[],feedback_replies:i%2?null:{id:idFor(4000+i),body:'Team reply '+i}}));
+      let rows=Array.from({length:7},(_,i)=>({id:idFor(3000+i),bus_stop_id:records[0].id,description:'Private report '+i,email:'private@example.test',language:'de',overall_rating:null,severity:'high',status:'new',public_visibility:'pending',created_at:'2026-01-01T10:00:00Z',resolution_notes:'',bus_stops:{name_it:'Bolzano'},stop_points:{name_it:'Nord',point_number:'1'},stop_feedback_categories:[],stop_feedback_photos:[],feedback_replies:i%2?null:{id:idFor(4000+i),body:'Team reply '+i,created_at:'2026-01-01T10:00:00Z',updated_at:'2026-01-01T10:00:00Z'},...moderationOverrides.get(idFor(3000+i))}));
+      if(url.searchParams.get('status')==='eq.new')rows=rows.filter(x=>x.status==='new');
       if(url.searchParams.get('feedback_replies')==='is.null')rows=rows.filter(x=>!x.feedback_replies);
       if(url.searchParams.get('feedback_replies')==='not.is.null')rows=rows.filter(x=>x.feedback_replies);
       if(url.searchParams.get('id')?.startsWith('gt.'))rows=rows.filter(x=>x.id>url.searchParams.get('id').slice(3));
-      return reply(rows.slice(0,2));
+      return reply(rows.slice(0,2),200,rows.length);
     }
     return reply({ message: `Unexpected fixture path ${url.pathname}` }, 404);
   } catch (error) {
@@ -202,7 +263,7 @@ await writeFile(hookPath,`const original=globalThis.fetch;globalThis.fetch=(inpu
 try {
   app = spawn(process.execPath, [require.resolve('next/dist/bin/next'), 'dev', '--hostname', '127.0.0.1', '--port', String(appPort)], {
     cwd: appDir, detached: true,
-    env: { ...process.env, NODE_ENV: 'development', NEXT_TELEMETRY_DISABLED: '1', NEXT_PUBLIC_SUPABASE_URL: fixtureUrl, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'synthetic-public-key', SUPABASE_SERVICE_ROLE_KEY: serverAdminKey, NODE_OPTIONS: `--require ${hookPath}` },
+    env: { ...process.env, NODE_ENV: 'development', NEXT_TELEMETRY_DISABLED: '1', NEXT_PUBLIC_SUPABASE_URL: fixtureUrl, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'synthetic-public-key', NEXT_PUBLIC_FEEDBACK_ENVIRONMENT_ID:environmentId,NEXT_PUBLIC_FEEDBACK_PROJECT_REF:'local-fixture', SUPABASE_SERVICE_ROLE_KEY: serverAdminKey, CRON_SECRET:cleanupSecret, NODE_OPTIONS: `--require ${hookPath}` },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   for (const stream of [app.stdout, app.stderr]) stream.on('data', chunk => { appLog = (appLog + chunk).slice(-30000); });
@@ -677,6 +738,55 @@ try {
   await delegatedPhoto.getByRole('alert').filter({hasText:'Feedback management access required'}).waitFor();
   assert.equal(configWrites.length,writesBeforeRevocation);
   console.log('PASS: owner grants config-only access through User Management; manager can save but cannot manage users, and revocation blocks an open page');
+  currentUserId=userId;
+  Object.assign(runtime,{kind:'testing',label:'Testing',accepting_submissions:false});
+  await page.goto(`${appUrl}/feedback-settings/environments`);
+  await page.getByRole('heading',{name:'Umgebung',exact:true}).waitFor();
+  const versionButton=page.getByRole('button',{name:'Version speichern',exact:true});await versionButton.click();
+  let campaignDialog=page.locator('dialog[open]');await campaignDialog.locator('[name=label]').fill('Discarded version');
+  await campaignDialog.getByRole('button',{name:'Änderungen verwerfen und schließen'}).click();assert.equal(datasetVersions.length,0);
+  await versionButton.click();campaignDialog=page.locator('dialog[open]');assert.equal(await campaignDialog.locator('[name=label]').inputValue(),'');
+  await campaignDialog.locator('[name=label]').fill('Pilot v1');await campaignDialog.getByRole('button',{name:'Speichern',exact:true}).click();await campaignDialog.getByRole('status').filter({hasText:'Gespeichert.'}).waitFor();await campaignDialog.getByRole('button',{name:'Änderungen verwerfen und schließen'}).click();
+  const datasetDownload=await context.request.get(`${appUrl}/feedback-settings/dataset-export?environment=${environmentId}&dataset=${datasetVersions[0].id}`);assert.equal(datasetDownload.status(),200);const datasetDocument=await datasetDownload.json();assert.equal(datasetDocument.format,'feedback-stop-dataset-v1');assert.equal(datasetDocument.points[0].stop_place_id,datasetDocument.places[0].id);assert.ok(!JSON.stringify(datasetDocument).includes('private@example.test'));
+  await page.getByRole('button',{name:'Kampagne hinzufügen',exact:true}).click();campaignDialog=page.locator('dialog[open]');
+  await campaignDialog.locator('[name=name]').fill('Pilot campaign');await campaignDialog.getByRole('button',{name:'Zurücksetzen',exact:true}).click();assert.equal(await campaignDialog.locator('[name=name]').inputValue(),'');
+  await campaignDialog.locator('[name=name]').fill('Pilot campaign');await campaignDialog.getByRole('button',{name:'Speichern',exact:true}).click();await campaignDialog.getByRole('status').filter({hasText:'Gespeichert.'}).waitFor();await campaignDialog.getByRole('button',{name:'Änderungen verwerfen und schließen'}).click();
+  await page.getByRole('button',{name:'Aktivieren',exact:true}).click();await waitFor(()=>runtime.campaign_id!==null);
+  await page.getByRole('button',{name:'Abschließen',exact:true}).click();await waitFor(()=>runtime.campaign_id===null);
+  assert.ok(await page.getByRole('button',{name:'Bereinigung planen',exact:true}).isDisabled());
+  await page.setViewportSize({width:390,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+  await page.screenshot({path:'/tmp/feedback-campaigns-mobile.png',fullPage:true});await page.setViewportSize({width:1440,height:1000});
+  console.log('PASS: environment-bound dataset/campaign dialogs, cancellation, reset, activation/closure, blocked cleanup and mobile layout');
+  const evaluationUrl=`${appUrl}/feedback-settings/evaluation-export?environment=${environmentId}&campaign=legacy`;
+  const evaluationCsv=await context.request.get(evaluationUrl);assert.equal(evaluationCsv.status(),200);const evaluationText=await evaluationCsv.text();assert.ok(evaluationText.includes(evaluationRows.at(-1).feedback_id));assert.ok(evaluationText.includes('historical_unassigned'));assert.ok(!evaluationText.includes('private@example.test'));assert.match(evaluationCsv.headers()['x-content-sha256'],/^[a-f0-9]{64}$/);
+  evaluationFailure=true;const failedEvaluation=await context.request.get(evaluationUrl);assert.equal(failedEvaluation.status(),503);assert.ok(!failedEvaluation.headers()['content-disposition']);assert.equal(evaluationExports.at(-1).status,'failed');evaluationFailure=false;
+  assert.equal((await context.request.get(`${appUrl}/feedback-settings/evaluation-export?environment=${idFor(9999)}&campaign=legacy`)).status(),403);
+  assert.equal((await context.request.get(`${appUrl}/api/maintenance/feedback-cleanup`)).status(),401);
+  console.log('PASS: evaluation CSV traverses capped pages, preserves unknown provenance, excludes operational text, records failed captures and rejects a different environment');
+  Object.assign(runtime,{kind:'production',label:'Production'});
+  created.can_view_feedback=true;created.can_reply_feedback=true;currentUserId=created.user_id;
+  await page.goto(`${appUrl}/`);const feedbackEntry=page.locator('.feedback-entry').first();await feedbackEntry.waitFor();
+  await feedbackEntry.getByRole('button',{name:'Status & Sichtbarkeit',exact:true}).click();let moderationDialog=page.locator('dialog[open]');
+  assert.equal(await moderationDialog.locator('[name=visibility] option[value=published]').count(),0);
+  await moderationDialog.locator('[name=status]').selectOption('resolved');await moderationDialog.locator('[name=notes]').fill('Verified fix');
+  await moderationDialog.getByRole('button',{name:'Speichern',exact:true}).click();await moderationDialog.getByRole('status').filter({hasText:'Gespeichert.'}).waitFor();
+  assert.equal(moderationWrites.at(-1).p_visibility,null);assert.equal(moderationWrites.at(-1).p_status,'resolved');
+  await moderationDialog.getByRole('button',{name:'Änderungen verwerfen und schließen'}).click();
+  currentUserId=userId;await page.goto(`${appUrl}/`);await page.locator('.feedback-entry').first().getByRole('button',{name:'Status & Sichtbarkeit',exact:true}).click();moderationDialog=page.locator('dialog[open]');
+  await moderationDialog.locator('[name=visibility]').selectOption('published');await moderationDialog.getByRole('button',{name:'Speichern',exact:true}).click();await moderationDialog.getByRole('status').filter({hasText:'Gespeichert.'}).waitFor();assert.equal(moderationWrites.at(-1).p_visibility,'published');
+  await moderationDialog.getByRole('button',{name:'Änderungen verwerfen und schließen'}).click();
+  console.log('PASS: production moderation popup preserves visibility for staff status edits and exposes publication only to the owner');
+  runtime.kind='testing';
+  for(const scenario of ['waiting','blocked','success','storage_failure']){
+    workerScenario=scenario;workerClaimed=false;workerPhotosDeleted=false;workerCalls.length=0;
+    const run=await context.request.get(`${appUrl}/api/maintenance/feedback-cleanup`,{headers:{authorization:`Bearer ${cleanupSecret}`}});
+    assert.equal(run.status(),scenario==='storage_failure'?503:200);
+    if(scenario==='waiting'||scenario==='blocked'){const counts=await run.json();assert.equal(counts[scenario],1);assert.ok(!workerCalls.includes('storage.remove'));}
+    if(scenario==='success'){assert.equal((await run.json()).completed,1);assert.ok(workerCalls.includes('storage.remove'));assert.ok(workerCalls.some(x=>x.endsWith('complete_feedback_cleanup')));}
+    if(scenario==='storage_failure'){assert.ok(workerCalls.some(x=>x.endsWith('fail_feedback_cleanup')));assert.ok(!workerCalls.some(x=>x.endsWith('complete_feedback_cleanup')));}
+  }
+  workerScenario='none';
+  console.log('PASS: authenticated cleanup worker waits for settling, respects blocked jobs, removes Storage before finalizing, and retains results/report cleanup on Storage failure');
   staff = false;
   await page.goto(`${appUrl}/account/password`);
   await page.waitForURL(url=>url.pathname==='/');

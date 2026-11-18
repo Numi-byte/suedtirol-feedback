@@ -11,7 +11,8 @@ import { useLanguage } from "@/components/language-provider";
 import { feedbackFormCopy } from "@/lib/feedback-form-copy";
 import type { FeedbackFormCopy } from "@/lib/feedback-form-copy";
 import type { Language } from "@/lib/i18n";
-import { getSupabaseConfig } from "@/lib/supabase/config";
+import { getSupabaseConfig, getFeedbackEnvironmentHeaders } from "@/lib/supabase/config";
+import { feedbackRuntimeChanged } from "../../../../shared/feedback-environment";
 
 import { FeedbackCategoryIcon } from "@/components/feedback-category-icon";
 import { parseFeedbackFormConfig, feedbackCategoryLabel, validFeedbackPhoto, type FeedbackFormConfig } from "../../../../shared/feedback-form-config";
@@ -27,6 +28,7 @@ async function publicRequest(url: string, publishableKey: string, init: RequestI
     headers: {
       apikey: publishableKey,
       Authorization: `Bearer ${publishableKey}`,
+      ...getFeedbackEnvironmentHeaders(),
       ...init.headers,
     },
     signal: AbortSignal.timeout(timeoutMs),
@@ -157,6 +159,10 @@ export function FeedbackForm({ placeId, pointId, stopName, stopLocation, transpo
       if(!configResponse.ok) throw new Error("config");
       const fresh = parseFeedbackFormConfig(await configResponse.json());
       setConfig(fresh);
+      if (feedbackRuntimeChanged(config.runtime, fresh.runtime) || fresh.runtime?.accepting_submissions === false) {
+        setSubmitError("configurationChanged");
+        return;
+      }
       const allowed=new Set(fresh.categories.filter(c=>c.is_active).map(c=>c.slug));
       if(selected.some(slug=>!allowed.has(slug)) || (photo&&!validFeedbackPhoto(photo,fresh))){
         setSelected(current=>current.filter(slug=>allowed.has(slug)));
@@ -185,6 +191,12 @@ export function FeedbackForm({ placeId, pointId, stopName, stopLocation, transpo
           p_language: language,
           p_upload_token: uploadToken,
           p_photo_extension: extension,
+          ...(fresh.runtime?.kind !== "unconfigured" && fresh.runtime ? {
+            p_environment: fresh.runtime.environment_id,
+            p_campaign: fresh.runtime.campaign_id,
+            p_dataset_version: fresh.runtime.dataset_version_id,
+            p_form_version: fresh.runtime.form_version_id,
+          } : {}),
         }),
       });
       if (!reportResponse.ok) throw new Error("report");

@@ -37,3 +37,12 @@ tail -1 "$test_log"
 
 run_sql "$repo_root/supabase/tests/public-stop-search.sql"
 tail -1 "$test_log"
+
+run_sql "$repo_root/supabase/tests/feedback-environments.sql"
+tail -1 "$test_log"
+
+run_sql "$repo_root/supabase/tests/feedback-production.sql"
+tail -1 "$test_log"
+
+run_sql "$repo_root/supabase/tests/feedback-concurrency-seed.sql"
+bash "$repo_root/supabase/tests/feedback-concurrency.sh" "$test_container"

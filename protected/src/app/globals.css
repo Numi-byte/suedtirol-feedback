@@ -528,3 +528,37 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .csv-download { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 44px; padding: 10px 16px; border: 1px solid var(--line); border-radius: 24px; background: var(--sky); color: var(--blue-800); font-size: 14px; }
 .csv-download:hover { background: var(--line); }
 .point-editor > .csv-download { float: right; margin: 0 0 16px 16px; }
+.feedback-workspace { display: grid; gap: 24px; }
+.management-tabs { margin: 0 0 24px; }
+.feedback-workspace .management-tabs { margin: 0; }
+.management-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 16px; }
+.management-heading h2 { margin: 0; }
+.environment-badge { display: inline-flex; align-items: center; padding: 6px 14px; border: 1px solid var(--line); border-radius: 24px; color: var(--blue-800); background: var(--sky); font-size: 14px; line-height: 1.5; }
+.environment-badge[data-kind="production"] { background: #fff3dc; border-color: #e8c984; color: #705000; }
+.management-id, .runtime-versions code, .campaign-details code { overflow-wrap: anywhere; word-break: break-word; font-size: 12px; }
+.management-id { display: block; margin: 12px 0; }
+.management-notice { margin: 16px 0; padding: 16px 20px; border-radius: 20px; background: var(--sky); color: var(--blue-800); line-height: 1.6; }
+.management-check { display: flex; align-items: flex-start; gap: 12px; line-height: 1.6; }
+.management-check input { flex: 0 0 auto; width: 20px; height: 20px; margin: 3px 0 0; }
+.management-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin: 20px 0; }
+.management-actions .user-management-form { margin: 0; }
+.management-download { display: inline-flex; align-items: center; min-height: 44px; padding: 10px 18px; border: 1px solid var(--line); border-radius: 24px; color: var(--blue-800); }
+.management-download:hover { background: var(--sky); }
+.dataset-version-list, .management-audit { list-style: none; padding: 0; margin: 16px 0; }
+.dataset-version-list li, .evaluation-result { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; padding: 20px 0; border-bottom: 1px solid var(--line); }
+.dataset-version-list li > div, .evaluation-result > div { min-width: 0; flex: 1 1 260px; }
+.dataset-version-list strong, .dataset-version-list small, .dataset-version-list code, .evaluation-result small { display: block; margin-bottom: 6px; overflow-wrap: anywhere; }
+.dataset-version-list code { font-size: 12px; }
+.campaign-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; margin-top: 20px; }
+.campaign-list a { display: flex; align-items: center; justify-content: space-between; gap: 16px; border: 1px solid var(--line); border-radius: 20px; padding: 16px 20px; color: var(--blue-800); }
+.campaign-list a[aria-current="page"] { border-color: var(--blue-800); background: var(--sky); }
+.cleanup-summary { display: grid; grid-template-columns: repeat(auto-fit,minmax(130px,1fr)); gap: 16px; padding: 20px; border-radius: 24px; background: var(--surface); }
+.cleanup-summary dt { font-size: 14px; color: var(--muted); }
+.cleanup-summary dd { margin: 8px 0 0; font-size: 26px; color: var(--blue-800); }
+.cleanup-job, .evaluation-receipt { padding: 20px 0; border-top: 1px solid var(--line); }
+.management-audit li { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.management-audit code { grid-column: 1 / -1; font-size: 12px; overflow-wrap: anywhere; }
+.feedback-moderation { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; padding-top: 24px; margin-top: 24px; border-top: 1px solid var(--line); }
+.feedback-moderation > div { flex: 1 1 260px; }
+.verification-reminder { color: #855100; font-size: 14px; line-height: 1.6; }
+@media (max-width: 640px) { .campaign-list { grid-template-columns: minmax(0,1fr); } .management-audit li { grid-template-columns: 1fr; } .feedback-workspace .editor-card { padding: 20px; } }

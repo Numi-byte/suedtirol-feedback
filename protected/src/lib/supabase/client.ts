@@ -1,7 +1,7 @@
 import { createBrowserClient } from "@supabase/ssr";
-import { getSupabaseConfig } from "./config";
+import { getSupabaseConfig, getFeedbackEnvironmentHeaders } from "./config";
 
 export function createClient() {
   const { url, publishableKey } = getSupabaseConfig();
-  return createBrowserClient(url, publishableKey);
+  return createBrowserClient(url, publishableKey, { global: { headers: getFeedbackEnvironmentHeaders() } });
 }

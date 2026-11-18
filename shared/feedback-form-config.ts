@@ -1,3 +1,4 @@
+import { parseFeedbackRuntime, type FeedbackRuntime } from "./feedback-environment.ts";
 export type FeedbackLanguage = "de" | "it" | "en";
 export type FeedbackCategoryConfig = {
   slug: string;
@@ -12,6 +13,7 @@ export type FeedbackFormConfig = {
   photos_enabled: boolean;
   max_photo_bytes: number;
   categories: FeedbackCategoryConfig[];
+  runtime?: FeedbackRuntime;
 };
 export function parseFeedbackFormConfig(value: unknown): FeedbackFormConfig {
   if (!value || typeof value !== "object")
@@ -50,6 +52,7 @@ export function parseFeedbackFormConfig(value: unknown): FeedbackFormConfig {
     throw new Error("No valid active categories.");
   return {
     ...v,
+    ...(v.runtime ? { runtime: parseFeedbackRuntime(v.runtime) } : {}),
     categories: [...v.categories].sort((a, b) => a.sort_order - b.sort_order),
   };
 }

@@ -371,6 +371,17 @@ try {
     ),
   );
   console.log("PASS: dynamic public categories remain within mobile viewport");
+  await page.setViewportSize({width:1440,height:1000});
+  config.runtime={environment_id:placeId,kind:'testing',label:'Test',project_ref:'local-fixture',campaign_id:placeId,campaign_name:'Pilot',dataset_version_id:placeId,form_version_id:placeId,accepting_submissions:true};
+  await open();await page.locator('[name=categories][value=custom_issue]').check();
+  config.runtime={...config.runtime,campaign_id:pointId,form_version_id:pointId};
+  const beforeVersionChange=reports.length;
+  await page.locator('button[type=submit]').click();await page.getByRole('alert').filter({hasText:/changed/}).first().waitFor();assert.equal(reports.length,beforeVersionChange);
+  await page.locator('button[type=submit]').click();await page.waitForURL(url=>url.pathname==='/feedback/thanks');
+  assert.equal(reports.at(-1).p_environment,placeId);assert.equal(reports.at(-1).p_campaign,pointId);assert.equal(reports.at(-1).p_dataset_version,placeId);assert.equal(reports.at(-1).p_form_version,pointId);
+  await open();await page.locator('[name=categories][value=custom_issue]').check();config.runtime.accepting_submissions=false;
+  const beforeClosure=reports.length;await page.locator('button[type=submit]').click();await page.getByRole('alert').filter({hasText:/changed/}).first().waitFor();assert.equal(reports.length,beforeClosure);
+  console.log('PASS: changed campaign/form versions require review, submissions carry exact provenance, and closed campaigns cannot submit');
 } catch (error) {
   console.error(log);
   throw error;

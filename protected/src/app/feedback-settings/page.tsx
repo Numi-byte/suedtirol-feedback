@@ -15,6 +15,7 @@ import {
   type FeedbackCategoryConfig,
 } from "../../../../shared/feedback-form-config";
 import { FeedbackCategoryIcon } from "@/components/feedback-category-icon";
+import { FeedbackManagementTabs } from "./management-tabs";
 export const dynamic = "force-dynamic";
 export default async function FeedbackSettingsPage() {
   const client = await createClient();
@@ -129,6 +130,8 @@ export default async function FeedbackSettingsPage() {
         <header>
           <h1>{copy.title}</h1>
         </header>
+        <FeedbackManagementTabs current="form" language={language} />
+        {config.runtime?.dataset_version_id ? <p className="management-notice">{language === "de" ? "Das veröffentlichte Formular ist versioniert und gesperrt. Schließe zuerst die Kampagne oder pausiere die Veröffentlichung, bevor du Kategorien oder Foto-Einstellungen änderst." : language === "it" ? "Il modulo pubblicato è bloccato. Chiudi la campagna o sospendi la pubblicazione prima di modificare categorie e foto." : "The published form is versioned and locked. Close the campaign or pause publication before changing categories or photos."}</p> : null}
         <section
           className="feedback-category-guidelines"
           aria-labelledby="feedback-svg-guidelines"

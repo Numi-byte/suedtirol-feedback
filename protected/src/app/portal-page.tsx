@@ -24,13 +24,15 @@ import { reportedIssueLabel, type FeedbackCategory } from "@/lib/reported-issues
 import { PortalHeader, PortalFooter } from "@/components/portal-shell";
 import { portalShellCopy } from "@/lib/portal-shell-copy";
 import { PortalNavigation, PortalLink, PortalSearchForm } from "./portal-navigation";
-import { getPortalAccess, portalHome } from "@/lib/portal-access";
+import { getPortalAccess, portalHome, PORTAL_OWNER_ID } from "@/lib/portal-access";
+import { FeedbackModeration } from "./feedback-moderation";
+import { parseFeedbackRuntime, type FeedbackRuntime } from "../../../shared/feedback-environment";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 type FeedbackPhoto = { id: string; storage_path: string };
-type FeedbackReply = { id: string; body: string; created_at: string; updated_at: string };
+type FeedbackReply = { id: string; body: string; public_body?: string | null; created_at: string; updated_at: string };
 type Severity = "low" | "medium" | "high";
 type Status = "new" | "in_review" | "resolved" | "dismissed";
 type ReplyFilter = "all" | "replied" | "unreplied";
@@ -106,6 +108,12 @@ export default async function PortalPage({ view, searchParams }: { view: "feedba
 
   if (!access || !access[view]) redirect(home);
 
+  let feedbackRuntime: FeedbackRuntime | null = null;
+  if (view === "feedback") {
+    const context = await supabase.rpc("get_feedback_runtime_context");
+    try { if (!context.error) feedbackRuntime = parseFeedbackRuntime(context.data); } catch {}
+  }
+
   const searchQuery = q?.trim() ?? "";
   const searchFilter = stopSearchFilter(searchQuery);
   const missingOnly = missing === "1";
@@ -124,7 +132,7 @@ export default async function PortalPage({ view, searchParams }: { view: "feedba
     return query.order("archived_at", { ascending: false }).order("id");
   };
   const replyFilter: ReplyFilter = replies === "replied" || replies === "unreplied" ? replies : "all";
-  const feedbackSelect = "id,severity,description,overall_rating,cleanliness_rating,safety_rating,accessibility_rating,information_rating,shelter_rating,has_shelter,has_seating,has_lighting,comment,email,consent_to_contact,language,status,created_at,bus_stops(name_de,name_it,name_en,municipality,municipality_de,municipality_it),stop_points(point_number,name_de,name_it),stop_feedback_categories(category_slug,feedback_categories(label_de,label_it,label_en)),stop_feedback_photos(id,storage_path),feedback_replies!left(id,body,created_at,updated_at)";
+  const feedbackSelect = "id,severity,description,overall_rating,cleanliness_rating,safety_rating,accessibility_rating,information_rating,shelter_rating,has_shelter,has_seating,has_lighting,comment,email,consent_to_contact,language,status,created_at,public_visibility,resolution_notes,verification_due_at,campaign_id,dataset_version_id,form_version_id,bus_stops(name_de,name_it,name_en,municipality,municipality_de,municipality_it),stop_points(point_number,name_de,name_it),stop_feedback_categories(category_slug,feedback_categories(label_de,label_it,label_en)),stop_feedback_photos(id,storage_path),feedback_replies!left(id,body,public_body,created_at,updated_at)";
   const buildFeedbackQuery = (head = false) => {
     let query = supabase.from("stop_feedback").select(feedbackSelect, { count: "exact", head });
     if (replyFilter === "replied") query = query.not("feedback_replies", "is", null);
@@ -360,8 +368,9 @@ export default async function PortalPage({ view, searchParams }: { view: "feedba
                 key={`${entry.id}-${reply?.updated_at ?? "unanswered"}`}
                 feedbackId={entry.id}
                 reply={reply}
-                labels={t.feedback.reply}
+                labels={feedbackRuntime && feedbackRuntime.kind !== "unconfigured" ? { ...t.feedback.reply, publish: language === "de" ? "Antwort speichern" : language === "it" ? "Salva risposta" : "Save reply", privacy: feedbackRuntime.kind === "production" ? (language === "de" ? "Die Antwort wird als Entwurf gespeichert. Nur der Inhaber kann sie öffentlich freigeben." : language === "it" ? "La risposta è una bozza. Solo il titolare può pubblicarla." : "The reply is saved as a draft. Only the owner can publish it.") : t.feedback.reply.privacy } : t.feedback.reply}
               /> : reply ? <div className="existing-reply"><span>{t.feedback.reply.answered}</span><p>{reply.body}</p></div> : null}
+              {feedbackRuntime && feedbackRuntime.kind !== "unconfigured" ? <FeedbackModeration id={entry.id} status={status} visibility={entry.public_visibility ?? "hidden"} notes={entry.resolution_notes ?? ""} due={entry.verification_due_at ?? new Date(Date.parse(entry.created_at) + 90 * 86400000).toISOString()} draft={!!reply && feedbackRuntime.kind === "production" && reply.body !== reply.public_body} runtime={feedbackRuntime} owner={user.id === PORTAL_OWNER_ID} language={language} /> : null}
             </article>;
           })}
           {!visibleFeedback.length && <p className="empty feedback-empty">{replyFilter === "all" ? t.feedback.empty : t.feedback.filter.empty}</p>}

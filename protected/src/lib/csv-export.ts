@@ -63,6 +63,8 @@ export function flattenExport(row: Row, table: string): Row {
       : 0,
     reply_id: reply.id,
     reply_body: reply.body,
+    reply_public_body: reply.public_body,
+    reply_public_updated_at: reply.public_updated_at,
     reply_author_id: reply.author_id,
     reply_created_at: reply.created_at,
     reply_updated_at: reply.updated_at,
