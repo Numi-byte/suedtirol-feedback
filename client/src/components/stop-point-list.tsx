@@ -1,5 +1,7 @@
 "use client";
 
+import { useMemo } from "react";
+import { rankStopPoints } from "@/lib/stop-search";
 import Link from "next/link";
 import Image from "next/image";
 import vectorMap from "@/components/vectormap.svg";
@@ -11,6 +13,7 @@ import { pointFeedbackHref, stopPointName } from "@/lib/stop-point-links";
 import type { MapLabels } from "@/components/stop-map";
 
 type Props = {
+  query?: string;
   points: StopPoint[];
   status: "loading" | "ready" | "error";
   language: Language;
@@ -22,11 +25,12 @@ type Props = {
   showMapLinks?: boolean;
 };
 
-export function StopPointList({ points, status, language, labels, placeId, selectedPointId, onSelect, onHighlight, showMapLinks }: Props) {
+export function StopPointList({ points, query = "", status, language, labels, placeId, selectedPointId, onSelect, onHighlight, showMapLinks }: Props) {
+  const orderedPoints = useMemo(() => rankStopPoints(points, query, language), [points, query, language]);
   if (status !== "ready") return <p className="point-list-status" role="status">{status === "loading" ? labels.pointsLoading : labels.pointsError}</p>;
   if (!points.length) return <p className="point-list-status">{labels.noPoints}</p>;
   return <ul className="stop-point-list">
-    {points.map(point => <li key={point.id} className={point.id === selectedPointId ? "is-selected" : undefined}
+    {orderedPoints.map(point => <li key={point.id} className={point.id === selectedPointId ? "is-selected" : undefined}
       onMouseEnter={() => onHighlight?.(point.id)} onMouseLeave={() => onHighlight?.(null)}
       onFocus={() => onHighlight?.(point.id)} onBlur={event => {
         if (!event.currentTarget.contains(event.relatedTarget as Node | null)) onHighlight?.(null);

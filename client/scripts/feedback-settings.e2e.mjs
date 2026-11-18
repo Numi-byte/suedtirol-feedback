@@ -192,7 +192,7 @@ try {
   let releaseStops;
   const stopsGate=new Promise(resolve=>{releaseStops=resolve;});
   let stopsMode='delayed';
-  const stop={id:placeId,name_de:'Test',name_it:'Test',name_en:'Test',municipality:'Bolzano',latitude:46.5,longitude:11.35,is_accessible:false,feedback_count:0};
+  const stop={id:placeId,name_de:'Test',name_it:'Test',name_en:'Test',municipality:'Bolzano',latitude:46.5,longitude:11.35,is_accessible:false,feedback_count:0,point_search:[{name_de:'Weißes Kreuz',name_it:'Croce Bianca',point_number:'7'}]};
   await page.route(`${appUrl}/api/stops`,async route=>{
     if(stopsMode==='delayed')await stopsGate;
     await route.fulfill({status:stopsMode==='error'?503:200,contentType:'application/json',body:JSON.stringify(stopsMode==='empty'?[]:stopsMode==='error'?{error:'Synthetic failure'}:[stop])});
@@ -204,6 +204,20 @@ try {
   releaseStops();stopsMode='ready';
   await page.locator('.map-loading').waitFor({state:'hidden'});
   await page.locator('.map-surface .stop-marker').first().waitFor();
+  const mapSearch=page.locator('#map-stop-search');
+  await mapSearch.fill('croce BOLZANO');
+  await page.locator('.map-surface .stop-marker').first().waitFor();
+  await mapSearch.fill('weisses kreuz');
+  await page.locator('.map-surface .stop-marker').first().waitFor();
+  await page.goto(`${appUrl}/stops`);
+  const directorySearch=page.locator('#stop-search');
+  await directorySearch.fill('Cróce, Bianca');
+  await page.locator('.stop-card').first().waitFor();
+  await directorySearch.fill('weisses krezu');
+  await page.locator('.stop-card').first().waitFor();
+  assert.equal(await page.locator('.stop-card').count(),1);
+  console.log('PASS: existing map and directory inputs find boarding-point aliases, accents, German spelling and a transposed typo');
+  await page.goto(appUrl);
   stopsMode='error';await page.reload();
   await page.locator('.map-loading.error').waitFor();
   assert.equal(await page.locator('.map-loading .loading-spinner').count(),0);

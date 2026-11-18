@@ -11,6 +11,7 @@ import { stopName as nameFor } from "@/lib/stops";
 import type { BusStop } from "@/lib/stops";
 import { useStopPoints } from "@/lib/stop-points";
 import { createStopClusterIndex, stopClusterDiameter } from "@/lib/stop-clusters";
+import { buildStopSearch, searchStopIndex } from "@/lib/stop-search";
 import { StopPointList } from "@/components/stop-point-list";
 import { stopPointName } from "@/lib/stop-point-links";
 
@@ -133,15 +134,8 @@ export function StopMap({ stops, language, labels, stopsLoading, stopsError, onR
   }, [router, focusPointOnMap]);
 
   const stopName = (stop: BusStop) => nameFor(stop, language);
-  const filteredStops = useMemo(() => {
-    if (selectedId) return stops.filter(stop => stop.id === selectedId);
-    const terms = query.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
-    if (!terms.length) return stops;
-    return stops.filter((stop) => {
-      const searchable = [stop.name_de, stop.name_it, stop.name_en, stop.municipality_de, stop.municipality_it, stop.municipality].join(" ").toLocaleLowerCase();
-      return terms.every((term) => searchable.includes(term));
-    });
-  }, [query, stops, selectedId]);
+  const searchIndex = useMemo(() => buildStopSearch(stops, language), [stops, language]);
+  const filteredStops = useMemo(() => selectedId ? stops.filter(stop => stop.id === selectedId) : searchStopIndex(searchIndex, query), [query, stops, selectedId, searchIndex]);
   const clusterIndex = useMemo(() => createStopClusterIndex(filteredStops), [filteredStops]);
   const listedStops = useMemo(() => {
     if (selectedId || query.trim()) return filteredStops;
@@ -597,7 +591,7 @@ export function StopMap({ stops, language, labels, stopsLoading, stopsError, onR
                 </button>
               </div>
               {selected.is_accessible ? <div className="transport-tags"><span>{labels.accessible}</span></div> : null}
-              <StopPointList points={points} status={pointsStatus} placeId={selected.id} language={language} labels={labels}
+              <StopPointList query={query} points={points} status={pointsStatus} placeId={selected.id} language={language} labels={labels}
                 selectedPointId={selectedPointId} onSelect={point => updatePointSelection(point.id)}
                 onHighlight={id => {
                   for (const [pointId, marker] of pointMarkersRef.current) {

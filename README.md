@@ -490,3 +490,26 @@ user-ID form parameter, migration or email recovery redirect is used. All
 password inputs are cleared after an attempt; errors never echo credentials.
 This is a signed-in password-change flow; forgotten-password assistance remains
 available through the account owner.
+
+## Client search across places and boarding points
+
+Apply `supabase/migrations/20261118120000_public_stop_search.sql` before deploying
+the updated client. The new read-only public RPC keeps the existing published,
+unarchived place projection and adds each place's boarding-point names and
+numbers. It exposes no private reports, contact details or import metadata.
+The cached, paginated stop snapshot uses this projection; there are no per-place
+requests to build the search index and no request per search keystroke.
+
+The existing map and stop-directory inputs share normalized matching and ranking:
+case/accent/punctuation folding, German ß spelling, words in any order, joined
+name parts, station abbreviations and conservative single-typo/transposition
+matching for words of at least five letters. Short words and numbers are not
+fuzzy-matched. Exact place names rank first, followed by exact point names and
+partial matches. Every search term must match the same place or one of its
+individual points; names of unrelated sibling points are not combined.
+
+Point-name searches return their existing parent-place cards. Opening a place
+puts relevant boarding points first while retaining all of its points. Stored
+names, display text, controls, publication rules and existing public lookup RPCs
+remain unchanged. The migration creates a new read function only; it does not
+rewrite any stop data.

@@ -15,6 +15,7 @@ export type BusStop = {
   longitude: number;
   is_accessible: boolean;
   feedback_count: number;
+  point_search?: { name_de: string; name_it: string; point_number: string }[];
 };
 
 export function stopName(stop: BusStop, language: Language) {
