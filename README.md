@@ -513,3 +513,39 @@ puts relevant boarding points first while retaining all of its points. Stored
 names, display text, controls, publication rules and existing public lookup RPCs
 remain unchanged. The migration creates a new read function only; it does not
 rewrite any stop data.
+
+## Protected CSV downloads
+
+CSV links are available in the feedback inbox, active/archived stop-place tables,
+the selected place's stop-point editor, and (for database-authorized staff) the
+stop import page. Database users can also download all stop points from the
+database page. Exports cover all matching rows, not just the visible page.
+Active-place exports retain the search and missing-municipality selection;
+archive exports retain the archive table's missing-municipality selection.
+Feedback exports retain the all/replied/unreplied selection. Point-editor exports
+are scoped to the selected parent place; global exports include archived and
+unpublished records available to the caller.
+
+`/exports` requires a verified signed-in session and checks database permission
+for places/points or feedback-inbox permission for reports. Reply permission is
+not required to export reports the account is already allowed to read. Requests
+use the caller's regular Supabase client and RLS; no service-role key is used.
+Responses are private/no-store, including error responses.
+
+Feedback CSV includes the stored report fields, parent-place and point names,
+category labels in all three languages, photo count and reply details. It does
+not embed photo files or signed photo URLs. Place exports include stored table
+fields; point exports also include parent names and municipality translations.
+
+Files use UTF-8 with BOM, comma separators, quoted cells and CRLF records.
+Potential formula-leading text is prefixed with an apostrophe for spreadsheet
+safety; genuine numeric values retain their values. Filenames use the Berlin
+calendar date. These are spreadsheet exports, not database backup files.
+
+Reads page by ID beyond the API row cap. Rows are prepared before download so
+query failures do not create a seemingly successful partial file. Resource
+limits are 100,000 rows, 32 MiB and 45 seconds of preparation; oversized exports
+return an error rather than truncating. Prepared chunks are streamed to avoid
+Vercel's buffered-response size limit. Concurrent data edits can be reflected
+between read pages; this is not a transactionally frozen snapshot. No migration
+is required.

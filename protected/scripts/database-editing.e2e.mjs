@@ -35,6 +35,7 @@ const municipalityFeed={locations:[
 ]};
 const points = new Map();
 const writes = [];
+let exportFailure=false;
 let staff = true;
 let currentUserId = userId;
 const serverAdminKey = 'synthetic-server-admin-key-not-for-browser';
@@ -132,7 +133,7 @@ const fixture = createServer(async (req, res) => {
       Object.assign(account,{is_active:body.p_active,can_manage_stops:body.p_stops,can_manage_database:body.p_database,can_view_feedback:body.p_feedback,can_manage_feedback:body.p_feedback_settings??account.can_manage_feedback??false,can_reply_feedback:body.p_reply_feedback??false});
       return reply(null);
     }
-    const eq = key => url.searchParams.get(key)?.replace(/^eq\./, '');
+    const eq = key => url.searchParams.get(key)?.startsWith('eq.') ? url.searchParams.get(key).slice(3) : undefined;
     const single = value => req.headers.accept?.includes('vnd.pgrst.object') ? value : [value];
     if (url.pathname === '/rest/v1/bus_stops') {
       if (req.method === 'POST') {
@@ -149,13 +150,16 @@ const fixture = createServer(async (req, res) => {
         writes.push({ kind: 'update', id: record.id, body });
         return reply(single({ id: record.id }));
       }
+      if(exportFailure&&url.searchParams.get('id')?.startsWith('gt.'))return reply({message:'Synthetic export failure'},503);
       let rows = records.filter(x => !eq('id') || x.id === eq('id'));
       if (url.searchParams.get('municipality_names_missing') === 'eq.true') rows=rows.filter(x=>!x.municipality_de.trim()||!x.municipality_it.trim());
       if (url.searchParams.get('archived_at') === 'is.null') rows = rows.filter(x => !x.archived_at);
       if (url.searchParams.get('archived_at') === 'not.is.null') rows = rows.filter(x => x.archived_at);
+      if(url.searchParams.get('id')?.startsWith('gt.'))rows=rows.filter(x=>x.id>url.searchParams.get('id').slice(3));
+      if(url.searchParams.get('order')==='id.asc')rows.sort((a,b)=>a.id.localeCompare(b.id));
       const count = rows.length;
       const offset = Number(url.searchParams.get('offset') ?? 0);
-      rows = rows.slice(offset, offset + Number(url.searchParams.get('limit') ?? 1000));
+      rows = rows.slice(offset, offset + (url.searchParams.get('select')==='*'?Math.min(3,Number(url.searchParams.get('limit')??500)):Number(url.searchParams.get('limit') ?? 1000)));
       return reply(rows, 200, count);
     }
     if (url.pathname === '/rest/v1/stop_points') {
@@ -167,8 +171,16 @@ const fixture = createServer(async (req, res) => {
         writes.push({ kind: 'point', id: point.id, body });
         return reply(single({ id: point.id }));
       }
+      if (!place) return reply([...points.values()].filter(x=>!url.searchParams.get('id')||x.id>url.searchParams.get('id').slice(3)));
       if (!points.has(place)) points.set(place, { id: `22222222-2222-4222-8222-${place.slice(-12)}`, name_de: 'Steig Nord', name_it: 'Banchina nord', point_number: '1', transport_type: 'bus' });
-      return reply([points.get(place)], 200, 1);
+      return reply([points.get(place)].filter(x=>!url.searchParams.get('id')||x.id>url.searchParams.get('id').slice(3)), 200, 1);
+    }
+    if(url.pathname==='/rest/v1/stop_feedback') {
+      let rows=Array.from({length:7},(_,i)=>({id:idFor(3000+i),bus_stop_id:records[0].id,description:'Private report '+i,email:'private@example.test',bus_stops:{name_it:'Bolzano'},stop_points:{name_it:'Nord',point_number:'1'},stop_feedback_categories:[],stop_feedback_photos:[],feedback_replies:i%2?null:{id:idFor(4000+i),body:'Team reply '+i}}));
+      if(url.searchParams.get('feedback_replies')==='is.null')rows=rows.filter(x=>!x.feedback_replies);
+      if(url.searchParams.get('feedback_replies')==='not.is.null')rows=rows.filter(x=>x.feedback_replies);
+      if(url.searchParams.get('id')?.startsWith('gt.'))rows=rows.filter(x=>x.id>url.searchParams.get('id').slice(3));
+      return reply(rows.slice(0,2));
     }
     return reply({ message: `Unexpected fixture path ${url.pathname}` }, 404);
   } catch (error) {
@@ -228,6 +240,16 @@ try {
   assert.equal(await page.locator('#stop-editor').count(), 0);
   console.log('PASS: stop management contains imports, with creation moved to Database');
 
+  const csv=await context.request.get(`${appUrl}/exports?table=places`);
+  assert.equal(csv.status(),200);assert.match(csv.headers()['content-type'],/text\/csv/);assert.match(csv.headers()['content-disposition'],/attachment/);assert.match(csv.headers()['cache-control'],/no-store/);
+  const csvText=await csv.text();assert.ok(csvText.includes(records.at(-1).id));assert.ok(csvText.includes('Bolzano 1'));
+  const activeCsv=await (await context.request.get(`${appUrl}/exports?table=places&scope=active`)).text();
+  assert.ok(!activeCsv.includes(idFor(40)));
+  const archivedCsv=await (await context.request.get(`${appUrl}/exports?table=places&scope=archived`)).text();assert.ok(archivedCsv.includes(idFor(40)));
+  exportFailure=true;const failedExport=await context.request.get(`${appUrl}/exports?table=places`);assert.equal(failedExport.status(),503);assert.ok(!failedExport.headers()['content-disposition']);exportFailure=false;
+  const reportCsv=await (await context.request.get(`${appUrl}/exports?table=feedback&replies=replied`)).text();assert.ok(reportCsv.includes('Team reply 6'));assert.ok(!reportCsv.includes('Private report 1'));
+  assert.equal((await context.request.get(`${appUrl}/exports?table=bad`)).status(),400);
+  console.log('PASS: CSV exports cover all capped pages, archive/reply scopes, private no-store downloads, and fail cleanly on later-page errors');
   await page.goto(`${appUrl}/database?q=Bozen&page=2&archivePage=2`);
   await page.locator('.stop-row').first().click();
   await page.locator('.stop-edit-form input[name=id]').waitFor({ state: 'attached' });
@@ -237,6 +259,7 @@ try {
   const timeOrigin = await page.evaluate(() => performance.timeOrigin);
   const editor = page.locator('.stop-edit-form');
   const pointEditor = page.locator('.point-edit-form').first();
+  const pointCsv=await context.request.get(`${appUrl}/exports?table=points&place=${selectedId}`);assert.equal(pointCsv.status(),200);assert.match(await pointCsv.text(),/Banchina nord/);
   await editor.locator('[name=name_it]').fill('Bolzano edited');
   await editor.locator('[name=is_published]').uncheck();
   await pointEditor.locator('select').selectOption('train');
@@ -571,6 +594,9 @@ try {
   await page.setViewportSize({width:1440,height:1000});
   console.log('PASS: owner settings save inline; unsafe SVG rejected before RPC; normalized icon assignment, retirement and removal work on mobile');
   currentUserId=created.user_id;
+  assert.equal((await context.request.get(`${appUrl}/exports?table=places`)).status(),403);
+  assert.equal((await context.request.get(`${appUrl}/exports?table=points`)).status(),403);
+  assert.equal((await context.request.get(`${appUrl}/exports?table=feedback`)).status(),403);
   await page.goto(`${appUrl}/feedback-settings`);
   await page.waitForURL(url=>url.pathname==='/stops');
   assert.equal(await page.locator('a[href="/feedback-settings"]').count(),0);

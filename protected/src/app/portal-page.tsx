@@ -1,4 +1,5 @@
 import { municipalityName } from "../../../shared/municipality";
+import { CsvDownload } from "@/components/csv-download";
 import Image from "next/image";
 import loginPhoto from "@/components/3e665714419485d3f8c4ee7c0026d022bef11c77.jpg";
 import { archiveBusStop, createBusStop, restoreBusStop, updateBusStop, updateStopPointType } from "./actions";
@@ -203,10 +204,12 @@ export default async function PortalPage({ view, searchParams }: { view: "feedba
         {view === "stops" ? <>
         <section className="import-card">
           <StopDataImport places={t.importer} points={t.pointImporter} />
+          {access.database ? <div className="csv-downloads"><CsvDownload language={language} table="places"/><CsvDownload language={language} table="points"/></div> : null}
         </section>
         </> : null}
         {view === "database" ? <div className="database-workspace">
         <section className="stops-card" id="stop-database">
+          <div className="csv-downloads"><CsvDownload language={language} table="places" params={{scope:"active",q:searchQuery,...(missingOnly?{missing:"1"}:{})}}/><CsvDownload language={language} table="points"/></div>
           <div className="database-heading"><div className="card-heading"><span>{t.stops.kicker}</span><h2>{activeStopCount} {t.stops.count}</h2></div><PortalLink className="editor-cancel" href={navigationHref({ stop: null }, "stop-editor")}>{t.editor.title}</PortalLink></div>
           <PortalSearchForm className="database-search">
             <label htmlFor="database-stop-search">{t.stops.searchLabel}</label>
@@ -239,7 +242,7 @@ export default async function PortalPage({ view, searchParams }: { view: "feedba
             <span className="page-summary">{t.stops.page} {currentPage} {t.stops.of} {pageCount}</span>
           </nav> : null}
           {archivedStops.length > 0 ? <div className="archived-list" id="archived-stops">
-            <h3>{t.archived.title} · {archivePage.count} {t.archived.count}</h3>
+            <h3>{t.archived.title} · {archivePage.count} {t.archived.count}</h3><CsvDownload language={language} table="places" params={{scope:"archived",...(missingOnly?{missing:"1"}:{})}}/>
             {archivedStops.map((stop) => (
               <div className="archived-row" key={stop.id}>
                 <div><strong>{stop.name_de || stop.name_it}</strong><small>{municipalityName(stop, language)}</small></div>
@@ -283,7 +286,7 @@ export default async function PortalPage({ view, searchParams }: { view: "feedba
           </div> : null}
         </section>
         {editing ? <section className="editor-card point-editor" id="stop-points-editor">
-          <div className="card-heading"><h2>{t.pointEditor.title}</h2><p>{editing.name_de || editing.name_it}</p></div>
+          <CsvDownload language={language} table="points" params={{place:editing.id}}/><div className="card-heading"><h2>{t.pointEditor.title}</h2><p>{editing.name_de || editing.name_it}</p></div>
           {editingPoints.map(point => <StopMutationForm action={updateStopPointType} labels={t.editor} className="point-edit-form" key={point.id}>
             <input type="hidden" name="point_id" value={point.id} /><input type="hidden" name="place_id" value={editing.id} />
             <h3>{point[`name_${language === "it" ? "it" : "de"}`]} · {t.pointEditor.point} {point.point_number}</h3>
@@ -303,6 +306,7 @@ export default async function PortalPage({ view, searchParams }: { view: "feedba
         <MunicipalityBackfill language={language} referenceDate={municipalityReferenceDate} />
       </section> : null}
       {view === "feedback" ? <section className="feedback-card" id="feedback-inbox">
+        <div className="csv-downloads"><CsvDownload language={language} table="feedback" params={{replies:replyFilter}}/></div>
         <div className="feedback-heading-row">
           <div className="card-heading"><h1>{t.feedback.kicker}</h1><p>{t.feedback.note}</p></div>
           <div className="feedback-summary" aria-label={t.feedback.summaryLabel}><strong>{allFeedbackCount ?? 0}</strong><span>{t.feedback.reports}</span><strong>{newFeedbackCount ?? 0}</strong><span>{t.feedback.fresh}</span></div>
