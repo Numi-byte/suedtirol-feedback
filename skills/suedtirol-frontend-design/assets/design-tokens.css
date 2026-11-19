@@ -1,0 +1,70 @@
+/* Portable starting point. Map these roles into an existing token system when one exists. */
+:root {
+  color-scheme: light;
+
+  --st-action: #007eb5;
+  --st-action-hover: #006a99;
+  --st-action-deep: #055a81;
+  --st-heading: #0f2733;
+  --st-portal-heading: #2a424d;
+  --st-text: #4b6673;
+  --st-muted: #64818f;
+  --st-tint: #ecf6fa;
+  --st-canvas: #f5f8fa;
+  --st-border: #dbe6ef;
+  --st-success: #2f8f5b;
+  --st-warning: #efa51b;
+  --st-danger: #9b2f22;
+  --st-surface: #fff;
+
+  --st-font-body: "Frutiger", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --st-font-display: "Ely Rounded", "Segoe UI Rounded", "Segoe UI", sans-serif;
+
+  --st-space-1: 4px;
+  --st-space-2: 8px;
+  --st-space-3: 12px;
+  --st-space-4: 16px;
+  --st-space-6: 24px;
+  --st-space-8: 32px;
+  --st-space-10: 40px;
+  --st-space-12: 48px;
+  --st-space-16: 64px;
+  --st-space-20: 80px;
+
+  --st-radius-field: 16px;
+  --st-radius-card: 32px;
+  --st-radius-feature: 48px;
+  --st-radius-pill: 999px;
+  --st-control-min: 44px;
+  --st-content-max: 1200px;
+  --st-shell-max: 1600px;
+  --st-focus: 0 0 0 3px rgb(0 126 181 / 28%);
+  --st-dialog-shadow: 0 24px 100px rgb(0 43 77 / 20%);
+}
+
+/* Do not add @font-face unless the target project owns suitable font files. */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  color: var(--st-text);
+  background: var(--st-canvas);
+  font: 400 16px/1.5 var(--st-font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input, select, textarea { font: inherit; }
+
+:focus-visible {
+  outline: 3px solid var(--st-action);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
