@@ -379,17 +379,29 @@ export function StopMap({ stops, language, labels, stopsLoading, stopsError, onR
 
   useEffect(() => {
     pointSelectionRef.current = selectedPointId;
+
     for (const [id, marker] of pointMarkersRef.current) {
       const active = id === selectedPointId;
+
       marker.setRadius(active ? 11 : 8);
+      marker.setStyle({
+        fillColor: active ? "#A80A90" : "#0070A3",
+      });
+
       const element = marker.getElement();
       const focused = element === document.activeElement;
       element?.setAttribute("aria-pressed", String(active));
+
       if (active) {
-        marker.bringToFront(); marker.openTooltip();
-        if (focused && element instanceof SVGElement) element.focus({ preventScroll: true });
+        marker.bringToFront();
+        marker.openTooltip();
+
+        if (focused && element instanceof SVGElement) {
+          element.focus({ preventScroll: true });
+        }
+      } else {
+        marker.closeTooltip();
       }
-      else marker.closeTooltip();
     }
   }, [selectedPointId]);
 
