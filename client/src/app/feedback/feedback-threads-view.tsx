@@ -5,9 +5,9 @@ import { useLanguage } from "@/components/language-provider";
 import { feedbackCategoryLabel, type FeedbackCategoryConfig } from "../../../../shared/feedback-form-config";
 
 const copy = {
-  de: { eyebrow: "Rückmeldungen", title: "Öffentliche Beiträge", intro: "Die Auswahl anderer Fahrgäste – anonym und ohne persönliche Angaben.", anonymous: "Anonymer Beitrag", issue: "Gemeldetes Problem", reply: "Antwort des Teams", waiting: "Noch keine Antwort", empty: "Für diesen Haltepunkt gibt es noch keine Beiträge." },
-  it: { eyebrow: "Riscontri", title: "Contributi pubblici", intro: "Le selezioni di altri passeggeri, anonime e senza dati personali.", anonymous: "Contributo anonimo", issue: "Problema segnalato", reply: "Risposta del team", waiting: "Nessuna risposta per ora", empty: "Non ci sono ancora contributi per questo punto di fermata." },
-  en: { eyebrow: "Feedback", title: "Public posts", intro: "Selections from other passengers, anonymous and without personal details.", anonymous: "Anonymous post", issue: "Reported issue", reply: "Team reply", waiting: "No reply yet", empty: "There are no posts for this stop point yet." },
+  de: { eyebrow: "Rückmeldungen", title: "Nutzerfeedback", intro: "Anonyme Feedback anderer Fahrgäste ohne personenbezogenen Daten lesen.", anonymous: "Anonymer Beitrag", issue: "Gemeldetes Problem", reply: "Antwort des Teams", waiting: "Noch keine Antwort", empty: "Für diesen Haltepunkt gibt es noch keine Beiträge." },
+  it: { eyebrow: "Riscontri", title: "Feeback degli utenti", intro: "Leggi i feedback degli altri passeggeri, in forma anonima e senza dati personali.", anonymous: "Contributo anonimo", issue: "Problema segnalato", reply: "Risposta del team", waiting: "Nessuna risposta per ora", empty: "Non ci sono ancora contributi per questo punto di fermata." },
+  en: { eyebrow: "Feedback", title: "User feedback", intro: "Read anonymous feedback from other passengers, without personal details.", anonymous: "Anonymous post", issue: "Reported issue", reply: "Team reply", waiting: "No reply yet", empty: "There are no posts for this stop point yet." },
 } as const;
 
 type Language = keyof typeof copy;
